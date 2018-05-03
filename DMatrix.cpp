@@ -3,13 +3,11 @@
 //
 
 #include "DMatrix.h"
-#include <stdexcept>
 #include <cmath>
 
 using namespace std;
 
 namespace linalg {
-
     DMatrix::DMatrix(unsigned rowCount, unsigned columnCount)
             : rowCount(rowCount), columnCount(columnCount), length(rowCount * columnCount) {
         vec = vector<double>(length);
@@ -32,7 +30,7 @@ namespace linalg {
 
     DMatrix DMatrix::dup() const {
         DMatrix result(rowCount, columnCount);
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             result[i] = vec[i];
         }
         return result;
@@ -80,7 +78,7 @@ namespace linalg {
     }
 
     void DMatrix::assertIndex(unsigned index) const {
-        if (index >= getLength()) {
+        if (index >= length) {
             throw out_of_range("index is out of range");
         }
     }
@@ -102,7 +100,7 @@ namespace linalg {
     }
 
     void DMatrix::assertSameLength(const DMatrix &other) const {
-        if (getLength() != other.getLength()) {
+        if (length != other.length) {
             throw runtime_error("lengths are not equal");
         }
     }
@@ -113,7 +111,7 @@ namespace linalg {
 
     DMatrix DMatrix::addInPlace(const DMatrix &other) {
         assertSameSize(other);
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] += other[i];
         }
     }
@@ -124,7 +122,7 @@ namespace linalg {
 
     DMatrix DMatrix::subInPlace(const DMatrix &other) {
         assertSameSize(other);
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] -= other[i];
         }
     }
@@ -135,7 +133,7 @@ namespace linalg {
 
     DMatrix DMatrix::elementWiseMulInPlace(const DMatrix &other) {
         assertSameSize(other);
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] *= other[i];
         }
     }
@@ -146,7 +144,7 @@ namespace linalg {
 
     DMatrix DMatrix::elementWiseDivInPlace(const DMatrix &other) {
         assertSameSize(other);
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] /= other[i];
         }
     }
@@ -156,7 +154,7 @@ namespace linalg {
     }
 
     DMatrix DMatrix::scalarMulInPlace(double r) {
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] *= r;
         }
     }
@@ -166,8 +164,18 @@ namespace linalg {
     }
 
     DMatrix DMatrix::scalarDivInPlace(double r) {
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             vec[i] /= r;
+        }
+    }
+
+    DMatrix DMatrix::applyFunctionToElements(function<double(double)> &func) {
+        return dup().applyFunctionToElementsInPlace(func);
+    }
+
+    DMatrix DMatrix::applyFunctionToElementsInPlace(function<double(double)> &func) {
+        for (unsigned i = 0; i < length; ++i) {
+            vec[i] = func(vec[i]);
         }
     }
 
@@ -189,7 +197,7 @@ namespace linalg {
     double DMatrix::vector_innerProduct(DMatrix &other) const {
         assertSameLength(other);
         double result = 0.0;
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             result += vec[i] * other[i];
         }
         return result;
@@ -197,7 +205,7 @@ namespace linalg {
 
     double DMatrix::vector_norm() const {
         double result = 0.0;
-        for (unsigned i = 0; i < getLength(); ++i) {
+        for (unsigned i = 0; i < length; ++i) {
             result += vec[i] * vec[i];
         }
         return sqrt(result);

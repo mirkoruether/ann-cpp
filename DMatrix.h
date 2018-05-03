@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -82,6 +83,10 @@ namespace linalg {
         DMatrix operator/(double r) const;
 
         DMatrix scalarDivInPlace(double r);
+
+        DMatrix applyFunctionToElements(function<double(double)> &func);
+
+        DMatrix applyFunctionToElementsInPlace(function<double(double)> &func);
 
         inline
         bool isRowVector() const;
