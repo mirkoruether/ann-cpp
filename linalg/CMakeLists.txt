@@ -1,0 +1,1 @@
+add_library(linalg DMatrix.h DMatrix.cpp MatrixMulUtil.h MatrixMulUtil.cpp)

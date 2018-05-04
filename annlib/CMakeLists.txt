@@ -1,0 +1,1 @@
+add_library(annlib NetworkLayer.h NetworkLayer.cpp NeuralNetwork.h NeuralNetwork.cpp)
