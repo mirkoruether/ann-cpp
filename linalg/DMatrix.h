@@ -56,37 +56,37 @@ namespace linalg {
 
         DMatrix operator+=(const DMatrix &other);
 
-        DMatrix addInPlace(const DMatrix &other);
+        DMatrix& addInPlace(const DMatrix &other);
 
         DMatrix operator-(const DMatrix &other) const;
 
         DMatrix operator-=(const DMatrix &other);
 
-        DMatrix subInPlace(const DMatrix &other);
+        DMatrix& subInPlace(const DMatrix &other);
 
         DMatrix elementWiseMul(const DMatrix &other) const;
 
-        DMatrix elementWiseMulInPlace(const DMatrix &other);
+        DMatrix& elementWiseMulInPlace(const DMatrix &other);
 
         DMatrix elementWiseDiv(const DMatrix &other) const;
 
-        DMatrix elementWiseDivInPlace(const DMatrix &other);
+        DMatrix& elementWiseDivInPlace(const DMatrix &other);
 
         DMatrix operator*(double r) const;
 
         DMatrix operator*=(double r);
 
-        DMatrix scalarMulInPlace(double r);
+        DMatrix& scalarMulInPlace(double r);
 
         DMatrix operator/(double r) const;
 
         DMatrix operator/=(double r);
 
-        DMatrix scalarDivInPlace(double r);
+        DMatrix& scalarDivInPlace(double r);
 
         DMatrix applyFunctionToElements(const function<double(double)> &func);
 
-        DMatrix applyFunctionToElementsInPlace(const function<double(double)> &func);
+        DMatrix& applyFunctionToElementsInPlace(const function<double(double)> &func);
 
         bool isRowVector() const;
 

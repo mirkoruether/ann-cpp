@@ -105,11 +105,12 @@ namespace linalg {
         return addInPlace(other);
     }
 
-    DMatrix DMatrix::addInPlace(const DMatrix &other) {
+    DMatrix &DMatrix::addInPlace(const DMatrix &other) {
         assertSameSize(other);
         for (unsigned i = 0; i < length; ++i) {
             vec[i] += other[i];
         }
+        return *this;
     }
 
     DMatrix DMatrix::operator-(const DMatrix &other) const {
@@ -120,33 +121,36 @@ namespace linalg {
         return subInPlace(other);
     }
 
-    DMatrix DMatrix::subInPlace(const DMatrix &other) {
+    DMatrix &DMatrix::subInPlace(const DMatrix &other) {
         assertSameSize(other);
         for (unsigned i = 0; i < length; ++i) {
             vec[i] -= other[i];
         }
+        return *this;
     }
 
     DMatrix DMatrix::elementWiseMul(const DMatrix &other) const {
         return dup().elementWiseMulInPlace(other);
     }
 
-    DMatrix DMatrix::elementWiseMulInPlace(const DMatrix &other) {
+    DMatrix &DMatrix::elementWiseMulInPlace(const DMatrix &other) {
         assertSameSize(other);
         for (unsigned i = 0; i < length; ++i) {
             vec[i] *= other[i];
         }
+        return *this;
     }
 
     DMatrix DMatrix::elementWiseDiv(const DMatrix &other) const {
         return dup().elementWiseDivInPlace(other);
     }
 
-    DMatrix DMatrix::elementWiseDivInPlace(const DMatrix &other) {
+    DMatrix &DMatrix::elementWiseDivInPlace(const DMatrix &other) {
         assertSameSize(other);
         for (unsigned i = 0; i < length; ++i) {
             vec[i] /= other[i];
         }
+        return *this;
     }
 
     DMatrix DMatrix::operator*(double r) const {
@@ -157,10 +161,11 @@ namespace linalg {
         return scalarMulInPlace(r);
     }
 
-    DMatrix DMatrix::scalarMulInPlace(double r) {
+    DMatrix &DMatrix::scalarMulInPlace(double r) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] *= r;
         }
+        return *this;
     }
 
     DMatrix DMatrix::operator/(double r) const {
@@ -171,20 +176,22 @@ namespace linalg {
         return scalarDivInPlace(r);
     }
 
-    DMatrix DMatrix::scalarDivInPlace(double r) {
+    DMatrix &DMatrix::scalarDivInPlace(double r) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] /= r;
         }
+        return *this;
     }
 
     DMatrix DMatrix::applyFunctionToElements(const function<double(double)> &func) {
         return dup().applyFunctionToElementsInPlace(func);
     }
 
-    DMatrix DMatrix::applyFunctionToElementsInPlace(const function<double(double)> &func) {
+    DMatrix &DMatrix::applyFunctionToElementsInPlace(const function<double(double)> &func) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] = func(vec[i]);
         }
+        return *this;
     }
 
     bool DMatrix::isRowVector() const {

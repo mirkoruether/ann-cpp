@@ -19,6 +19,6 @@ int main() {
     matrix(1, 1) = 4;
 
     cout << matrix.getLength() << endl;
-    string s;
-    cin >> s;
+    int i;
+    cin >> i;
 }
