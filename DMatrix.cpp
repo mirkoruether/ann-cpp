@@ -13,17 +13,14 @@ namespace linalg {
         vec = vector<double>(length);
     }
 
-    inline
     unsigned DMatrix::getRowCount() const {
         return rowCount;
     }
 
-    inline
     unsigned DMatrix::getColumnCount() const {
         return columnCount;
     }
 
-    inline
     unsigned DMatrix::getLength() const {
         return length;
     }
@@ -50,28 +47,23 @@ namespace linalg {
         return pair<unsigned, unsigned>(getRowCount(), getColumnCount());
     }
 
-    inline
     double &DMatrix::operator[](unsigned index) {
         return vec[index];
     }
 
-    inline
     const double &DMatrix::operator[](unsigned index) const {
         return vec[index];
     }
 
-    inline
     unsigned DMatrix::index(unsigned row, unsigned column) const {
         return row * getColumnCount() + column;
     }
 
-    inline
     double &DMatrix::operator()(unsigned row, unsigned column) {
         assertIndex(row, column);
         return vec[index(row, column)];
     }
 
-    inline
     double DMatrix::operator()(unsigned row, unsigned column) const {
         assertIndex(row, column);
         return vec[index(row, column)];
@@ -109,6 +101,10 @@ namespace linalg {
         return dup().addInPlace(other);
     }
 
+    DMatrix DMatrix::operator+=(const DMatrix &other) {
+        return addInPlace(other);
+    }
+
     DMatrix DMatrix::addInPlace(const DMatrix &other) {
         assertSameSize(other);
         for (unsigned i = 0; i < length; ++i) {
@@ -118,6 +114,10 @@ namespace linalg {
 
     DMatrix DMatrix::operator-(const DMatrix &other) const {
         return dup().subInPlace(other);
+    }
+
+    DMatrix DMatrix::operator-=(const DMatrix &other) {
+        return subInPlace(other);
     }
 
     DMatrix DMatrix::subInPlace(const DMatrix &other) {
@@ -153,6 +153,10 @@ namespace linalg {
         return dup().scalarMulInPlace(r);
     }
 
+    DMatrix DMatrix::operator*=(double r) {
+        return scalarMulInPlace(r);
+    }
+
     DMatrix DMatrix::scalarMulInPlace(double r) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] *= r;
@@ -163,38 +167,39 @@ namespace linalg {
         return dup().scalarDivInPlace(r);
     }
 
+    DMatrix DMatrix::operator/=(double r) {
+        return scalarDivInPlace(r);
+    }
+
     DMatrix DMatrix::scalarDivInPlace(double r) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] /= r;
         }
     }
 
-    DMatrix DMatrix::applyFunctionToElements(function<double(double)> &func) {
+    DMatrix DMatrix::applyFunctionToElements(const function<double(double)> &func) {
         return dup().applyFunctionToElementsInPlace(func);
     }
 
-    DMatrix DMatrix::applyFunctionToElementsInPlace(function<double(double)> &func) {
+    DMatrix DMatrix::applyFunctionToElementsInPlace(const function<double(double)> &func) {
         for (unsigned i = 0; i < length; ++i) {
             vec[i] = func(vec[i]);
         }
     }
 
-    inline
     bool DMatrix::isRowVector() const {
         return rowCount == 1;
     }
 
-    inline
     bool DMatrix::isColVector() const {
         return columnCount == 1;
     }
 
-    inline
     bool DMatrix::isScalar() const {
         return rowCount == 1 && columnCount == 1;
     }
 
-    double DMatrix::vector_innerProduct(DMatrix &other) const {
+    double DMatrix::vector_innerProduct(const DMatrix &other) const {
         assertSameLength(other);
         double result = 0.0;
         for (unsigned i = 0; i < length; ++i) {

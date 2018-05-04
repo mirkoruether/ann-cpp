@@ -6,7 +6,15 @@
 #include "MatrixMulUtil.h"
 
 namespace linalg {
-    DMatrix matrix_Mul(bool transposeA, bool transposeB, DMatrix &a, DMatrix &b) {
+    DMatrix matrix_Mul_Case0(const DMatrix &a, const DMatrix &b);
+
+    DMatrix matrix_Mul_Case1(const DMatrix &a, const DMatrix &b);
+
+    DMatrix matrix_Mul_Case2(const DMatrix &a, const DMatrix &b);
+
+    DMatrix matrix_Mul_Case3(const DMatrix &a, const DMatrix &b);
+
+    DMatrix matrix_Mul(bool transposeA, bool transposeB, const DMatrix &a, const DMatrix &b) {
         int key = transposeA + 2 * transposeB;
         switch (key) {
             case 0:
@@ -62,6 +70,6 @@ namespace linalg {
     //A transposed, B transposed
     DMatrix matrix_Mul_Case3(const DMatrix &a, const DMatrix &b) {
         //TODO optimize
-        return matrix_Mul_Case0(a.transpose(), b.transpose());
+        return matrix_Mul_Case0(a, b).transpose();
     }
 }

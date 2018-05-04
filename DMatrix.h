@@ -22,13 +22,10 @@ namespace linalg {
     public:
         DMatrix(unsigned rowCount, unsigned columnCount);
 
-        inline
         unsigned getRowCount() const;
 
-        inline
         unsigned getColumnCount() const;
 
-        inline
         unsigned getLength() const;
 
         DMatrix dup() const;
@@ -37,19 +34,14 @@ namespace linalg {
 
         pair<unsigned, unsigned> getSize() const;
 
-        inline
         double &operator[](unsigned index);
 
-        inline
         const double &operator[](unsigned index) const;
 
-        inline
         unsigned index(unsigned row, unsigned column) const;
 
-        inline
         double &operator()(unsigned row, unsigned column);
 
-        inline
         double operator()(unsigned row, unsigned column) const;
 
         void assertIndex(unsigned index) const;
@@ -62,9 +54,13 @@ namespace linalg {
 
         DMatrix operator+(const DMatrix &other) const;
 
+        DMatrix operator+=(const DMatrix &other);
+
         DMatrix addInPlace(const DMatrix &other);
 
         DMatrix operator-(const DMatrix &other) const;
+
+        DMatrix operator-=(const DMatrix &other);
 
         DMatrix subInPlace(const DMatrix &other);
 
@@ -78,26 +74,27 @@ namespace linalg {
 
         DMatrix operator*(double r) const;
 
+        DMatrix operator*=(double r);
+
         DMatrix scalarMulInPlace(double r);
 
         DMatrix operator/(double r) const;
 
+        DMatrix operator/=(double r);
+
         DMatrix scalarDivInPlace(double r);
 
-        DMatrix applyFunctionToElements(function<double(double)> &func);
+        DMatrix applyFunctionToElements(const function<double(double)> &func);
 
-        DMatrix applyFunctionToElementsInPlace(function<double(double)> &func);
+        DMatrix applyFunctionToElementsInPlace(const function<double(double)> &func);
 
-        inline
         bool isRowVector() const;
 
-        inline
         bool isColVector() const;
 
-        inline
         bool isScalar() const;
 
-        double vector_innerProduct(DMatrix &other) const;
+        double vector_innerProduct(const DMatrix &other) const;
 
         double vector_norm() const;
     };
