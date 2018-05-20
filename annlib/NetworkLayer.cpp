@@ -9,8 +9,8 @@ using namespace linalg;
 using namespace std;
 
 namespace annlib {
-    NetworkLayer::NetworkLayer(const DMatrix &biases, const DMatrix &weights,
-                               const function<double(double)> &activationFunction)
+    NetworkLayer::NetworkLayer(const DRowVector &biases, const DMatrix &weights,
+                               const ActivationFunction &activationFunction)
             : biases(biases), weights(weights), activationFunction(activationFunction) {
         if (!biases.isRowVector() || biases.getLength() != weights.getColumnCount()) {
             throw runtime_error("column count of weights and length of biases differ");
@@ -25,7 +25,11 @@ namespace annlib {
         return biases.getLength();
     }
 
-    const DMatrix &NetworkLayer::getBiases() const {
+    const DRowVector &NetworkLayer::getBiases() const {
+        return biases;
+    }
+
+    DRowVector &NetworkLayer::getBiases() {
         return biases;
     }
 
@@ -33,18 +37,28 @@ namespace annlib {
         return weights;
     }
 
-    const function<double(double)> &NetworkLayer::getActivationFunction() const {
+    DMatrix &NetworkLayer::getWeights() {
+        return weights;
+    }
+
+    const ActivationFunction &NetworkLayer::getActivationFunction() const {
         return activationFunction;
     }
 
-    DMatrix NetworkLayer::calculateWeightedInput(const DMatrix &in) const {
+    DRowVector NetworkLayer::calculateWeightedInput(const DRowVector &in) const {
         if (!in.isRowVector() || in.getLength() != getInputSize()) {
             throw runtime_error("wrong input dimensions");
         }
-        return matrix_Mul(false, false, in, weights).addInPlace(biases);
+        return (DRowVector) matrix_Mul(false, false, in, weights).addInPlace(biases);
     }
 
-    DMatrix NetworkLayer::feedForward(const DMatrix &in) const {
-        return calculateWeightedInput(in).applyFunctionToElementsInPlace(activationFunction);
+    DRowVector NetworkLayer::feedForward(const DRowVector &in) const {
+        return (DRowVector) calculateWeightedInput(in).applyFunctionToElementsInPlace(activationFunction.f);
+    }
+
+    pair<DMatrix, DMatrix> NetworkLayer::feedForwardDetailed(const DRowVector &in) {
+        DMatrix weightedInput = calculateWeightedInput(in);
+        DMatrix activation = weightedInput.applyFunctionToElements(activationFunction.f);
+        return pair<DMatrix, DMatrix>(weightedInput, activation);
     }
 }

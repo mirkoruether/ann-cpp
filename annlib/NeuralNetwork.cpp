@@ -4,6 +4,7 @@
 
 #include "NeuralNetwork.h"
 
+
 unsigned NeuralNetwork::getInputSize() const {
     return layers[0].getInputSize();
 }
@@ -16,14 +17,19 @@ const vector<NetworkLayer> &NeuralNetwork::getLayers() const {
     return layers;
 }
 
-DMatrix NeuralNetwork::feedForward(const DMatrix &in) const {
+vector<NetworkLayer> &NeuralNetwork::getLayers() {
+    return layers;
+}
+
+DRowVector NeuralNetwork::feedForward(const DRowVector &in) const {
     if (!in.isRowVector() || in.getLength() != getInputSize()) {
         throw runtime_error("Wrong input size!");
     }
 
-    DMatrix result = in;
+    const DRowVector *result = &in;
     for (const NetworkLayer &layer : layers) {
-        result = layer.feedForward(result);
+        const DRowVector layerResult = layer.feedForward(*result);
+        result = &layerResult;
     }
-    return result;
+    return *result;
 }

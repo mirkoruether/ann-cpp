@@ -6,7 +6,8 @@
 #define ANN_CPP_NETWORKLAYER_H
 
 #include "DMatrix.h"
-#include <functional>
+#include "ActivationFunction.h"
+#include "DRowVector.h"
 
 using namespace linalg;
 using namespace std;
@@ -14,25 +15,31 @@ using namespace std;
 namespace annlib {
     class NetworkLayer {
     private:
-        DMatrix biases;
+        DRowVector biases;
         DMatrix weights;
-        function<double(double)> activationFunction;
+        ActivationFunction activationFunction;
     public:
-        NetworkLayer(const DMatrix &biases, const DMatrix &weights, const function<double(double)> &activationFunction);
+        NetworkLayer(const DRowVector &biases, const DMatrix &weights, const ActivationFunction &activationFunction);
 
         unsigned getInputSize() const;
 
         unsigned getOutputSize() const;
 
-        const DMatrix &getBiases() const;
+        const DRowVector &getBiases() const;
+
+        DRowVector &getBiases();
 
         const DMatrix &getWeights() const;
 
-        const function<double(double)> &getActivationFunction() const;
+        DMatrix &getWeights();
 
-        DMatrix calculateWeightedInput(const DMatrix &in) const;
+        const ActivationFunction &getActivationFunction() const;
 
-        DMatrix feedForward(const DMatrix &in) const;
+        DRowVector calculateWeightedInput(const DRowVector &in) const;
+
+        DRowVector feedForward(const DRowVector &in) const;
+
+        pair<DMatrix, DMatrix> feedForwardDetailed(const DRowVector &in);
     };
 }
 

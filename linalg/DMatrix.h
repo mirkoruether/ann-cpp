@@ -8,19 +8,27 @@
 #include <cstdlib>
 #include <vector>
 #include <functional>
+#include <memory>
 
 using namespace std;
+using vec_ptr = shared_ptr<vector<double> >;
 
 namespace linalg {
+    class DRowVector;
+
+    class DColumnVector;
+
     class DMatrix {
-    private:
-        unsigned rowCount;
+    protected:
         unsigned columnCount;
-        unsigned length;
-        vector<double> vec;
+        vec_ptr vec;
 
     public:
+        DMatrix(vec_ptr vec_p, unsigned columnCount);
+
         DMatrix(unsigned rowCount, unsigned columnCount);
+
+        virtual ~DMatrix();
 
         unsigned getRowCount() const;
 
@@ -28,9 +36,9 @@ namespace linalg {
 
         unsigned getLength() const;
 
-        DMatrix dup() const;
+        virtual DMatrix &dup() const;
 
-        DMatrix transpose() const;
+        virtual DMatrix &transpose() const;
 
         pair<unsigned, unsigned> getSize() const;
 
@@ -52,47 +60,63 @@ namespace linalg {
 
         void assertSameLength(const DMatrix &other) const;
 
-        DMatrix operator+(const DMatrix &other) const;
+        virtual DMatrix &operator+(const DMatrix &other) const;
 
-        DMatrix operator+=(const DMatrix &other);
+        virtual DMatrix &operator+=(const DMatrix &other);
 
-        DMatrix& addInPlace(const DMatrix &other);
+        virtual DMatrix &addInPlace(const DMatrix &other);
 
-        DMatrix operator-(const DMatrix &other) const;
+        virtual DMatrix &operator-(const DMatrix &other) const;
 
-        DMatrix operator-=(const DMatrix &other);
+        virtual DMatrix &operator-=(const DMatrix &other);
 
-        DMatrix& subInPlace(const DMatrix &other);
+        virtual DMatrix &subInPlace(const DMatrix &other);
 
-        DMatrix elementWiseMul(const DMatrix &other) const;
+        virtual DMatrix &elementWiseMul(const DMatrix &other) const;
 
-        DMatrix& elementWiseMulInPlace(const DMatrix &other);
+        virtual DMatrix &elementWiseMulInPlace(const DMatrix &other);
 
-        DMatrix elementWiseDiv(const DMatrix &other) const;
+        virtual DMatrix &elementWiseDiv(const DMatrix &other) const;
 
-        DMatrix& elementWiseDivInPlace(const DMatrix &other);
+        virtual DMatrix &elementWiseDivInPlace(const DMatrix &other);
 
-        DMatrix operator*(double r) const;
+        virtual DMatrix &operator*(double r) const;
 
-        DMatrix operator*=(double r);
+        virtual DMatrix &operator*=(double r);
 
-        DMatrix& scalarMulInPlace(double r);
+        virtual DMatrix &scalarMulInPlace(double r);
 
-        DMatrix operator/(double r) const;
+        virtual DMatrix &operator/(double r) const;
 
-        DMatrix operator/=(double r);
+        virtual DMatrix &operator/=(double r);
 
-        DMatrix& scalarDivInPlace(double r);
+        virtual DMatrix &scalarDivInPlace(double r);
 
-        DMatrix applyFunctionToElements(const function<double(double)> &func);
+        virtual DMatrix &applyFunctionToElements(const function<double(double)> &func) const;
 
-        DMatrix& applyFunctionToElementsInPlace(const function<double(double)> &func);
+        virtual DMatrix &applyFunctionToElementsInPlace(const function<double(double)> &func);
 
         bool isRowVector() const;
 
-        bool isColVector() const;
+        explicit operator DRowVector();
+
+        DRowVector &toRowVectorDuplicate() const;
+
+        DRowVector &asRowVector();
+
+        bool isColumnVector() const;
+
+        explicit operator DColumnVector();
+
+        DColumnVector &toColumnVectorDuplicate() const;
+
+        DColumnVector &asColumnVector();
 
         bool isScalar() const;
+
+        explicit operator double();
+
+        double toScalar() const;
 
         double vector_innerProduct(const DMatrix &other) const;
 

@@ -1,11 +1,17 @@
 <component name="ProjectDictionaryState">
   <dictionary name="Mirko">
     <words>
+      <w>activationfunction</w>
       <w>annlib</w>
+      <w>costfunction</w>
+      <w>dcolumnvector</w>
       <w>dmatrix</w>
+      <w>drowvector</w>
+      <w>gtest</w>
       <w>linalg</w>
       <w>matrixmulutil</w>
       <w>mirko</w>
+      <w>momentumstochasticgradientdescenttrainer</w>
       <w>networklayer</w>
       <w>neuralnetwork</w>
       <w>noninfringement</w>

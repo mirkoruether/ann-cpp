@@ -1,1 +1,1 @@
-add_library(annlib NetworkLayer.h NetworkLayer.cpp NeuralNetwork.h NeuralNetwork.cpp)
+add_library(annlib NetworkLayer.h NetworkLayer.cpp NeuralNetwork.h NeuralNetwork.cpp MomentumStochasticGradientDescentTrainer.cpp MomentumStochasticGradientDescentTrainer.h ActivationFunction.cpp ActivationFunction.h CostFunction.cpp CostFunction.h)

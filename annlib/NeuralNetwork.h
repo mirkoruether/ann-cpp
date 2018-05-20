@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "NetworkLayer.h"
+#include "DRowVector.h"
 
 using namespace linalg;
 using namespace annlib;
@@ -22,9 +23,11 @@ namespace annlib {
 
         unsigned getOutputSize() const;
 
-        DMatrix feedForward(const DMatrix &in) const;
+        DRowVector feedForward(const DRowVector &in) const;
 
         const vector<NetworkLayer> &getLayers() const;
+
+        vector<NetworkLayer> &getLayers();
     };
 }
 
