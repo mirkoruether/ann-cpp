@@ -19,6 +19,11 @@ namespace annlib {
         vector<NetworkLayer> layers;
 
     public:
+        NeuralNetwork(const vector<DMatrix> &weightsList, const vector<DRowVector> &biasesList,
+                      const function<double(double)> &activationFunction);
+
+        explicit NeuralNetwork(const vector<NetworkLayer> &layers);
+
         unsigned getInputSize() const;
 
         unsigned getOutputSize() const;

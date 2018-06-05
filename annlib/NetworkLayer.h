@@ -17,9 +17,10 @@ namespace annlib {
     private:
         DRowVector biases;
         DMatrix weights;
-        ActivationFunction activationFunction;
+        function<double(double)> activationFunction;
     public:
-        NetworkLayer(const DRowVector &biases, const DMatrix &weights, const ActivationFunction &activationFunction);
+        NetworkLayer(const DMatrix &weights, const DRowVector &biases,
+                     const function<double(double)> &activationFunction);
 
         unsigned getInputSize() const;
 
@@ -33,13 +34,11 @@ namespace annlib {
 
         DMatrix &getWeights();
 
-        const ActivationFunction &getActivationFunction() const;
+        const function<double(double)> &getActivationFunction() const;
 
         DRowVector calculateWeightedInput(const DRowVector &in) const;
 
         DRowVector feedForward(const DRowVector &in) const;
-
-        pair<DMatrix, DMatrix> feedForwardDetailed(const DRowVector &in);
     };
 }
 

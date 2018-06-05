@@ -9,8 +9,8 @@ using namespace linalg;
 using namespace std;
 
 namespace annlib {
-    NetworkLayer::NetworkLayer(const DRowVector &biases, const DMatrix &weights,
-                               const ActivationFunction &activationFunction)
+    NetworkLayer::NetworkLayer(const DMatrix &weights, const DRowVector &biases,
+                               const function<double(double)> &activationFunction)
             : biases(biases), weights(weights), activationFunction(activationFunction) {
         if (!biases.isRowVector() || biases.getLength() != weights.getColumnCount()) {
             throw runtime_error("column count of weights and length of biases differ");
@@ -41,7 +41,7 @@ namespace annlib {
         return weights;
     }
 
-    const ActivationFunction &NetworkLayer::getActivationFunction() const {
+    const function<double(double)> &NetworkLayer::getActivationFunction() const {
         return activationFunction;
     }
 
@@ -53,12 +53,6 @@ namespace annlib {
     }
 
     DRowVector NetworkLayer::feedForward(const DRowVector &in) const {
-        return (DRowVector) calculateWeightedInput(in).applyFunctionToElementsInPlace(activationFunction.f);
-    }
-
-    pair<DMatrix, DMatrix> NetworkLayer::feedForwardDetailed(const DRowVector &in) {
-        DMatrix weightedInput = calculateWeightedInput(in);
-        DMatrix activation = weightedInput.applyFunctionToElements(activationFunction.f);
-        return pair<DMatrix, DMatrix>(weightedInput, activation);
+        return (DRowVector) calculateWeightedInput(in).applyFunctionToElementsInPlace(activationFunction);
     }
 }

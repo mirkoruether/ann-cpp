@@ -26,10 +26,24 @@ DRowVector NeuralNetwork::feedForward(const DRowVector &in) const {
         throw runtime_error("Wrong input size!");
     }
 
-    const DRowVector *result = &in;
+    DRowVector result = in;
     for (const NetworkLayer &layer : layers) {
-        const DRowVector layerResult = layer.feedForward(*result);
-        result = &layerResult;
+        const DRowVector layerResult = layer.feedForward(result);
+        result = layerResult;
     }
-    return *result;
+    return result;
+}
+
+NeuralNetwork::NeuralNetwork(const vector<NetworkLayer> &layers)
+        : layers(layers) {}
+
+NeuralNetwork::NeuralNetwork(const vector<DMatrix> &weightsList, const vector<DRowVector> &biasesList,
+                             const function<double(double)> &activationFunction) {
+    if (weightsList.size() != biasesList.size())
+        throw runtime_error("weightsList and biasesList differ in length");
+
+    layers = vector<NetworkLayer>(biasesList.size());
+    for (int i = 0; i < layers.size(); ++i) {
+        layers[i] = NetworkLayer(weightsList[i], biasesList[i], activationFunction);
+    }
 }
