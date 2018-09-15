@@ -1,1 +1,1 @@
-add_library(linalg DMatrix.h DMatrix.cpp MatrixMulUtil.h MatrixMulUtil.cpp DRowVector.cpp DRowVector.h DColumnVector.cpp DColumnVector.h)
+add_library(linalg DMatrix.h DMatrix.cpp MatrixMulUtil.h MatrixMulUtil.cpp)

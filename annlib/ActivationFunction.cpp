@@ -1,18 +1,14 @@
 //
-// Created by Mirko on 16.05.2018.
+// Created by Mirko on 14.09.2018.
 //
 
 #include "ActivationFunction.h"
 
+using namespace annlib;
+
 namespace annlib {
-    ActivationFunction::ActivationFunction(const function<double(double)> &f, const function<double(double)> &df)
-            : f(f), df(df) {}
+    LogisticActivationFunction::LogisticActivationFunction(double T)
+            : ActivationFunction([this, T](double d) { return 1 / (1 + exp(-d / T)); },
+                                 [this, T](double d) { return exp(d / T) / (T * pow(exp(d / T) + 1.0, 2.0)); }) {}
 
-    double ActivationFunction::apply(double d) const {
-        return f(d);
-    }
-
-    double ActivationFunction::apply_derivative(double d) const {
-        return df(d);
-    }
 }

@@ -16,28 +16,16 @@ namespace annlib {
         const function<double(double)> &f;
         const function<double(double)> &df;
 
-        ActivationFunction(const function<double(double)> &f, const function<double(double)> &df);
+        ActivationFunction(const function<double(double)> &f, const function<double(double)> &df) : f(f), df(df) {}
 
-        double apply(double d) const;
+        double apply(double d) const { return f(d); }
 
-        double apply_derivative(double d) const;
+        double apply_derivative(double d) const { return df(d); }
     };
 
-    class LogisticActivationFunction : ActivationFunction {
-    private:
-        double T;
-
-        double f(double x) {
-            1 / (1 + exp(-x / T));
-        }
-
-        double df(double x) {
-            exp(x / T) / (T * pow(exp(x / T) + 1.0, 2.0));
-        }
-
+    class LogisticActivationFunction : public ActivationFunction {
     public:
-        explicit LogisticActivationFunction(double T)
-                : T(T), ActivationFunction(f, df) {}
+        explicit LogisticActivationFunction(double T);
     };
 }
 

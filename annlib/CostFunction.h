@@ -21,6 +21,13 @@ namespace annlib {
         virtual DMatrix calculateErrorOfLastLayer(const DMatrix &netOutput, const DMatrix &solution,
                                                   const DMatrix &lastLayerDerivativeActivation);
     };
+
+    class QuadraticCosts : public CostFunction {
+    public:
+        double calculateCosts(const DMatrix &netOutput, const DMatrix &solution) const override;
+
+        DMatrix calculateGradient(const DMatrix &netOutput, const DMatrix &solution) const override;
+    };
 }
 
 

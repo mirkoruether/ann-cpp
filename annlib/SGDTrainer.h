@@ -6,7 +6,7 @@
 #define ANN_CPP_MOMENTUMSTOCHASTICGRADIENTDESCENTTRAINER_H
 
 #include <vector>
-#include "DMatrix.h";
+#include "DMatrix.h"
 #include "ActivationFunction.h"
 #include "CostFunction.h"
 #include "TrainingData.h"
@@ -30,19 +30,12 @@ namespace annlib {
         double learningRate;
         double momentumCoEfficient;
         unsigned miniBatchSize;
-        ActivationFunction activationFunction;
-        CostFunction costFunction;
-        REG costFunctionRegularization;
+        shared_ptr<ActivationFunction> activationFunction;
+        shared_ptr<CostFunction> costFunction;
+        shared_ptr<REG> costFunctionRegularization;
 
     public:
-        SGDTrainer()
-                : learningRate(0.1),
-                  momentumCoEfficient(0),
-                  miniBatchSize(10),
-                  activationFunction(LogisticActivationFunction(1)),
-                  costFunction(costFunction), //TODO default init
-                  costFunctionRegularization(costFunctionRegularization) //TODO default init
-        {}
+        SGDTrainer();
 
         void train(const vector<TrainingData> &data, int epochs);
 
@@ -65,18 +58,18 @@ namespace annlib {
             return *this;
         }
 
-        SGDTrainer &withActivationFunction(const ActivationFunction &activationFunction) {
-            this->activationFunction = activationFunction;
+        SGDTrainer &withActivationFunction(shared_ptr<ActivationFunction> activationFunction) {
+            this->activationFunction = move(activationFunction);
             return *this;
         }
 
-        SGDTrainer &withCostFunction(const CostFunction &costFunction) {
-            this->costFunction = costFunction;
+        SGDTrainer &withCostFunction(shared_ptr<CostFunction> costFunction) {
+            this->costFunction = move(costFunction);
             return *this;
         }
 
-        SGDTrainer &withCostFunctionRegularization(const REG &costFunctionRegularization) {
-            this->costFunctionRegularization = costFunctionRegularization;
+        SGDTrainer &withCostFunctionRegularization(shared_ptr<REG> costFunctionRegularization) {
+            this->costFunctionRegularization = move(costFunctionRegularization);
             return *this;
         }
     };

@@ -3,7 +3,6 @@
 //
 
 #include "DMatrix.h"
-#include "DRowVector.h"
 #include <cmath>
 
 using namespace std;
@@ -36,7 +35,7 @@ namespace linalg {
         return ((unsigned) vec->size());
     }
 
-    DMatrix &DMatrix::dup() const {
+    DMatrix DMatrix::dup() const {
         DMatrix result(getRowCount(), getColumnCount());
         for (unsigned i = 0; i < getLength(); ++i) {
             result[i] = vec->operator[](i);
@@ -44,7 +43,7 @@ namespace linalg {
         return result;
     }
 
-    DMatrix &DMatrix::transpose() const {
+    DMatrix DMatrix::transpose() const {
         DMatrix result = DMatrix(getColumnCount(), getRowCount());
         for (unsigned i = 0; i < getRowCount(); ++i) {
             for (unsigned j = 0; j < getColumnCount(); ++j) {
@@ -209,12 +208,12 @@ namespace linalg {
         return getRowCount() == 1;
     }
 
-    DRowVector &DMatrix::asRowVector() {
+    DRowVector DMatrix::asRowVector() {
         DRowVector vec = DRowVector(vec);
         return vec;
     }
 
-    DRowVector &DMatrix::toRowVectorDuplicate() const {
+    DRowVector DMatrix::toRowVectorDuplicate() const {
         return dup().asRowVector();
     }
 
@@ -222,12 +221,12 @@ namespace linalg {
         return getColumnCount() == 1;
     }
 
-    DColumnVector &DMatrix::asColumnVector() {
-        DColumnVector vec = DColumnVector(vec);
-        return vec;
+    DColumnVector DMatrix::asColumnVector() {
+        DColumnVector columnVector = DColumnVector(vec);
+        return columnVector;
     }
 
-    DColumnVector &DMatrix::toColumnVectorDuplicate() const {
+    DColumnVector DMatrix::toColumnVectorDuplicate() const {
         return dup().asColumnVector();
     }
 
@@ -274,5 +273,21 @@ namespace linalg {
         if (!isScalar())
             throw logic_error("Implicit conversion not possible, matrix is no scalar value");
         return toScalar();
+    }
+
+    DRowVector::DRowVector(unsigned columnCount)
+            : DMatrix(1, columnCount) {
+    }
+
+    DRowVector::DRowVector(vec_ptr vec_p)
+            : DMatrix(vec_p, (unsigned) vec_p->size()) {
+    }
+
+    DColumnVector::DColumnVector(unsigned rowCount)
+            : DMatrix(rowCount, 1) {
+    }
+
+    DColumnVector::DColumnVector(vec_ptr vec_p)
+            : DMatrix(move(vec_p), 1) {
     }
 }

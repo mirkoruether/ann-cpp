@@ -7,7 +7,6 @@
 
 #include "DMatrix.h"
 #include "ActivationFunction.h"
-#include "DRowVector.h"
 
 using namespace linalg;
 using namespace std;

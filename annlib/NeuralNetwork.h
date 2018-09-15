@@ -7,7 +7,6 @@
 
 #include <vector>
 #include "NetworkLayer.h"
-#include "DRowVector.h"
 
 using namespace linalg;
 using namespace annlib;

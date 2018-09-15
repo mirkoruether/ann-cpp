@@ -36,9 +36,9 @@ namespace linalg {
 
         unsigned getLength() const;
 
-        virtual DMatrix &dup() const;
+        virtual DMatrix dup() const;
 
-        virtual DMatrix &transpose() const;
+        virtual DMatrix transpose() const;
 
         pair<unsigned, unsigned> getSize() const;
 
@@ -100,17 +100,17 @@ namespace linalg {
 
         explicit operator DRowVector();
 
-        DRowVector &toRowVectorDuplicate() const;
+        DRowVector toRowVectorDuplicate() const;
 
-        DRowVector &asRowVector();
+        DRowVector asRowVector();
 
         bool isColumnVector() const;
 
         explicit operator DColumnVector();
 
-        DColumnVector &toColumnVectorDuplicate() const;
+        DColumnVector toColumnVectorDuplicate() const;
 
-        DColumnVector &asColumnVector();
+        DColumnVector asColumnVector();
 
         bool isScalar() const;
 
@@ -121,6 +121,20 @@ namespace linalg {
         double vector_innerProduct(const DMatrix &other) const;
 
         double vector_norm() const;
+    };
+
+    class DRowVector : public DMatrix {
+    public:
+        explicit DRowVector(vec_ptr vec_p);
+
+        explicit DRowVector(unsigned columnCount);
+    };
+
+    class DColumnVector : public DMatrix {
+    public:
+        explicit DColumnVector(vec_ptr vec_p);
+
+        explicit DColumnVector(unsigned rowCount);
     };
 }
 

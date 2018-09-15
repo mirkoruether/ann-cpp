@@ -42,8 +42,8 @@ NeuralNetwork::NeuralNetwork(const vector<DMatrix> &weightsList, const vector<DR
     if (weightsList.size() != biasesList.size())
         throw runtime_error("weightsList and biasesList differ in length");
 
-    layers = vector<NetworkLayer>(biasesList.size());
-    for (int i = 0; i < layers.size(); ++i) {
-        layers[i] = NetworkLayer(weightsList[i], biasesList[i], activationFunction);
+    layers = vector<NetworkLayer>();
+    for (int i = 0; i < biasesList.size(); ++i) {
+        layers.emplace_back(NetworkLayer(weightsList[i], biasesList[i], activationFunction));
     }
 }
