@@ -1,5 +1,5 @@
 //
-// Created by Mirko on 05.06.2018.
+// Created by Mirko on 23.07.2018.
 //
 
 #ifndef ANN_CPP_TRAININGDATA_H

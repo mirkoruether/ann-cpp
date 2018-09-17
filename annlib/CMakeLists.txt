@@ -1,1 +1,1 @@
-add_library(annlib NetworkLayer.h NetworkLayer.cpp NeuralNetwork.h NeuralNetwork.cpp SGDTrainer.cpp SGDTrainer.h ActivationFunction.cpp ActivationFunction.h CostFunction.cpp CostFunction.h TrainingData.h ActivationFunction.cpp)
+add_library(annlib NetworkLayer.h NetworkLayer.cpp NeuralNetwork.h NeuralNetwork.cpp SGDTrainer.cpp SGDTrainer.h ActivationFunction.cpp ActivationFunction.h CostFunction.cpp CostFunction.h TrainingData.h ActivationFunction.cpp CostFunctionRegularization.cpp CostFunctionRegularization.h)

@@ -14,19 +14,19 @@ using namespace linalg;
 namespace annlib {
     class CostFunction {
     public:
-        virtual double calculateCosts(const DMatrix &netOutput, const DMatrix &solution) const = 0;
+        virtual double calculateCosts(const DRowVector &netOutput, const DRowVector &solution) const = 0;
 
-        virtual DMatrix calculateGradient(const DMatrix &netOutput, const DMatrix &solution) const = 0;
+        virtual DRowVector calculateGradient(const DRowVector &netOutput, const DRowVector &solution) const = 0;
 
-        virtual DMatrix calculateErrorOfLastLayer(const DMatrix &netOutput, const DMatrix &solution,
-                                                  const DMatrix &lastLayerDerivativeActivation);
+        virtual DRowVector calculateErrorOfLastLayer(const DRowVector &netOutput, const DRowVector &solution,
+                                                     const DRowVector &lastLayerDerivativeActivation);
     };
 
     class QuadraticCosts : public CostFunction {
     public:
-        double calculateCosts(const DMatrix &netOutput, const DMatrix &solution) const override;
+        double calculateCosts(const DRowVector &netOutput, const DRowVector &solution) const override;
 
-        DMatrix calculateGradient(const DMatrix &netOutput, const DMatrix &solution) const override;
+        DRowVector calculateGradient(const DRowVector &netOutput, const DRowVector &solution) const override;
     };
 }
 

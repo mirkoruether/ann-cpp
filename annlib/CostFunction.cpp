@@ -6,12 +6,13 @@
 #include <cmath>
 
 
-DMatrix annlib::CostFunction::calculateErrorOfLastLayer(const DMatrix &netOutput, const DMatrix &solution,
-                                                        const DMatrix &lastLayerDerivativeActivation) {
-    return calculateGradient(netOutput, solution).elementWiseMulInPlace(lastLayerDerivativeActivation);
+DRowVector annlib::CostFunction::calculateErrorOfLastLayer(const DRowVector &netOutput, const DRowVector &solution,
+                                                           const DRowVector &lastLayerDerivativeActivation) {
+    return (DRowVector) calculateGradient(netOutput, solution)
+            .elementWiseMulInPlace(lastLayerDerivativeActivation);
 }
 
-double annlib::QuadraticCosts::calculateCosts(const DMatrix &netOutput, const DMatrix &solution) const {
+double annlib::QuadraticCosts::calculateCosts(const DRowVector &netOutput, const DRowVector &solution) const {
     netOutput.assertSameSize(solution);
 
     double result = 0.0;
@@ -21,6 +22,6 @@ double annlib::QuadraticCosts::calculateCosts(const DMatrix &netOutput, const DM
     return 0.5 * result;
 }
 
-DMatrix annlib::QuadraticCosts::calculateGradient(const DMatrix &netOutput, const DMatrix &solution) const {
-    return netOutput - solution;
+DRowVector annlib::QuadraticCosts::calculateGradient(const DRowVector &netOutput, const DRowVector &solution) const {
+    return (DRowVector) (netOutput - solution);
 }
