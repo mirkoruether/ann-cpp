@@ -10,19 +10,20 @@
 #include "ActivationFunction.h"
 #include "CostFunction.h"
 #include "TrainingData.h"
-#include <vector>
+#include "CostFunctionRegularization.h"
 
 using namespace std;
 using namespace linalg;
 
 namespace annlib {
     class SGDTrainer {
-        using REG = function<DMatrix(DMatrix, double, unsigned)>;
     private:
         vector<DMatrix> weights;
         vector<DRowVector> biases;
 
         vector<DMatrix> velocities;
+
+    public:
 
         //------------------
         // Hyper Parameters
@@ -32,9 +33,8 @@ namespace annlib {
         unsigned miniBatchSize;
         shared_ptr<ActivationFunction> activationFunction;
         shared_ptr<CostFunction> costFunction;
-        shared_ptr<REG> costFunctionRegularization;
+        shared_ptr<CostFunctionRegularization> costFunctionRegularization;
 
-    public:
         SGDTrainer();
 
         void train(const vector<TrainingData> &data, int epochs);
@@ -42,36 +42,6 @@ namespace annlib {
         void trainEpoch(const vector<TrainingData> &data);
 
         void trainMiniBatch(const vector<TrainingData> &batch);
-
-        SGDTrainer &withLearningRate(double learningRate) {
-            this->learningRate = learningRate;
-            return *this;
-        }
-
-        SGDTrainer &withMomentumCoEfficient(double momentumCoEfficient) {
-            this->momentumCoEfficient = momentumCoEfficient;
-            return *this;
-        }
-
-        SGDTrainer &withMiniBatchSize(unsigned miniBatchSize) {
-            this->miniBatchSize = miniBatchSize;
-            return *this;
-        }
-
-        SGDTrainer &withActivationFunction(shared_ptr<ActivationFunction> activationFunction) {
-            this->activationFunction = move(activationFunction);
-            return *this;
-        }
-
-        SGDTrainer &withCostFunction(shared_ptr<CostFunction> costFunction) {
-            this->costFunction = move(costFunction);
-            return *this;
-        }
-
-        SGDTrainer &withCostFunctionRegularization(shared_ptr<REG> costFunctionRegularization) {
-            this->costFunctionRegularization = move(costFunctionRegularization);
-            return *this;
-        }
     };
 }
 
