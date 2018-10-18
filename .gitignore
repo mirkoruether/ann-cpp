@@ -31,6 +31,7 @@
 *.out
 *.app
 
+/.vs/*
 /cmake-build-*
 /test/lib/gtest-1-8-0/*
 !/test/lib/gtest-1-8-0/CMakeLists.txt

@@ -1,7 +1,3 @@
-//
-// Created by Mirko on 20.02.2018.
-//
-
 #ifndef LINALG_DMATRIX_H
 #define LINALG_DMATRIX_H
 
@@ -11,131 +7,160 @@
 #include <memory>
 
 using namespace std;
-using vec_ptr = shared_ptr<vector<double> >;
+using vec_ptr = shared_ptr<vector<double>>;
 
-namespace linalg {
-    class DRowVector;
+namespace linalg
+{
+	class DRowVector;
 
-    class DColumnVector;
+	class DColumnVector;
 
-    class DMatrix {
-    protected:
-        unsigned columnCount;
-        vec_ptr vec;
+	class DMatrix
+	{
+	protected:
+		unsigned columnCount;
+		vec_ptr vec;
 
-    public:
-        DMatrix(vec_ptr vec_p, unsigned columnCount);
+	public:
+		DMatrix(vec_ptr vec_p, unsigned columnCount);
 
-        DMatrix(unsigned rowCount, unsigned columnCount);
+		DMatrix(unsigned rowCount, unsigned columnCount);
 
-        virtual ~DMatrix();
+		DMatrix() : DMatrix(0, 0)
+		{
+		}
 
-        unsigned getRowCount() const;
+		virtual ~DMatrix() = default;
 
-        unsigned getColumnCount() const;
+		unsigned getRowCount() const;
 
-        unsigned getLength() const;
+		unsigned getColumnCount() const;
 
-        virtual DMatrix dup() const;
+		unsigned getLength() const;
 
-        virtual DMatrix transpose() const;
+		virtual DMatrix dup() const;
 
-        pair<unsigned, unsigned> getSize() const;
+		virtual DMatrix transpose() const;
 
-        double &operator[](unsigned index);
+		pair<unsigned, unsigned> getSize() const;
 
-        const double &operator[](unsigned index) const;
+		double& operator[](unsigned index);
 
-        unsigned index(unsigned row, unsigned column) const;
+		const double& operator[](unsigned index) const;
 
-        double &operator()(unsigned row, unsigned column);
+		unsigned index(unsigned row, unsigned column) const;
 
-        double operator()(unsigned row, unsigned column) const;
+		double& operator()(unsigned row, unsigned column);
 
-        void assertIndex(unsigned index) const;
+		double operator()(unsigned row, unsigned column) const;
 
-        void assertIndex(unsigned row, unsigned column) const;
+		void assertIndex(unsigned index) const;
 
-        void assertSameSize(const DMatrix &other) const;
+		void assertIndex(unsigned row, unsigned column) const;
 
-        void assertSameLength(const DMatrix &other) const;
+		void assertSameSize(const DMatrix& other) const;
 
-        virtual DMatrix &operator+(const DMatrix &other) const;
+		void assertSameLength(const DMatrix& other) const;
 
-        virtual DMatrix &operator+=(const DMatrix &other);
+		virtual DMatrix operator+(const DMatrix& other) const;
 
-        virtual DMatrix &addInPlace(const DMatrix &other);
+		virtual DMatrix operator+=(const DMatrix& other);
 
-        virtual DMatrix &operator-(const DMatrix &other) const;
+		virtual DMatrix addInPlace(const DMatrix& other);
 
-        virtual DMatrix &operator-=(const DMatrix &other);
+		virtual DMatrix operator-(const DMatrix& other) const;
 
-        virtual DMatrix &subInPlace(const DMatrix &other);
+		virtual DMatrix operator-=(const DMatrix& other);
 
-        virtual DMatrix &elementWiseMul(const DMatrix &other) const;
+		virtual DMatrix subInPlace(const DMatrix& other);
 
-        virtual DMatrix &elementWiseMulInPlace(const DMatrix &other);
+		virtual DMatrix elementWiseMul(const DMatrix& other) const;
 
-        virtual DMatrix &elementWiseDiv(const DMatrix &other) const;
+		virtual DMatrix elementWiseMulInPlace(const DMatrix& other);
 
-        virtual DMatrix &elementWiseDivInPlace(const DMatrix &other);
+		virtual DMatrix elementWiseDiv(const DMatrix& other) const;
 
-        virtual DMatrix &operator*(double r) const;
+		virtual DMatrix elementWiseDivInPlace(const DMatrix& other);
 
-        virtual DMatrix &operator*=(double r);
+		virtual DMatrix operator*(double r) const;
 
-        virtual DMatrix &scalarMulInPlace(double r);
+		virtual DMatrix operator*=(double r);
 
-        virtual DMatrix &operator/(double r) const;
+		virtual DMatrix scalarMulInPlace(double r);
 
-        virtual DMatrix &operator/=(double r);
+		virtual DMatrix operator/(double r) const;
 
-        virtual DMatrix &scalarDivInPlace(double r);
+		virtual DMatrix operator/=(double r);
 
-        virtual DMatrix &applyFunctionToElements(const function<double(double)> &func) const;
+		virtual DMatrix scalarDivInPlace(double r);
 
-        virtual DMatrix &applyFunctionToElementsInPlace(const function<double(double)> &func);
+		virtual DMatrix applyFunctionToElements(const function<double(double)>& func) const;
 
-        bool isRowVector() const;
+		virtual DMatrix applyFunctionToElementsInPlace(const function<double(double)>& func);
 
-        explicit operator DRowVector();
+		bool isRowVector() const;
 
-        DRowVector toRowVectorDuplicate() const;
+		explicit operator DRowVector() const;
 
-        DRowVector asRowVector();
+		DRowVector toRowVectorDuplicate() const;
 
-        bool isColumnVector() const;
+		DRowVector asRowVector() const;
 
-        explicit operator DColumnVector();
+		bool isColumnVector() const;
 
-        DColumnVector toColumnVectorDuplicate() const;
+		explicit operator DColumnVector() const;
 
-        DColumnVector asColumnVector();
+		DColumnVector toColumnVectorDuplicate() const;
 
-        bool isScalar() const;
+		DColumnVector asColumnVector() const;
 
-        explicit operator double();
+		bool isScalar() const;
 
-        double toScalar() const;
+		explicit operator double() const;
 
-        double vector_innerProduct(const DMatrix &other) const;
+		double toScalar() const;
 
-        double vector_norm() const;
-    };
+		double vector_innerProduct(const DMatrix& other) const;
 
-    class DRowVector : public DMatrix {
-    public:
-        explicit DRowVector(vec_ptr vec_p);
+		double vector_norm() const;
+	};
 
-        explicit DRowVector(unsigned columnCount);
-    };
+	class DRowVector : public DMatrix
+	{
+	public:
+		explicit DRowVector(vec_ptr vec_p)
+			: DMatrix(move(vec_p), static_cast<unsigned>(vec_p->size()))
+		{
+		}
 
-    class DColumnVector : public DMatrix {
-    public:
-        explicit DColumnVector(vec_ptr vec_p);
+		explicit DRowVector(unsigned columnCount)
+			: DMatrix(1, columnCount)
+		{
+		}
 
-        explicit DColumnVector(unsigned rowCount);
-    };
+		DRowVector() : DRowVector(0)
+		{
+		}
+	};
+
+
+	class DColumnVector : public DMatrix
+	{
+	public:
+		explicit DColumnVector(vec_ptr vec_p)
+			: DMatrix(move(vec_p), 1)
+		{
+		}
+
+		explicit DColumnVector(unsigned rowCount)
+			: DMatrix(rowCount, 1)
+		{
+		}
+
+		DColumnVector(): DColumnVector(0)
+		{
+		}
+	};
 }
 
 

@@ -1,7 +1,3 @@
-//
-// Created by Mirko on 16.05.2018.
-//
-
 #ifndef ANN_CPP_MOMENTUMSTOCHASTICGRADIENTDESCENTTRAINER_H
 #define ANN_CPP_MOMENTUMSTOCHASTICGRADIENTDESCENTTRAINER_H
 
@@ -15,34 +11,41 @@
 using namespace std;
 using namespace linalg;
 
-namespace annlib {
-    class SGDTrainer {
-    private:
-        vector<DMatrix> weights;
-        vector<DRowVector> biases;
+using backpropResult = tuple<vector<DRowVector>, vector<DRowVector>>;
 
-        vector<DMatrix> velocities;
+namespace annlib
+{
+	class SGDTrainer
+	{
+	private:
+		vector<DMatrix> weights;
+		vector<DRowVector> biases;
 
-    public:
+		backpropResult feedForwardAndBackpropError(TrainingData data);
 
-        //------------------
-        // Hyper Parameters
-        //------------------
-        double learningRate;
-        double momentumCoEfficient;
-        unsigned miniBatchSize;
-        shared_ptr<ActivationFunction> activationFunction;
-        shared_ptr<CostFunction> costFunction;
-        shared_ptr<CostFunctionRegularization> costFunctionRegularization;
+		void updateWeights(vector<backpropResult> results, unsigned trainingSetSize);
+		void updateBiases(vector<backpropResult> results);
 
-        SGDTrainer();
+	public:
 
-        void train(const vector<TrainingData> &data, int epochs);
+		//------------------
+		// Hyper Parameters
+		//------------------
+		double learningRate;
+		double momentumCoEfficient;
+		unsigned miniBatchSize;
+		shared_ptr<ActivationFunction> activationFunction;
+		shared_ptr<CostFunction> costFunction;
+		shared_ptr<CostFunctionRegularization> costFunctionRegularization;
 
-        void trainEpoch(const vector<TrainingData> &data);
+		SGDTrainer();
 
-        void trainMiniBatch(const vector<TrainingData> &batch);
-    };
+		void train(const vector<TrainingData>& data, int epochs);
+
+		void trainEpoch(const vector<TrainingData>& data);
+
+		void trainMiniBatch(const vector<TrainingData>& batch, unsigned trainingSetSize);
+	};
 }
 
 #endif //ANN_CPP_MOMENTUMSTOCHASTICGRADIENTDESCENTTRAINER_H

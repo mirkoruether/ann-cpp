@@ -1,7 +1,3 @@
-//
-// Created by Mirko on 04.05.2018.
-//
-
 #include <iostream>
 #include <DMatrix.h>
 #include <NeuralNetwork.h>
@@ -10,7 +6,7 @@ using namespace std;
 using namespace linalg;
 
 int main() {
-    NeuralNetwork nn();
+   // NeuralNetwork nn();
 
     DMatrix matrix(2, 2);
     matrix(0, 0) = 1;
