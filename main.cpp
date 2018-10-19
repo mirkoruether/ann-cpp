@@ -1,20 +1,29 @@
 #include <iostream>
 #include <DMatrix.h>
 #include <NeuralNetwork.h>
+#include "SGDTrainer.h"
+#include "MNIST.h"
 
 using namespace std;
 using namespace linalg;
 
-int main() {
-   // NeuralNetwork nn();
+using MNIST_Data = vector<tuple<DRowVector, DRowVector>>;
 
-    DMatrix matrix(2, 2);
-    matrix(0, 0) = 1;
-    matrix(0, 1) = 2;
-    matrix(1, 0) = 3;
-    matrix(1, 1) = 4;
+int main()
+{
+	//TODO add paths
+	const string trainingImages = "";
+	const string trainingLabels = "";
+	const string testImages = "";
+	const string testLabels = "";
 
-    cout << matrix.getLength() << endl;
-    int i;
-    cin >> i;
+	vector<unsigned> sizes(3);
+	sizes[0] = 784;
+	sizes[1] = 100;
+	sizes[2] = 10;
+
+	SGDTrainer trainer(sizes);
+	trainer.costFunction = make_shared<CrossEntropyCosts>(CrossEntropyCosts());
+
+	MNIST_Data training = MNISTLoadCombined(trainingImages, trainingLabels);
 }

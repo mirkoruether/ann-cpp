@@ -32,6 +32,8 @@ namespace linalg
 
 		virtual ~DMatrix() = default;
 
+		static DMatrix ones(unsigned rows, unsigned cols);
+
 		unsigned getRowCount() const;
 
 		unsigned getColumnCount() const;

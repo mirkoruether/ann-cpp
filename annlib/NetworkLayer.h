@@ -33,8 +33,6 @@ namespace annlib
 
 		function<double(double)> getActivationFunction() const;
 
-		DRowVector calculateWeightedInput(const DRowVector& in) const;
-
 		DRowVector feedForward(const DRowVector& in) const;
 	};
 }

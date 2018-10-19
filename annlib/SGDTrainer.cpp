@@ -1,6 +1,7 @@
 #include "SGDTrainer.h"
 #include <random>
 #include "MatrixMulUtil.h"
+#include "CostFunctionRegularization.h"
 
 using namespace annlib;
 using namespace std;
@@ -46,6 +47,11 @@ void SGDTrainer::trainMiniBatch(const vector<TrainingData>& batch, unsigned trai
 
 	updateWeights(backpropResults, trainingSetSize);
 	updateBiases(backpropResults);
+}
+
+const NeuralNetwork SGDTrainer::toNeuralNet() const
+{
+	return NeuralNetwork(weights, biases, activationFunction->f);
 }
 
 
@@ -125,12 +131,15 @@ void SGDTrainer::updateBiases(vector<backpropResult> results)
 	}
 }
 
-SGDTrainer::SGDTrainer()
-	: learningRate(0.1),
+SGDTrainer::SGDTrainer(const vector<unsigned>& sizes)
+	: weights(sizes.size() - 1),
+	  biases(sizes.size() - 1),
+	  learningRate(0.1),
 	  momentumCoEfficient(0),
 	  miniBatchSize(10),
-	  activationFunction(make_shared<ActivationFunction>(LogisticActivationFunction(1))),
+	  activationFunction(make_shared<ActivationFunction>(LogisticActivationFunction(1.0))),
 	  costFunction(make_shared<QuadraticCosts>(QuadraticCosts())),
-	  costFunctionRegularization(nullptr) //TODO default init
+	  costFunctionRegularization(make_shared<L2Regularization>(L2Regularization(3.0)))
 {
+	//TODO Init weights and biases
 }

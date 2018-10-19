@@ -52,17 +52,16 @@ namespace annlib
 		return activationFunction;
 	}
 
-	DRowVector NetworkLayer::calculateWeightedInput(const DRowVector& in) const
+	DRowVector NetworkLayer::feedForward(const DRowVector& in) const
 	{
 		if (!in.isRowVector() || in.getLength() != getInputSize())
 		{
 			throw runtime_error("wrong input dimensions");
 		}
-		return static_cast<DRowVector>(matrix_Mul(false, false, in, weights).addInPlace(biases));
-	}
 
-	DRowVector NetworkLayer::feedForward(const DRowVector& in) const
-	{
-		return static_cast<DRowVector>(calculateWeightedInput(in).applyFunctionToElementsInPlace(activationFunction));
+		return matrix_Mul(false, false, in, weights)
+		       .addInPlace(biases)
+		       .applyFunctionToElementsInPlace(activationFunction)
+		       .asRowVector();
 	}
 }

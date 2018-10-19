@@ -7,6 +7,7 @@
 #include "CostFunction.h"
 #include "TrainingData.h"
 #include "CostFunctionRegularization.h"
+#include "NeuralNetwork.h"
 
 using namespace std;
 using namespace linalg;
@@ -38,13 +39,15 @@ namespace annlib
 		shared_ptr<CostFunction> costFunction;
 		shared_ptr<CostFunctionRegularization> costFunctionRegularization;
 
-		SGDTrainer();
+		SGDTrainer(const vector<unsigned>& sizes);
 
 		void train(const vector<TrainingData>& data, int epochs);
 
 		void trainEpoch(const vector<TrainingData>& data);
 
 		void trainMiniBatch(const vector<TrainingData>& batch, unsigned trainingSetSize);
+
+		const NeuralNetwork toNeuralNet() const;
 	};
 }
 

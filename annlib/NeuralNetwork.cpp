@@ -1,8 +1,5 @@
-//
-// Created by Mirko on 04.05.2018.
-//
-
 #include "NeuralNetwork.h"
+#include <utility>
 
 
 unsigned NeuralNetwork::getInputSize() const {
@@ -11,14 +8,6 @@ unsigned NeuralNetwork::getInputSize() const {
 
 unsigned NeuralNetwork::getOutputSize() const {
     return layers[layers.size() - 1].getOutputSize();
-}
-
-const vector<NetworkLayer> &NeuralNetwork::getLayers() const {
-    return layers;
-}
-
-vector<NetworkLayer> &NeuralNetwork::getLayers() {
-    return layers;
 }
 
 DRowVector NeuralNetwork::feedForward(const DRowVector &in) const {
@@ -34,8 +23,8 @@ DRowVector NeuralNetwork::feedForward(const DRowVector &in) const {
     return result;
 }
 
-NeuralNetwork::NeuralNetwork(const vector<NetworkLayer> &layers)
-        : layers(layers) {}
+NeuralNetwork::NeuralNetwork(vector<NetworkLayer> layers)
+        : layers(move(layers)) {}
 
 NeuralNetwork::NeuralNetwork(const vector<DMatrix> &weightsList, const vector<DRowVector> &biasesList,
                              const function<double(double)> &activationFunction) {
