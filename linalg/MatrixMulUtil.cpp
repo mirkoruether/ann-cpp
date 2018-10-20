@@ -3,7 +3,7 @@
 //
 
 #include <stdexcept>
-#include "MatrixMulUtil.h"
+#include "matrixmulutil.h"
 
 namespace linalg {
     DMatrix matrix_Mul_Case0(const DMatrix &a, const DMatrix &b);

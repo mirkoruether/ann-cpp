@@ -125,6 +125,17 @@ namespace linalg
 		double vector_innerProduct(const DMatrix& other) const;
 
 		double vector_norm() const;
+
+		friend bool operator==(const DMatrix& lhs, const DMatrix& rhs)
+		{
+			return lhs.columnCount == rhs.columnCount
+				&& lhs.vec.get() == rhs.vec.get();
+		}
+
+		friend bool operator!=(const DMatrix& lhs, const DMatrix& rhs)
+		{
+			return !(lhs == rhs);
+		}
 	};
 
 	class DRowVector : public DMatrix

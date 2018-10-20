@@ -2,7 +2,7 @@
 // Created by Mirko on 14.09.2018.
 //
 
-#include "ActivationFunction.h"
+#include "activationfunction.h"
 
 using namespace annlib;
 

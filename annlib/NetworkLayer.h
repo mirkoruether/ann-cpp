@@ -1,8 +1,8 @@
 #ifndef ANN_CPP_NETWORKLAYER_H
 #define ANN_CPP_NETWORKLAYER_H
 
-#include "DMatrix.h"
-#include "ActivationFunction.h"
+#include "dmatrix.h"
+#include "activationfunction.h"
 
 using namespace linalg;
 using namespace std;

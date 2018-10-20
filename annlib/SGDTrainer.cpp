@@ -1,7 +1,10 @@
-#include "SGDTrainer.h"
+#include "sgdtrainer.h"
 #include <random>
-#include "MatrixMulUtil.h"
-#include "CostFunctionRegularization.h"
+#include <ppl.h>
+#include "matrixmulutil.h"
+#include "costfunctionreg.h"
+
+#define minibatch_parallel
 
 using namespace annlib;
 using namespace std;
@@ -18,35 +21,32 @@ void SGDTrainer::train(const vector<TrainingData>& data, int epochs)
 
 void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 {
+	random_device rd;
+	mt19937 rng(rd());
+	const uniform_int_distribution<unsigned> randomNumber(0, static_cast<unsigned>(data.size() - 1));
+
 	for (unsigned batchNo = 0; batchNo < data.size() / miniBatchSize; batchNo++)
 	{
-		vector<TrainingData> miniBatch = vector<TrainingData>();
+		vector<backpropResult> backpropResults(miniBatchSize);
 
-		random_device rd;
-		mt19937 rng(rd());
-		const uniform_int_distribution<unsigned> randomNumber(0, static_cast<unsigned>(data.size()));
-
-		for (unsigned i = 0; i < miniBatchSize; ++i)
+#ifdef minibatch_parallel
+		Concurrency::parallel_for(size_t(0), backpropResults.size(), [&](size_t i)
 		{
-			miniBatch.push_back(data[randomNumber(rng)]);
+			backpropResults[i] = feedForwardAndBackpropError(data[randomNumber(rng)]);
+		});
+#endif
+
+#ifndef minibatch_parallel
+		for(unsigned i = 0; i < backpropResults.size(); i++)
+		{
+			backpropResults[i] = feedForwardAndBackpropError(data[randomNumber(rng)]);
 		}
+#endif
 
-		trainMiniBatch(miniBatch, data.size());
+
+		updateWeights(backpropResults, data.size());
+		updateBiases(backpropResults);
 	}
-}
-
-void SGDTrainer::trainMiniBatch(const vector<TrainingData>& batch, unsigned trainingSetSize)
-{
-	vector<backpropResult> backpropResults(batch.size());
-
-	for (unsigned i = 0; i < backpropResults.size(); i++)
-	{
-		//TODO Parallel
-		backpropResults[i] = feedForwardAndBackpropError(batch[i]);
-	}
-
-	updateWeights(backpropResults, trainingSetSize);
-	updateBiases(backpropResults);
 }
 
 const NeuralNetwork SGDTrainer::toNeuralNet() const
@@ -84,7 +84,7 @@ backpropResult SGDTrainer::feedForwardAndBackpropError(TrainingData data)
 	                                                           data.solution,
 	                                                           lastLayerDerivativeActivation);
 
-	for (unsigned i = lastLayer - 1; i >= 0; i--)
+	for (int i = lastLayer - 1; i >= 0; i--)
 	{
 		error[i] = matrix_Mul(false, true, error[i + 1], weights[i + 1])
 		           .elementWiseMulInPlace(weightedInput[i].applyFunctionToElements(activationFunction->df))
@@ -104,7 +104,7 @@ void SGDTrainer::updateWeights(vector<backpropResult> results, unsigned training
 			decay += matrix_Mul(true, false, get<0>(result)[layer], get<1>(result)[layer]);
 		}
 
-		decay *= learningRate / results.size();
+		decay *= learningRate / static_cast<double>(results.size());
 
 		if (costFunctionRegularization != nullptr)
 		{
@@ -131,15 +131,24 @@ void SGDTrainer::updateBiases(vector<backpropResult> results)
 	}
 }
 
-SGDTrainer::SGDTrainer(const vector<unsigned>& sizes)
-	: weights(sizes.size() - 1),
-	  biases(sizes.size() - 1),
-	  learningRate(0.1),
+SGDTrainer::SGDTrainer()
+	: learningRate(5),
 	  momentumCoEfficient(0),
-	  miniBatchSize(10),
-	  activationFunction(make_shared<ActivationFunction>(LogisticActivationFunction(1.0))),
-	  costFunction(make_shared<QuadraticCosts>(QuadraticCosts())),
-	  costFunctionRegularization(make_shared<L2Regularization>(L2Regularization(3.0)))
+	  miniBatchSize(8),
+	  activationFunction(make_shared<LogisticActivationFunction>(LogisticActivationFunction(1.0))),
+	  costFunction(make_shared<CrossEntropyCosts>(CrossEntropyCosts())),
+	  costFunctionRegularization(make_shared<L2Regularization>(L2Regularization(3.0))),
+	  netInit(make_shared<NormalizedGaussianInit>(NormalizedGaussianInit()))
 {
-	//TODO Init weights and biases
+}
+
+void SGDTrainer::initNet(const vector<unsigned>& sizes)
+{
+	weights = vector<DMatrix>(sizes.size() - 1);
+	biases = vector<DRowVector>(sizes.size() - 1);
+	for (unsigned i = 0; i < sizes.size() - 1; i++)
+	{
+		weights[i] = netInit->initWeights(sizes[i], sizes[i + 1]);
+		biases[i] = netInit->initBiases(sizes[i + 1]);
+	}
 }

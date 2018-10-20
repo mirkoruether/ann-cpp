@@ -1,4 +1,4 @@
-#include "CostFunction.h"
+#include "costfunction.h"
 #include <cmath>
 
 

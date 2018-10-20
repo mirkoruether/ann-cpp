@@ -1,4 +1,4 @@
-#include "DMatrix.h"
+#include "dmatrix.h"
 #include <cmath>
 
 using namespace std;
@@ -27,7 +27,7 @@ namespace linalg
 	DMatrix DMatrix::ones(unsigned rows, unsigned cols)
 	{
 		DMatrix result(rows, cols);
-		for (unsigned i = 0; i< rows*cols; i++)
+		for (unsigned i = 0; i < rows * cols; i++)
 		{
 			result[i] = 1.0;
 		}
@@ -66,7 +66,7 @@ namespace linalg
 		{
 			for (unsigned j = 0; j < getColumnCount(); ++j)
 			{
-				result[j, i] = this->operator()(i, j);
+				result.operator()(j, i) = this->operator()(i, j);
 			}
 		}
 		return result;

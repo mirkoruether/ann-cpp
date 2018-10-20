@@ -2,12 +2,13 @@
 #define ANN_CPP_MOMENTUMSTOCHASTICGRADIENTDESCENTTRAINER_H
 
 #include <vector>
-#include "DMatrix.h"
-#include "ActivationFunction.h"
-#include "CostFunction.h"
-#include "TrainingData.h"
-#include "CostFunctionRegularization.h"
-#include "NeuralNetwork.h"
+#include "dmatrix.h"
+#include "activationfunction.h"
+#include "costfunction.h"
+#include "trainingdata.h"
+#include "costfunctionreg.h"
+#include "netinit.h"
+#include "neuralnetwork.h"
 
 using namespace std;
 using namespace linalg;
@@ -37,15 +38,16 @@ namespace annlib
 		unsigned miniBatchSize;
 		shared_ptr<ActivationFunction> activationFunction;
 		shared_ptr<CostFunction> costFunction;
-		shared_ptr<CostFunctionRegularization> costFunctionRegularization;
+		shared_ptr<CostFunctionReg> costFunctionRegularization;
+		shared_ptr<NetInit> netInit;
 
-		SGDTrainer(const vector<unsigned>& sizes);
+		SGDTrainer();
+
+		void initNet(const vector<unsigned>& sizes);
 
 		void train(const vector<TrainingData>& data, int epochs);
 
 		void trainEpoch(const vector<TrainingData>& data);
-
-		void trainMiniBatch(const vector<TrainingData>& batch, unsigned trainingSetSize);
 
 		const NeuralNetwork toNeuralNet() const;
 	};

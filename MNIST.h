@@ -2,12 +2,14 @@
 #define MNIST_H
 
 #include <string>
-#include "DMatrix.h"
+#include "dmatrix.h"
+#include "trainingdata.h"
 
 using namespace std;
 using namespace linalg;
+using namespace annlib;
 
-vector<tuple<DRowVector, DRowVector>> MNISTLoadCombined(const string& imageFile, const string& labelFile);
+vector<TrainingData> MNISTLoadCombined(const string& imageFile, const string& labelFile);
 
 vector<DRowVector> MNISTLoadImages(const string& file);
 

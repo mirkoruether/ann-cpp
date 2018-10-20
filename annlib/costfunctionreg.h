@@ -1,26 +1,26 @@
-#ifndef ANN_CPP_COSTFUNCTIONREGULARIZATION_H
-#define ANN_CPP_COSTFUNCTIONREGULARIZATION_H
+#ifndef ANN_CPP_COSTFUNCTIONREG_H
+#define ANN_CPP_COSTFUNCTIONREG_H
 
-#include "DMatrix.h"
+#include "dmatrix.h"
 
 using namespace linalg;
 
 namespace annlib
 {
-	class CostFunctionRegularization
+	class CostFunctionReg
 	{
 	public:
-		virtual ~CostFunctionRegularization() = default;
+		virtual ~CostFunctionReg() = default;
 		virtual DMatrix
 		calculateWeightDecay(const DMatrix& weights, double learningRate, int trainingSetSize) const = 0;
 	};
 
-	class AbstractCostFunctionRegularization : public CostFunctionRegularization
+	class AbstractCostFunctionReg : public CostFunctionReg
 	{
 	private:
 		double regularizationParameter;
 	protected:
-		explicit AbstractCostFunctionRegularization(double regularizationParameter);
+		explicit AbstractCostFunctionReg(double regularizationParameter);
 
 	public:
 		DMatrix calculateWeightDecay(const DMatrix& weights, double learningRate, int trainingSetSize) const override;
@@ -33,7 +33,7 @@ namespace annlib
 		void setRegularizationParameter(double regularizationParameter);
 	};
 
-	class L1Regularization : public AbstractCostFunctionRegularization
+	class L1Regularization : public AbstractCostFunctionReg
 	{
 	public:
 		explicit L1Regularization(double regularizationParameter);
@@ -42,7 +42,7 @@ namespace annlib
 		                             double regularizationParameter) const override;
 	};
 
-	class L2Regularization : public AbstractCostFunctionRegularization
+	class L2Regularization : public AbstractCostFunctionReg
 	{
 	public:
 		explicit L2Regularization(double regularizationParameter);
@@ -53,4 +53,4 @@ namespace annlib
 }
 
 
-#endif //ANN_CPP_COSTFUNCTIONREGULARIZATION_H
+#endif //ANN_CPP_COSTFUNCTIONREG_H

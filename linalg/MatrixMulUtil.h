@@ -5,7 +5,7 @@
 #ifndef ANN_CPP_MATRIXMULUTIL_H
 #define ANN_CPP_MATRIXMULUTIL_H
 
-#include "DMatrix.h"
+#include "dmatrix.h"
 
 using namespace std;
 using namespace linalg;

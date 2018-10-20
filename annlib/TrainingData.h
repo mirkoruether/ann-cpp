@@ -5,19 +5,26 @@
 #ifndef ANN_CPP_TRAININGDATA_H
 #define ANN_CPP_TRAININGDATA_H
 
-#include "DMatrix.h"
+#include <utility>
+#include "dmatrix.h"
 
 using namespace linalg;
 
-namespace annlib {
-    class TrainingData {
-    public:
-        const DRowVector &input;
-        const DRowVector &solution;
+namespace annlib
+{
+	class TrainingData
+	{
+	public:
+		DRowVector input;
+		DRowVector solution;
 
-        TrainingData(const DRowVector &input, const DRowVector &solution)
-                : input(input), solution(solution) {}
-    };
+		TrainingData() = default;
+
+		TrainingData(DRowVector input, DRowVector solution)
+			: input(std::move(input)), solution(std::move(solution))
+		{
+		}
+	};
 }
 
 

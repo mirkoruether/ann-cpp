@@ -7,16 +7,17 @@
 
 #include <functional>
 #include <cmath>
+#include <utility>
 
 using namespace std;
 
 namespace annlib {
     class ActivationFunction {
     public:
-        const function<double(double)> &f;
-        const function<double(double)> &df;
+        function<double(double)> f;
+        function<double(double)> df;
 
-        ActivationFunction(const function<double(double)> &f, const function<double(double)> &df) : f(f), df(df) {}
+        ActivationFunction(function<double(double)> f, function<double(double)> df) : f(std::move(f)), df(std::move(df)) {}
 
         double apply(double d) const { return f(d); }
 

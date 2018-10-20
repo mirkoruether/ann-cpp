@@ -2,7 +2,7 @@
 #define ANN_CPP_NEURALNETWORK_H
 
 #include <vector>
-#include "NetworkLayer.h"
+#include "networklayer.h"
 
 using namespace linalg;
 using namespace annlib;

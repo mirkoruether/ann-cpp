@@ -1,10 +1,9 @@
-#include "MNIST.h"
-#include "DMatrix.h"
+#include "mnist.h"
+#include "dmatrix.h"
 #include <fstream>
 
 using namespace std;
 using namespace linalg;
-
 
 int readNextInt(ifstream* ifs)
 {
@@ -17,7 +16,15 @@ int readNextInt(ifstream* ifs)
 		| (buffer[3] & 0xff) << 0;
 }
 
-vector<tuple<DRowVector, DRowVector>> MNISTLoadCombined(const string& imageFile, const string& labelFile)
+int readNextByte(ifstream* ifs)
+{
+	char buffer[1];
+	ifs->read(buffer, 1);
+
+	return buffer[0] & 0xff;
+}
+
+vector<TrainingData> MNISTLoadCombined(const string& imageFile, const string& labelFile)
 {
 	vector<DRowVector> images = MNISTLoadImages(imageFile);
 	vector<int> labels = MNISTLoadLabels(labelFile);
@@ -27,12 +34,12 @@ vector<tuple<DRowVector, DRowVector>> MNISTLoadCombined(const string& imageFile,
 		throw runtime_error("Image and label size do not match");
 	}
 
-	vector<tuple<DRowVector, DRowVector>> result(images.size());
+	vector<TrainingData> result(images.size());
 	for (unsigned i = 0; i < result.size(); i++)
 	{
 		DRowVector label(10);
 		label[labels[i]] = 1.0;
-		result[i] = tuple<DRowVector, DRowVector>(images[i], label);
+		result[i] = TrainingData(images[i], label);
 	}
 	return result;
 }
@@ -60,9 +67,9 @@ vector<DRowVector> MNISTLoadImages(const string& file)
 		DRowVector image(rows * cols);
 		for (int j = 0; j < rows * cols; j++)
 		{
-			image[j] = readNextInt(&ifs) / 255.0;
+			image[j] = readNextByte(&ifs) / 255.0;
 		}
-		images.push_back(image);
+		images[i] = image;
 	}
 
 	ifs.close();
@@ -87,7 +94,7 @@ vector<int> MNISTLoadLabels(const string& file)
 
 	for (int i = 0; i < count; i++)
 	{
-		labels.push_back(readNextInt(&ifs));
+		labels[i] = readNextByte(&ifs);
 	}
 
 	ifs.close();

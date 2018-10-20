@@ -1,6 +1,6 @@
-#include "NetworkLayer.h"
+#include "networklayer.h"
 #include <utility>
-#include "MatrixMulUtil.h"
+#include "matrixmulutil.h"
 
 using namespace linalg;
 using namespace std;

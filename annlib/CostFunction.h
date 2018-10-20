@@ -1,7 +1,7 @@
 #ifndef ANN_CPP_COSTFUNCTION_H
 #define ANN_CPP_COSTFUNCTION_H
 
-#include "DMatrix.h"
+#include "dmatrix.h"
 #include <functional>
 
 using namespace std;

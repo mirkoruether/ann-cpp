@@ -1,4 +1,6 @@
-add_library(linalg DMatrix.h DMatrix.cpp MatrixMulUtil.h MatrixMulUtil.cpp)
+add_library(linalg 
+dmatrix.h dmatrix.cpp 
+matrixmulutil.h matrixmulutil.cpp)
 
 install(TARGETS linalg DESTINATION lib)
-install(FILES DMatrix.h MatrixMulUtil.h DESTINATION include)
+install(FILES dmatrix.h matrixmulutil.h DESTINATION include)
