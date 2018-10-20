@@ -3,6 +3,7 @@
 #include <ppl.h>
 #include "matrixmulutil.h"
 #include "costfunctionreg.h"
+#include <iostream>
 
 #define minibatch_parallel
 
@@ -27,6 +28,7 @@ void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 
 	for (unsigned batchNo = 0; batchNo < data.size() / miniBatchSize; batchNo++)
 	{
+		const unsigned currentAllocs = DMatrix::ALLOCS;
 		vector<backpropResult> backpropResults(miniBatchSize);
 
 #ifdef minibatch_parallel
@@ -42,10 +44,13 @@ void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 			backpropResults[i] = feedForwardAndBackpropError(data[randomNumber(rng)]);
 		}
 #endif
-
-
+		
 		updateWeights(backpropResults, data.size());
 		updateBiases(backpropResults);
+
+		cout << "Number of memory allocations by DMatrix constructor" << endl
+			<< "    In this batch training cycle: " << DMatrix::ALLOCS - currentAllocs << endl
+			<< "    Total:                        " << DMatrix::ALLOCS << endl;
 	}
 }
 
@@ -135,20 +140,20 @@ SGDTrainer::SGDTrainer()
 	: learningRate(5),
 	  momentumCoEfficient(0),
 	  miniBatchSize(8),
-	  activationFunction(make_shared<LogisticActivationFunction>(LogisticActivationFunction(1.0))),
-	  costFunction(make_shared<CrossEntropyCosts>(CrossEntropyCosts())),
-	  costFunctionRegularization(make_shared<L2Regularization>(L2Regularization(3.0))),
-	  netInit(make_shared<NormalizedGaussianInit>(NormalizedGaussianInit()))
+	  activationFunction(make_shared<LogisticActivationFunction>(1.0)),
+	  costFunction(make_shared<CrossEntropyCosts>()),
+	  costFunctionRegularization(make_shared<L2Regularization>(3.0)),
+	  netInit(make_shared<NormalizedGaussianInit>())
 {
 }
 
 void SGDTrainer::initNet(const vector<unsigned>& sizes)
 {
-	weights = vector<DMatrix>(sizes.size() - 1);
-	biases = vector<DRowVector>(sizes.size() - 1);
+	weights = vector<DMatrix>();
+	biases = vector<DRowVector>();
 	for (unsigned i = 0; i < sizes.size() - 1; i++)
 	{
-		weights[i] = netInit->initWeights(sizes[i], sizes[i + 1]);
-		biases[i] = netInit->initBiases(sizes[i + 1]);
+		weights.emplace_back(netInit->initWeights(sizes[i], sizes[i + 1]));
+		biases.emplace_back(netInit->initBiases(sizes[i + 1]));
 	}
 }

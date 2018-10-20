@@ -34,12 +34,12 @@ vector<TrainingData> MNISTLoadCombined(const string& imageFile, const string& la
 		throw runtime_error("Image and label size do not match");
 	}
 
-	vector<TrainingData> result(images.size());
-	for (unsigned i = 0; i < result.size(); i++)
+	vector<TrainingData> result;
+	for (unsigned i = 0; i < images.size(); i++)
 	{
 		DRowVector label(10);
 		label[labels[i]] = 1.0;
-		result[i] = TrainingData(images[i], label);
+		result.emplace_back(images[i], label);
 	}
 	return result;
 }
@@ -60,7 +60,7 @@ vector<DRowVector> MNISTLoadImages(const string& file)
 	const int rows = readNextInt(&ifs);
 	const int cols = readNextInt(&ifs);
 
-	vector<DRowVector> images(count);
+	vector<DRowVector> images;
 
 	for (int i = 0; i < count; i++)
 	{
@@ -69,7 +69,7 @@ vector<DRowVector> MNISTLoadImages(const string& file)
 		{
 			image[j] = readNextByte(&ifs) / 255.0;
 		}
-		images[i] = image;
+		images.emplace_back(image);
 	}
 
 	ifs.close();
@@ -91,7 +91,6 @@ vector<int> MNISTLoadLabels(const string& file)
 	const int count = readNextInt(&ifs);
 
 	vector<int> labels(count);
-
 	for (int i = 0; i < count; i++)
 	{
 		labels[i] = readNextByte(&ifs);

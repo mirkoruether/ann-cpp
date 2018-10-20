@@ -8,6 +8,7 @@ namespace linalg
 	DMatrix::DMatrix(unsigned rowCount, unsigned columnCount)
 		: columnCount(columnCount)
 	{
+		ALLOCS++;
 		vec = make_shared<vector<double>>(rowCount * columnCount);
 	}
 

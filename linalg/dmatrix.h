@@ -22,6 +22,8 @@ namespace linalg
 		vec_ptr vec;
 
 	public:
+		inline static unsigned ALLOCS = 0;
+
 		DMatrix(vec_ptr vec_p, unsigned columnCount);
 
 		DMatrix(unsigned rowCount, unsigned columnCount);
