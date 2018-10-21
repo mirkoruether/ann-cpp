@@ -45,7 +45,7 @@ void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 		}
 #endif
 
-		updateWeights(backpropResults, data.size());
+		updateWeights(backpropResults, static_cast<unsigned>(data.size()));
 		updateBiases(backpropResults);
 	}
 	cout << "Number of memory allocations by DMatrix constructor" << endl
