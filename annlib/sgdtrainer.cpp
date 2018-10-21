@@ -26,9 +26,9 @@ void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 	mt19937 rng(rd());
 	const uniform_int_distribution<unsigned> randomNumber(0, static_cast<unsigned>(data.size() - 1));
 
+	const unsigned currentAllocs = DMatrix::ALLOCS;
 	for (unsigned batchNo = 0; batchNo < data.size() / miniBatchSize; batchNo++)
 	{
-		const unsigned currentAllocs = DMatrix::ALLOCS;
 		vector<backpropResult> backpropResults(miniBatchSize);
 
 #ifdef minibatch_parallel
@@ -44,14 +44,14 @@ void SGDTrainer::trainEpoch(const vector<TrainingData>& data)
 			backpropResults[i] = feedForwardAndBackpropError(data[randomNumber(rng)]);
 		}
 #endif
-		
+
 		updateWeights(backpropResults, data.size());
 		updateBiases(backpropResults);
-
-		cout << "Number of memory allocations by DMatrix constructor" << endl
-			<< "    In this batch training cycle: " << DMatrix::ALLOCS - currentAllocs << endl
-			<< "    Total:                        " << DMatrix::ALLOCS << endl;
 	}
+	cout << "Number of memory allocations by DMatrix constructor" << endl
+		<< "    Average per batch training cycle: "
+		<< (1.0 * DMatrix::ALLOCS - currentAllocs) / (1.0 * data.size() / miniBatchSize) << endl
+		<< "    Total:                            " << DMatrix::ALLOCS << endl;
 }
 
 const NeuralNetwork SGDTrainer::toNeuralNet() const
