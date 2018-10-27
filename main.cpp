@@ -151,7 +151,7 @@ void testTranspose()
 	assert(*(c+5) == 5);
 }
 
-void __testAddTranspose_checkC(double* c)
+void __testAddTranspose_check(double* c)
 {
 	assert(*(c + 0) == 12);
 	assert(*(c + 1) == 15);
@@ -173,7 +173,7 @@ void testAddTranspose()
 	*(a + 5) = 5;
 
 	mat_arr B(1, 2, 3);
-	double* b = A.start();
+	double* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -181,28 +181,61 @@ void testAddTranspose()
 	*(b + 4) = 20;
 	*(b + 5) = 22;
 
-	mat_arr C(1, 2, 3);
-	mat_element_wise_add(A, B, &C);
-	__testAddTranspose_checkC(C.start());
-
 	mat_arr A_t(1, 3, 2);
 	mat_transpose(A, &A_t);
-	mat_element_wise_add(A_t, B, &C, transpose_A);
-	__testAddTranspose_checkC(C.start());
 
 	mat_arr B_t(1, 3, 2);
-	mat_transpose(A, &A_t);
+	mat_transpose(B, &B_t);
+
+	mat_arr C(1, 2, 3);
+	mat_element_wise_add(A, B, &C);
+	__testAddTranspose_check(C.start());
+
+	mat_element_wise_add(A_t, B, &C, transpose_A);
+	__testAddTranspose_check(C.start());
+
 	mat_element_wise_add(A, B_t, &C, transpose_B);
-	__testAddTranspose_checkC(C.start());
+	__testAddTranspose_check(C.start());
 
 	mat_element_wise_add(A_t, B_t, &C, transpose_both);
-	__testAddTranspose_checkC(C.start());
+	__testAddTranspose_check(C.start());
+}
+
+void testMatMul()
+{
+	mat_arr A(1, 2, 3);
+	double* a = A.start();
+	*(a + 0) = 0;
+	*(a + 1) = 1;
+	*(a + 2) = 2;
+	*(a + 3) = 3;
+	*(a + 4) = 4;
+	*(a + 5) = 5;
+
+	mat_arr B(1, 3, 2);
+	double* b = B.start();
+	*(b + 0) = 12;
+	*(b + 1) = 14;
+	*(b + 2) = 16;
+	*(b + 3) = 18;
+	*(b + 4) = 20;
+	*(b + 5) = 22;
+
+	mat_arr C(1, 2, 2);
+	mat_matrix_mul(A, B, &C);
+	double* c = C.start();
+
+	assert(*(c + 0) == 56);
+	assert(*(c + 1) == 62);
+	assert(*(c + 2) == 200);
+	assert(*(c + 3) == 224);
 }
 
 int main()
 {
 	timeExecution("testTranspose ", []() { testTranspose(); });
 	timeExecution("testAddTranspose ", []() { testAddTranspose(); });
-	timeExecution("speedAddTranspose ", []() { speedAddTranspose(); });
+	timeExecution("testMatrixMul ", []() { testMatMul(); });
+	//timeExecution("speedAddTranspose ", []() { speedAddTranspose(); });
 	cin.get();
 }

@@ -266,21 +266,24 @@ namespace linalg
 
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const double* a = A.start() + (matNo * l * m);
-			const double* b = B.start() + (matNo * m * n);
+			const double* a = A.start() + (matNo * l * m) % A.size();
+			const double* b = B.start() + (matNo * m * n) % B.size();
 			double* c = C->start() + (matNo * l * n);
 
 			for (unsigned i = 0; i < l; i++)
 			{
-				unsigned aRow = i * m;
-				unsigned cRow = i * n;
+				const double* a_row = a + (i * m);
+				double* c_row = c + (i * n);
+				const double* b_element = b;
 				for (unsigned k = 0; k < m; k++)
 				{
-					unsigned aElement = (aRow + k);
-					unsigned bRow = k * n;
+					const double a_element_value = *(a_row + k);
+					double* c_element = c_row;
 					for (unsigned j = 0; j < n; j++)
 					{
-						*(c + (cRow + j)) += *(a + aElement) * *(b + (bRow + j));
+						*c_element += a_element_value * *b_element;
+						b_element++;
+						c_element++;
 					}
 				}
 			}
@@ -292,7 +295,7 @@ namespace linalg
 		switch (tr)
 		{
 		case transpose_no:
-			__mat_matrix_mul(A, B, C, true, false);
+			__mat_matrix_mul(A, B, C, false, false);
 			return;
 		case transpose_A:
 			__mat_matrix_mul(A, B, C, true, false);
