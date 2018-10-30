@@ -244,20 +244,8 @@ namespace linalg
 		}
 	}
 
-	void __mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                      const bool transpose_a, const bool transpose_b)
+	void __mat_matrix_mul_case0(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
-		__matrix_mul_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
-		                        B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
-		                        C->count, C->rows, C->cols);
-#endif
-
-		if (transpose_a || transpose_b)
-		{
-			throw runtime_error("Not supported yet");
-		}
-
 		const unsigned count = A.count;
 		const unsigned l = A.rows;
 		const unsigned m = A.cols;
@@ -290,21 +278,44 @@ namespace linalg
 		}
 	}
 
+	void __mat_matrix_mul_case1(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	{
+		throw runtime_error("Not supported yet");
+	}
+
+	void __mat_matrix_mul_case2(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	{
+		throw runtime_error("Not supported yet");
+	}
+
+	void __mat_matrix_mul_case3(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	{
+		throw runtime_error("Not supported yet");
+	}
+
 	void __mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
+#ifdef MAT_ARR_MATH_SIZE_CHECK
+		const bool transpose_a = tr == transpose_A || tr == transpose_both;
+		const bool transpose_b = tr == transpose_B || tr == transpose_both;
+		__matrix_mul_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
+		                        B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
+		                        C->count, C->rows, C->cols);
+#endif
+
 		switch (tr)
 		{
 		case transpose_no:
-			__mat_matrix_mul(A, B, C, false, false);
+			__mat_matrix_mul_case0(A, B, C);
 			return;
 		case transpose_A:
-			__mat_matrix_mul(A, B, C, true, false);
+			__mat_matrix_mul_case1(A, B, C);
 			return;
 		case transpose_B:
-			__mat_matrix_mul(A, B, C, false, true);
+			__mat_matrix_mul_case2(A, B, C);
 			return;
 		case transpose_both:
-			__mat_matrix_mul(A, B, C, true, true);
+			__mat_matrix_mul_case3(A, B, C);
 			return;
 		}
 	}
