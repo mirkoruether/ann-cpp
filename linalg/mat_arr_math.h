@@ -17,7 +17,8 @@ namespace linalg
 	};
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                         const function<double(double, double)>& f, mat_tr tr);
+	                                         const function<double(double, double)>& f,
+	                                         mat_tr tr = transpose_no);
 
 	mat_arr mat_element_wise_add(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
 	                             mat_tr tr = transpose_no);

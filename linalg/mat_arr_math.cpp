@@ -301,6 +301,11 @@ namespace linalg
 		__matrix_mul_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
 		                        B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
 		                        C->count, C->rows, C->cols);
+
+		if(A.start() == C->start() || B.start() == C->start())
+		{
+			throw runtime_error("Matrix mul in place not possible");
+		}
 #endif
 
 		switch (tr)

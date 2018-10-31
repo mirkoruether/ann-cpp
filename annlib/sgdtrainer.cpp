@@ -140,7 +140,7 @@ SGDTrainer::SGDTrainer()
 	: learningRate(5),
 	  momentumCoEfficient(0),
 	  miniBatchSize(8),
-	  activationFunction(make_shared<LogisticActivationFunction>(1.0)),
+	  activationFunction(make_shared<logistic_activation_function>(1.0)),
 	  costFunction(make_shared<CrossEntropyCosts>()),
 	  costFunctionRegularization(make_shared<L2Regularization>(3.0)),
 	  netInit(make_shared<NormalizedGaussianInit>())

@@ -3,7 +3,7 @@ trainingdata.h
 networklayer.h			networklayer.cpp 
 neuralnetwork.h			neuralnetwork.cpp 
 sgdtrainer.h			sgdtrainer.cpp
-activationfunction.h	activationfunction.cpp
+activation_function.h	activation_function.cpp
 costfunction.h			costfunction.cpp
 costfunctionreg.h		costfunctionreg.cpp 
 netinit.h				netinit.cpp)

@@ -3,7 +3,7 @@
 
 #include <vector>
 #include "dmatrix.h"
-#include "activationfunction.h"
+#include "activation_function.h"
 #include "costfunction.h"
 #include "trainingdata.h"
 #include "costfunctionreg.h"
@@ -36,7 +36,7 @@ namespace annlib
 		double learningRate;
 		double momentumCoEfficient;
 		unsigned miniBatchSize;
-		shared_ptr<ActivationFunction> activationFunction;
+		shared_ptr<activation_function> activationFunction;
 		shared_ptr<CostFunction> costFunction;
 		shared_ptr<CostFunctionReg> costFunctionRegularization;
 		shared_ptr<NetInit> netInit;
