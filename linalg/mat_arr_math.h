@@ -51,6 +51,9 @@ namespace linalg
 
 	mat_arr mat_element_wise_div(double a, const mat_arr& B, mat_arr* C = nullptr);
 
+	mat_arr mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
+	                           mat_tr tr = transpose_no);
+
 	mat_arr mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
 	                       mat_tr tr = transpose_no);
 

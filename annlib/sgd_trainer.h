@@ -27,6 +27,10 @@ namespace annlib
 		                     const vector<mat_arr>& activations_rv,
 		                     vector<mat_arr>* errors_rv) const;
 
+		void calculate_weight_decay(const mat_arr& input_rv,
+		                          const vector<mat_arr>& activations_rv,
+		                          const vector<mat_arr>& errors_rv,
+		                          vector<mat_arr>* weight_decays_noarr) const;
 	public:
 		double learning_rate;
 		unsigned batch_size;

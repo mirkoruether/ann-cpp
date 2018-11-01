@@ -244,7 +244,7 @@ namespace linalg
 		}
 	}
 
-	void __mat_matrix_mul_case0(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	void __mat_matrix_mul_add_case0(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
 		const unsigned count = A.count;
 		const unsigned l = A.rows;
@@ -278,22 +278,22 @@ namespace linalg
 		}
 	}
 
-	void __mat_matrix_mul_case1(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	void __mat_matrix_mul_add_case1(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
 		throw runtime_error("Not supported yet");
 	}
 
-	void __mat_matrix_mul_case2(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	void __mat_matrix_mul_add_case2(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
 		throw runtime_error("Not supported yet");
 	}
 
-	void __mat_matrix_mul_case3(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	void __mat_matrix_mul_add_case3(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
 		throw runtime_error("Not supported yet");
 	}
 
-	void __mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
+	void __mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		const bool transpose_a = tr == transpose_A || tr == transpose_both;
@@ -302,7 +302,7 @@ namespace linalg
 		                        B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
 		                        C->count, C->rows, C->cols);
 
-		if(A.start() == C->start() || B.start() == C->start())
+		if (A.start() == C->start() || B.start() == C->start())
 		{
 			throw runtime_error("Matrix mul in place not possible");
 		}
@@ -311,20 +311,46 @@ namespace linalg
 		switch (tr)
 		{
 		case transpose_no:
-			__mat_matrix_mul_case0(A, B, C);
+			__mat_matrix_mul_add_case0(A, B, C);
 			return;
 		case transpose_A:
-			__mat_matrix_mul_case1(A, B, C);
+			__mat_matrix_mul_add_case1(A, B, C);
 			return;
 		case transpose_B:
-			__mat_matrix_mul_case2(A, B, C);
+			__mat_matrix_mul_add_case2(A, B, C);
 			return;
 		case transpose_both:
-			__mat_matrix_mul_case3(A, B, C);
+			__mat_matrix_mul_add_case3(A, B, C);
 			return;
 		}
 	}
+
+	void __mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
+	{
+		unsigned size = C->size();
+		double* c = C->start();
+		for (unsigned i = 0; i < size; i++)
+		{
+			*(c + i) = 0.0;
+		}
+
+		__mat_matrix_mul_add(A, B, C, tr);
+	}
 #pragma endregion
+
+	mat_arr mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
+	{
+		if (C == nullptr)
+		{
+			mat_arr tempC = mat_arr(max(A.count, B.count),
+			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
+			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
+			__mat_matrix_mul_add(A, B, &tempC, tr);
+			return tempC;
+		}
+		__mat_matrix_mul_add(A, B, C, tr);
+		return *C;
+	}
 
 	mat_arr mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
@@ -333,7 +359,7 @@ namespace linalg
 			mat_arr tempC = mat_arr(max(A.count, B.count),
 			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
 			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
-			__mat_matrix_mul(A, B, &tempC, tr);
+			__mat_matrix_mul_add(A, B, &tempC, tr);
 			return tempC;
 		}
 		__mat_matrix_mul(A, B, C, tr);

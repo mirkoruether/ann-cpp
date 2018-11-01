@@ -44,5 +44,49 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv, const mat_arr& s
 	                                     activation_f->df,
 	                                     &errors_rv->operator[](layer_count - 1));
 
+	for (int layer_no = layer_count - 2; layer_no >= 0; --layer_no)
+	{
+		mat_matrix_mul(errors_rv->operator[](layer_no + 1),
+		               weights_noarr[layer_no + 1],
+		               &errors_rv->operator[](layer_no),
+		               transpose_B);
 
+		const function<double(double)>& actv_df = activation_f->df;
+
+		mat_element_by_element_operation(errors_rv->operator[](layer_no),
+		                                 weighted_inputs_rv[layer_no],
+		                                 &errors_rv->operator[](layer_no),
+		                                 [actv_df](double mat_mul_result, double wi)
+		                                 {
+			                                 return mat_mul_result * actv_df(wi);
+		                                 });
+	}
+}
+
+void sgd_trainer::calculate_weight_decay(const mat_arr& input_rv,
+                                         const vector<mat_arr>& activations_rv,
+                                         const vector<mat_arr>& errors_rv,
+                                         vector<mat_arr>* weight_decays_noarr) const
+{
+	const size_t layer_count = weights_noarr.size();
+	const size_t batch_count = input_rv.count;
+
+	const double decay_factor= learning_rate / batch_count;
+
+	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+	{
+		const mat_arr& lhs = layer_no == 0 ? input_rv : activations_rv[layer_no - 1];
+		const mat_arr& rhs = errors_rv[layer_no];
+		mat_arr* decay_noarr = &weight_decays_noarr->operator[](layer_no);
+
+		for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
+		{
+			mat_matrix_mul_add(lhs.get_mat(batch_no),
+			                   rhs.get_mat(batch_no),
+			                   decay_noarr,
+			                   transpose_A);
+		}
+
+		mat_element_wise_mul(*decay_noarr, decay_factor, decay_noarr);
+	}
 }
