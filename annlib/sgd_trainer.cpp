@@ -63,30 +63,55 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv, const mat_arr& s
 	}
 }
 
-void sgd_trainer::calculate_weight_decay(const mat_arr& input_rv,
-                                         const vector<mat_arr>& activations_rv,
-                                         const vector<mat_arr>& errors_rv,
-                                         vector<mat_arr>* weight_decays_noarr) const
+void sgd_trainer::calculate_gradient_weights(const mat_arr& input_rv,
+                                             const vector<mat_arr>& activations_rv,
+                                             const vector<mat_arr>& errors_rv,
+                                             vector<mat_arr>* gradient_weights_noarr) const
 {
 	const size_t layer_count = weights_noarr.size();
-	const size_t batch_count = input_rv.count;
-
-	const double decay_factor= learning_rate / batch_count;
+	const size_t batch_entry_count = input_rv.count;
 
 	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
 	{
 		const mat_arr& lhs = layer_no == 0 ? input_rv : activations_rv[layer_no - 1];
 		const mat_arr& rhs = errors_rv[layer_no];
-		mat_arr* decay_noarr = &weight_decays_noarr->operator[](layer_no);
+		mat_arr* grad_noarr = &gradient_weights_noarr->operator[](layer_no);
 
-		for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
+		for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 		{
-			mat_matrix_mul_add(lhs.get_mat(batch_no),
-			                   rhs.get_mat(batch_no),
-			                   decay_noarr,
+			mat_matrix_mul_add(lhs.get_mat(batch_entry_no),
+			                   rhs.get_mat(batch_entry_no),
+			                   grad_noarr,
 			                   transpose_A);
 		}
 
-		mat_element_wise_mul(*decay_noarr, decay_factor, decay_noarr);
+		mat_element_wise_div(*grad_noarr, batch_entry_count, grad_noarr);
+
+		if (weight_norm_penalty != nullptr)
+		{
+			weight_norm_penalty->add_penalty_to_gradient(weights_noarr[layer_no], grad_noarr);
+		}
+	}
+}
+
+void sgd_trainer::calculate_gradient_biases(const vector<mat_arr>& errors_rv,
+                                            vector<mat_arr>* gradient_biases_noarr_rv) const
+{
+	const size_t layer_count = weights_noarr.size();
+	const size_t batch_entry_count = errors_rv[0].count;
+
+	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+	{
+		const mat_arr& layer_error = errors_rv[layer_no];
+		mat_arr* grad_noarr_rv = &gradient_biases_noarr_rv->operator[](layer_no);
+
+		for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
+		{
+			mat_element_wise_add(*grad_noarr_rv,
+			                     layer_error.get_mat(batch_entry_no),
+			                     grad_noarr_rv);
+		}
+
+		mat_element_wise_div(*grad_noarr_rv, batch_entry_count, grad_noarr_rv);
 	}
 }

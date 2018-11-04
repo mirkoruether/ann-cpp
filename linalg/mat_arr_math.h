@@ -58,5 +58,7 @@ namespace linalg
 	                       mat_tr tr = transpose_no);
 
 	mat_arr mat_transpose(const mat_arr& A, mat_arr* C);
+
+	mat_arr mat_set_all(double val, mat_arr* C);
 }
 #endif

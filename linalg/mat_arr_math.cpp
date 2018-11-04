@@ -421,4 +421,19 @@ namespace linalg
 		__mat_transpose(A, C);
 		return *C;
 	}
+
+	mat_arr mat_set_all(double val, mat_arr* C)
+	{
+		if (C == nullptr)
+		{
+			throw runtime_error("C is nullptr");
+		}
+		const unsigned size = C->size();
+		double* c = C->start();
+		for (unsigned i = 0; i < size; i++)
+		{
+			*(c + i) = val;
+		}
+		return *C;
+	}
 }

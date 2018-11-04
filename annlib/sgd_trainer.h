@@ -5,6 +5,7 @@
 #include "mat_arr.h"
 #include "cost_function.h"
 #include "activation_function.h"
+#include "weight_norm_penalty.h"
 
 using namespace std;
 using namespace linalg;
@@ -27,15 +28,18 @@ namespace annlib
 		                     const vector<mat_arr>& activations_rv,
 		                     vector<mat_arr>* errors_rv) const;
 
-		void calculate_weight_decay(const mat_arr& input_rv,
-		                          const vector<mat_arr>& activations_rv,
-		                          const vector<mat_arr>& errors_rv,
-		                          vector<mat_arr>* weight_decays_noarr) const;
+		void calculate_gradient_weights(const mat_arr& input_rv,
+		                                const vector<mat_arr>& activations_rv,
+		                                const vector<mat_arr>& errors_rv,
+		                                vector<mat_arr>* gradient_weights_noarr) const;
+
+		void calculate_gradient_biases(const vector<mat_arr>& errors_rv,
+		                               vector<mat_arr>* gradient_biases_noarr_rv) const;
 	public:
-		double learning_rate;
-		unsigned batch_size;
+		unsigned mini_batch_size;
 		shared_ptr<activation_function> activation_f;
 		shared_ptr<cost_function> cost_f;
+		shared_ptr<weight_norm_penalty> weight_norm_penalty;
 	};
 }
 #endif
