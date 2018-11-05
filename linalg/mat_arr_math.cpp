@@ -6,6 +6,115 @@ using namespace linalg;
 
 namespace linalg
 {
+#pragma region multiple_element_by_element_internal
+
+#pragma endregion
+	template <size_t input_count>
+	void __mat_m_e_by_e_size_check(const array<mat_arr*, input_count>& input, mat_arr* C)
+	{
+		for (unsigned i = 0; i < input_count; i++)
+		{
+			if (C->rows != input[i]->rows)
+			{
+				throw runtime_error("Row count does not fit");
+			}
+
+			if (C->cols != input[i]->cols)
+			{
+				throw runtime_error("Column count does not fit");
+			}
+
+			if (input[i]->count != 1 && C->cols != input[i]->cols)
+			{
+				throw runtime_error("Wrong input array sizes");
+			}
+		}
+	}
+
+	template <typename in_t, typename out_t, size_t count>
+	array<out_t, count> __array_select(const array<in_t, count>& in, function<out_t(in_t)> f)
+	{
+		array<out_t, count> out{};
+		for (unsigned i = 0; i < count; i++)
+		{
+			out[i] = f(in[i]);
+		}
+		return out;
+	}
+
+	template <size_t input_count>
+	void __mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
+	                                     const function<double(array<double, input_count>)>& f)
+	{
+#ifdef MAT_ARR_MATH_SIZE_CHECK
+		__mat_m_e_by_e_size_check<input_count>(input, C);
+#endif
+
+		const unsigned rows_cols = C->rows * C->cols;
+		const unsigned count = C->count;
+
+		array<double*, input_count> input_starts
+			= __array_select(input, [](mat_arr* x) { return x->start(); });
+
+		double* c = C->start();
+
+		array<double, input_count> input_elements{};
+
+		for (unsigned mat_no = 0; mat_no < count; mat_no++)
+		{
+			for (unsigned rc = 0; rc < rows_cols; rc++)
+			{
+				*(c + rc) = f(__array_select(input_starts,
+				                             [&](const double* start)
+				                             {
+					                             return *(start + rc);
+				                             }));
+			}
+
+			for (unsigned i = 0; i < input_count; i++)
+			{
+				if (input[i]->count > 1)
+				{
+					input_starts[i] += rows_cols;
+				}
+			}
+			c += rows_cols;
+		}
+	}
+
+	template <size_t input_count>
+	mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
+	                                      const function<double(array<double, input_count>)>& f)
+	{
+		if (C == nullptr)
+		{
+			const unsigned rows = input[0]->rows;
+			const unsigned cols = input[0]->cols;
+			const unsigned count = input[0]->count;
+			for (unsigned i = 0; i < input_count; i++)
+			{
+				if (input[i]->count > count)
+				{
+					count = input[i]->count;
+				}
+			}
+			mat_arr tempC = mat_arr(count, rows, cols);
+			__mat_multiple_e_by_e_operation<input_count>(input, &tempC, f);
+			return tempC;
+		}
+		__mat_multiple_e_by_e_operation<input_count>(input, C, f);
+		return *C;
+	}
+
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 2>& input, mat_arr* C,
+	                                               const function<double(array<double, 2>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 3>& input, mat_arr* C,
+	                                               const function<double(array<double, 3>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 4>& input, mat_arr* C,
+	                                               const function<double(array<double, 4>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 5>& input, mat_arr* C,
+	                                               const function<double(array<double, 5>)>& f);
+
 #pragma region element_by_element_internal
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 	                                const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
@@ -46,26 +155,37 @@ namespace linalg
 		                    count, rows, cols);
 #endif
 
-		const double* a = A.start();
-		const double* b = B.start();
 		double* c = C->start();
 
-		const unsigned size_A = A.size();
-		const unsigned size_B = B.size();
-		const unsigned rows_count = rows * count;
+		const bool a_is_array = A.count > 1;
+		const bool b_is_array = B.count > 1;
+		const unsigned row_col = rows * cols;
 
-		unsigned i_normal = 0;
-		unsigned i_transposed = 0;
-		for (unsigned i = 0; i < rows_count; ++i)
+		const double* a = A.start();
+		const double* b = B.start();
+
+		for (unsigned mat_no = 0; mat_no > count; ++mat_no)
 		{
-			for (unsigned col = 0; col < cols; ++col)
+			unsigned i_normal = 0;
+			unsigned i_transposed = 0;
+
+			for (unsigned row = 0; row < rows; ++row)
 			{
-				*(c + i_normal) = f(*(a + ((transpose_a ? i_transposed : i_normal) % size_A)),
-				                    *(b + ((transpose_b ? i_transposed : i_normal) % size_B)));
-				i_normal++;
-				i_transposed += rows;
+				for (unsigned col = 0; col < cols; ++col)
+				{
+					*(c + i_normal) = f(*(a + (transpose_a ? i_transposed : i_normal)),
+					                    *(b + (transpose_b ? i_transposed : i_normal)));
+					i_normal++;
+					i_transposed += rows;
+				}
+				i_transposed -= (cols * rows - 1);
 			}
-			i_transposed -= (cols * rows - 1);
+
+			if (a_is_array)
+				a += row_col;
+
+			if (b_is_array)
+				b += row_col;
 		}
 	}
 

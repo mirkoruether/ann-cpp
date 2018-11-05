@@ -5,4 +5,4 @@ dmatrix.h dmatrix.cpp
 matrixmulutil.h matrixmulutil.cpp)
 
 install(TARGETS linalg DESTINATION lib)
-install(FILES dmatrix.h matrixmulutil.h DESTINATION include)
+install(FILES dmatrix.h matrixmulutil.h mat_arr.h Mat_arr_math.h DESTINATION include)

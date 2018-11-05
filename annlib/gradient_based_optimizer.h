@@ -26,6 +26,7 @@ namespace annlib
 	template <size_t buffers>
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
 	{
+	public:
 		vector<array<mat_arr, buffers>> weight_buffers;
 		vector<array<mat_arr, buffers>> biases_buffers;
 
@@ -73,6 +74,14 @@ namespace annlib
 		double alpha;
 		double beta1;
 		double beta2;
+
+		double beta1_pow_t;
+		double beta2_pow_t;
+
+		void init(const vector<unsigned>& sizes) override;
+
+		void adjust_weights(const vector<mat_arr>& gradient_weights_noarr, vector<mat_arr>* weights_noarr) override;
+
 
 		void adjust(const mat_arr& gradient_noarr,
 		            array<mat_arr, 2>* buffers_noarr,

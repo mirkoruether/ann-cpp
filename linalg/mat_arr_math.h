@@ -3,6 +3,7 @@
 
 #include "mat_arr.h"
 #include <functional>
+#include <array>
 
 using namespace linalg;
 
@@ -15,6 +16,10 @@ namespace linalg
 		transpose_B,
 		transpose_both
 	};
+
+	template <size_t input_count>
+	mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
+	                                              const function<double(array<double, input_count>)>& f);
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
 	                                         const function<double(double, double)>& f,

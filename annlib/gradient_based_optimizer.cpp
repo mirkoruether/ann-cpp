@@ -85,8 +85,26 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
 }
 
 adam::adam(double alpha, double beta1, double beta2)
-	: alpha(alpha), beta1(beta1), beta2(beta2)
+	: alpha(alpha), beta1(beta1), beta2(beta2),
+	  beta1_pow_t(1.0), beta2_pow_t(1.0)
 {
+}
+
+void adam::init(const vector<unsigned>& sizes)
+{
+	beta1_pow_t = 1.0;
+	beta2_pow_t = 1.0;
+
+	abstract_gradient_based_optimizer<2>::init(sizes);
+}
+
+void adam::adjust_weights(const vector<mat_arr>& gradient_weights_noarr,
+                          vector<mat_arr>* weights_noarr)
+{
+	beta1_pow_t *= beta1;
+	beta2_pow_t *= beta2;
+
+	abstract_gradient_based_optimizer<2>::adjust_weights(gradient_weights_noarr, weights_noarr);
 }
 
 void adam::adjust(const mat_arr& gradient_noarr,
@@ -108,7 +126,14 @@ void adam::adjust(const mat_arr& gradient_noarr,
 		                                 return beta2 * v + (1 - beta2) * pow(grad, 2);
 	                                 });
 
-	//TODO Count iterations (t variable in adam algorithm)
-	//TODO Add mat_element_by_element_operation with 3 inputs to implement adam update rule
-	throw runtime_error("Not implemented yet");
+	const double alpha_t = alpha * sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
+
+	const array<mat_arr*, 3> in{{target_noarr, m_buf, v_buf}};
+	mat_multiple_e_by_e_operation<3>(in, target_noarr,
+	                                 [&](const array<double, 3>& arr)
+	                                 {
+		                                 return arr[0]
+			                                 - alpha_t * arr[1]
+			                                 / (sqrt(arr[2]) + 1e-8);
+	                                 });
 }
