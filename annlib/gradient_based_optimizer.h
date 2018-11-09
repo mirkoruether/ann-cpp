@@ -12,9 +12,9 @@ namespace annlib
 	public:
 		virtual ~gradient_based_optimizer() = default;
 
-		virtual void init(const vector<unsigned>& sizes)
-		{
-		}
+		virtual void init(const vector<unsigned>& sizes);
+
+		virtual void next_mini_batch();
 
 		virtual void adjust_weights(const vector<mat_arr>& gradient_weights_noarr,
 		                            vector<mat_arr>* weights_noarr) = 0;
@@ -77,11 +77,11 @@ namespace annlib
 
 		double beta1_pow_t;
 		double beta2_pow_t;
+		double alpha_t;
 
 		void init(const vector<unsigned>& sizes) override;
 
-		void adjust_weights(const vector<mat_arr>& gradient_weights_noarr, vector<mat_arr>* weights_noarr) override;
-
+		void next_mini_batch() override;
 
 		void adjust(const mat_arr& gradient_noarr,
 		            array<mat_arr, 2>* buffers_noarr,

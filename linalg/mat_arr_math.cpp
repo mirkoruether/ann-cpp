@@ -1,6 +1,7 @@
 #define MAT_ARR_MATH_SIZE_CHECK 1
 
 #include "mat_arr_math.h"
+#include "general_util.h"
 
 using namespace linalg;
 
@@ -31,17 +32,6 @@ namespace linalg
 		}
 	}
 
-	template <typename in_t, typename out_t, size_t count>
-	array<out_t, count> __array_select(const array<in_t, count>& in, function<out_t(in_t)> f)
-	{
-		array<out_t, count> out{};
-		for (unsigned i = 0; i < count; i++)
-		{
-			out[i] = f(in[i]);
-		}
-		return out;
-	}
-
 	template <size_t input_count>
 	void __mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
 	                                     const function<double(array<double, input_count>)>& f)
@@ -54,7 +44,7 @@ namespace linalg
 		const unsigned count = C->count;
 
 		array<double*, input_count> input_starts
-			= __array_select(input, [](mat_arr* x) { return x->start(); });
+			= array_select(input, [](mat_arr* x) { return x->start(); });
 
 		double* c = C->start();
 
@@ -64,11 +54,11 @@ namespace linalg
 		{
 			for (unsigned rc = 0; rc < rows_cols; rc++)
 			{
-				*(c + rc) = f(__array_select(input_starts,
-				                             [&](const double* start)
-				                             {
-					                             return *(start + rc);
-				                             }));
+				*(c + rc) = f(array_select(input_starts,
+				                           [&](const double* start)
+				                           {
+					                           return *(start + rc);
+				                           }));
 			}
 
 			for (unsigned i = 0; i < input_count; i++)
@@ -447,13 +437,7 @@ namespace linalg
 
 	void __mat_matrix_mul(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
-		unsigned size = C->size();
-		double* c = C->start();
-		for (unsigned i = 0; i < size; i++)
-		{
-			*(c + i) = 0.0;
-		}
-
+		mat_set_all(0, C);
 		__mat_matrix_mul_add(A, B, C, tr);
 	}
 #pragma endregion
@@ -479,7 +463,7 @@ namespace linalg
 			mat_arr tempC = mat_arr(max(A.count, B.count),
 			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
 			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
-			__mat_matrix_mul_add(A, B, &tempC, tr);
+			__mat_matrix_mul(A, B, &tempC, tr);
 			return tempC;
 		}
 		__mat_matrix_mul(A, B, C, tr);
@@ -554,6 +538,122 @@ namespace linalg
 		{
 			*(c + i) = val;
 		}
+		return *C;
+	}
+
+	void __mat_concat_size_check(const vector<mat_arr>& mats, mat_arr* C)
+	{
+		const size_t mats_count = mats.size();
+		unsigned count_sum = 0;
+		for (unsigned i = 0; i < mats_count; i++)
+		{
+			if (C->rows != mats[i].rows)
+			{
+				throw runtime_error("Row count does not fit");
+			}
+
+			if (C->cols != mats[i].cols)
+			{
+				throw runtime_error("Column count does not fit");
+			}
+
+			count_sum += mats[i].count;
+		}
+
+		if (C->count != count_sum)
+		{
+			throw runtime_error("Array sizes do not fit");
+		}
+	}
+
+	void __mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C)
+	{
+#ifdef MAT_ARR_MATH_SIZE_CHECK
+		__mat_concat_size_check(mats, C);
+#endif
+		const unsigned mat_arr_count = mats.size();
+		const unsigned row_col = C->rows * C->cols;
+		double* c = C->start();
+
+		for (unsigned mat_arr_no = 0; mat_arr_no < mat_arr_count; mat_arr_no++)
+		{
+			const unsigned size = row_col * mats[mat_arr_no].count;
+			const double* m = mats[mat_arr_no].start();
+
+			for (unsigned i = 0; i < size; i++)
+			{
+				*c = *m;
+				c++;
+				m++;
+			}
+		}
+	}
+
+	mat_arr mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C)
+	{
+		if (C == nullptr)
+		{
+			unsigned count = 0;
+			for (const auto& mat : mats)
+			{
+				count += mat.count;
+			}
+			mat_arr tempC = mat_arr(count, mats[0].rows, mats[0].cols);
+			__mat_concat_mats(mats, &tempC);
+			return tempC;
+		}
+		__mat_concat_mats(mats, C);
+		return *C;
+	}
+
+	void __mat_select_mats_size_check(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	{
+		if (C->rows != A.rows)
+		{
+			throw runtime_error("Row count does not fit");
+		}
+
+		if (C->cols != A.cols)
+		{
+			throw runtime_error("Column count does not fit");
+		}
+
+		if (C->count != indices.size())
+		{
+			throw runtime_error("Array sizes do not fit");
+		}
+	}
+
+	void __mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	{
+#ifdef MAT_ARR_MATH_SIZE_CHECK
+		__mat_select_mats_size_check(A, indices, C);
+#endif
+
+		const unsigned mat_count = indices.size();
+		const unsigned row_col = C->rows * C->cols;
+		double* c = C->start();
+		for (unsigned mat_no = 0; mat_no < mat_count; mat_no++)
+		{
+			const double* a = A.start() + indices[mat_no] * row_col;
+			for (unsigned rc = 0; rc < row_col; rc++)
+			{
+				*c = *a;
+				a++;
+				c++;
+			}
+		}
+	}
+
+	mat_arr mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	{
+		if (C == nullptr)
+		{
+			mat_arr tempC = mat_arr(indices.size(), A.rows, A.cols);
+			__mat_select_mats(A, indices, &tempC);
+			return tempC;
+		}
+		__mat_select_mats(A, indices, C);
 		return *C;
 	}
 }

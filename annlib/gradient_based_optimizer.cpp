@@ -4,6 +4,14 @@
 
 using namespace annlib;
 
+void gradient_based_optimizer::init(const vector<unsigned>& sizes)
+{
+}
+
+void gradient_based_optimizer::next_mini_batch()
+{
+}
+
 template <size_t buffers>
 void abstract_gradient_based_optimizer<buffers>::init(const vector<unsigned>& sizes)
 {
@@ -44,8 +52,8 @@ void abstract_gradient_based_optimizer<buffers>::adjust_biases(const vector<mat_
 	for (unsigned i = 0; i < size; i++)
 	{
 		adjust(gradient_biases_rv_noarr[i],
-		       &biases_buffers->operator[](i),
-		       biases_rv_noarr[i]);
+		       &biases_buffers[i],
+		       &biases_rv_noarr->operator[](i));
 	}
 }
 
@@ -86,7 +94,7 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
 
 adam::adam(double alpha, double beta1, double beta2)
 	: alpha(alpha), beta1(beta1), beta2(beta2),
-	  beta1_pow_t(1.0), beta2_pow_t(1.0)
+	  beta1_pow_t(1.0), beta2_pow_t(1.0), alpha_t(0.0)
 {
 }
 
@@ -94,17 +102,16 @@ void adam::init(const vector<unsigned>& sizes)
 {
 	beta1_pow_t = 1.0;
 	beta2_pow_t = 1.0;
+	alpha_t = 0.0;
 
 	abstract_gradient_based_optimizer<2>::init(sizes);
 }
 
-void adam::adjust_weights(const vector<mat_arr>& gradient_weights_noarr,
-                          vector<mat_arr>* weights_noarr)
+void adam::next_mini_batch()
 {
 	beta1_pow_t *= beta1;
 	beta2_pow_t *= beta2;
-
-	abstract_gradient_based_optimizer<2>::adjust_weights(gradient_weights_noarr, weights_noarr);
+	alpha_t = alpha * sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
 }
 
 void adam::adjust(const mat_arr& gradient_noarr,
@@ -125,8 +132,6 @@ void adam::adjust(const mat_arr& gradient_noarr,
 	                                 {
 		                                 return beta2 * v + (1 - beta2) * pow(grad, 2);
 	                                 });
-
-	const double alpha_t = alpha * sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
 
 	const array<mat_arr*, 3> in{{target_noarr, m_buf, v_buf}};
 	mat_multiple_e_by_e_operation<3>(in, target_noarr,

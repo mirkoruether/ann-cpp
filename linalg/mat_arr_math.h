@@ -19,7 +19,7 @@ namespace linalg
 
 	template <size_t input_count>
 	mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
-	                                              const function<double(array<double, input_count>)>& f);
+	                                      const function<double(array<double, input_count>)>& f);
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
 	                                         const function<double(double, double)>& f,
@@ -65,5 +65,9 @@ namespace linalg
 	mat_arr mat_transpose(const mat_arr& A, mat_arr* C);
 
 	mat_arr mat_set_all(double val, mat_arr* C);
+
+	mat_arr mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C);
+
+	mat_arr mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C);
 }
 #endif
