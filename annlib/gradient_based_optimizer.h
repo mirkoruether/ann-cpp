@@ -7,6 +7,12 @@ using namespace linalg;
 
 namespace annlib
 {
+	enum adjust_target
+	{
+		weights,
+		biases
+	};
+
 	class gradient_based_optimizer
 	{
 	public:
@@ -16,25 +22,25 @@ namespace annlib
 
 		virtual void next_mini_batch();
 
-		virtual void adjust_weights(const vector<mat_arr>& gradient_weights_noarr,
-		                            vector<mat_arr>* weights_noarr) = 0;
-
-		virtual void adjust_biases(const vector<mat_arr>& gradient_biases_rv_noarr,
-		                           vector<mat_arr>* biases_rv_noarr) = 0;
+		virtual void adjust(const mat_arr& gradient_noarr,
+		                    mat_arr* target_noarr,
+		                    const adjust_target& at,
+		                    unsigned layer_no) = 0;
 	};
 
 	template <size_t buffers>
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
 	{
 	public:
-		vector<array<mat_arr, buffers>> weight_buffers;
+		vector<array<mat_arr, buffers>> weights_buffers;
 		vector<array<mat_arr, buffers>> biases_buffers;
 
 		void init(const vector<unsigned>& sizes) override;
 
-		void adjust_weights(const vector<mat_arr>& gradient_weights_noarr, vector<mat_arr>* weights_noarr) override;
-
-		void adjust_biases(const vector<mat_arr>& gradient_biases_rv_noarr, vector<mat_arr>* biases_rv_noarr) override;
+		void adjust(const mat_arr& gradient_noarr,
+		            mat_arr* target_noarr,
+		            const adjust_target& at,
+		            unsigned layer_no) override;
 
 		virtual void adjust(const mat_arr& gradient_noarr,
 		                    array<mat_arr, buffers>* buffers_noarr,

@@ -8,18 +8,6 @@ using namespace std;
 using namespace linalg;
 using namespace annlib;
 
-void sgd_trainer::build_batch(const training_data& training_data, mat_arr* input_rv, mat_arr* solution_rv,
-                              const function<double()>& random) const
-{
-	vector<unsigned> batch_indices(mini_batch_size);
-	for (unsigned i = 0; i < mini_batch_size; i++)
-	{
-		batch_indices[i] = random();
-	}
-
-	mat_select_mats(training_data.input, batch_indices, input_rv);
-	mat_select_mats(training_data.solution, batch_indices, solution_rv);
-}
 
 vector<unsigned> sgd_trainer::sizes() const
 {
@@ -32,21 +20,31 @@ vector<unsigned> sgd_trainer::sizes() const
 	return sizes;
 }
 
+void sgd_trainer::init(vector<unsigned>& sizes)
+{
+	const unsigned layer_count = sizes.size();
+	weights_noarr.clear();
+	biases_noarr_rv.clear();
+
+	for (unsigned i = 0; i < layer_count; i++)
+	{
+		weights_noarr.emplace_back(1, sizes[i], sizes[i + 1]);
+		biases_noarr_rv.emplace_back(1, 1, sizes[i + 1]);
+	}
+
+	optimizer->init(sizes);
+}
+
 void sgd_trainer::train_epochs(const training_data& training_data, unsigned epoch_count)
 {
-	const unsigned training_size = training_data.input.count;
-	const unsigned batch_count = epoch_count * (training_size / mini_batch_size);
+	const unsigned batch_count = epoch_count * (training_data.input.count / mini_batch_size);
 
 	training_buffer buffer(sizes(), mini_batch_size);
-
-	random_device rd;
-	mt19937 rng(rd());
-	const uniform_int_distribution<unsigned> randomNumber(0, static_cast<unsigned>(training_size - 1));
+	mini_batch_builder mb_builder(training_data);
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
 	{
-		build_batch(training_data, &buffer.input_rv, &buffer.solution_rv,
-		            [&]() { return randomNumber(rng); });
+		mb_builder.build_mini_batch(&buffer.input_rv, &buffer.solution_rv);
 
 		feed_forward_detailed(buffer.input_rv,
 		                      &buffer.weighted_inputs_rv, &buffer.activations_rv);
@@ -54,15 +52,14 @@ void sgd_trainer::train_epochs(const training_data& training_data, unsigned epoc
 		calculate_error(buffer.activations_rv.back(), buffer.solution_rv, buffer.weighted_inputs_rv,
 		                &buffer.errors_rv);
 
-		calculate_gradient_weights(buffer.input_rv, buffer.activations_rv, buffer.errors_rv,
-		                           &buffer.gradient_weights_noarr);
-
-		calculate_gradient_biases(buffer.errors_rv,
-		                          &buffer.gradient_biases_rv_noarr);
-
 		optimizer->next_mini_batch();
-		optimizer->adjust_weights(buffer.gradient_weights_noarr, &weights_noarr);
-		optimizer->adjust_biases(buffer.gradient_biases_rv_noarr, &biases_noarr_rv);
+
+		const size_t layer_count = weights_noarr.size();
+		for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+		{
+			adjust_weights(layer_no, &buffer);
+			adjust_biases(layer_no, &buffer);
+		}
 	}
 }
 
@@ -123,58 +120,67 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
 	}
 }
 
-void sgd_trainer::calculate_gradient_weights(const mat_arr& input_rv,
-                                             const vector<mat_arr>& activations_rv,
-                                             const vector<mat_arr>& errors_rv,
-                                             vector<mat_arr>* gradient_weights_noarr) const
+void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_rv,
+                                            const mat_arr& error_rv,
+                                            mat_arr* gradient_weight_noarr) const
 {
-	const size_t layer_count = weights_noarr.size();
-	const size_t batch_entry_count = input_rv.count;
+	const size_t batch_entry_count = previous_activation_rv.count;
+	mat_set_all(0, gradient_weight_noarr);
 
-	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
-		const mat_arr& lhs = layer_no == 0 ? input_rv : activations_rv[layer_no - 1];
-		const mat_arr& rhs = errors_rv[layer_no];
-		mat_arr* grad_noarr = &gradient_weights_noarr->operator[](layer_no);
-		mat_set_all(0, grad_noarr);
-
-		for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
-		{
-			mat_matrix_mul_add(lhs.get_mat(batch_entry_no),
-			                   rhs.get_mat(batch_entry_no),
-			                   grad_noarr,
-			                   transpose_A);
-		}
-
-		mat_element_wise_div(*grad_noarr, batch_entry_count, grad_noarr);
-
-		if (weight_norm_penalty != nullptr)
-		{
-			weight_norm_penalty->add_penalty_to_gradient(weights_noarr[layer_no], grad_noarr);
-		}
+		mat_matrix_mul_add(previous_activation_rv.get_mat(batch_entry_no),
+		                   error_rv.get_mat(batch_entry_no),
+		                   gradient_weight_noarr,
+		                   transpose_A);
 	}
+
+	mat_element_wise_div(*gradient_weight_noarr, batch_entry_count, gradient_weight_noarr);
 }
 
-void sgd_trainer::calculate_gradient_biases(const vector<mat_arr>& errors_rv,
-                                            vector<mat_arr>* gradient_biases_noarr_rv) const
+void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
+                                          mat_arr* gradient_bias_noarr_rv) const
 {
-	const size_t layer_count = weights_noarr.size();
-	const size_t batch_entry_count = errors_rv[0].count;
+	const size_t batch_entry_count = error_rv.count;
+	mat_set_all(0, gradient_bias_noarr_rv);
 
-	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
-		const mat_arr& layer_error = errors_rv[layer_no];
-		mat_arr* grad_noarr_rv = &gradient_biases_noarr_rv->operator[](layer_no);
-
-		for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
-		{
-			mat_element_wise_add(*grad_noarr_rv,
-			                     layer_error.get_mat(batch_entry_no),
-			                     grad_noarr_rv);
-		}
-
-		mat_element_wise_div(*grad_noarr_rv, batch_entry_count, grad_noarr_rv);
+		mat_element_wise_add(*gradient_bias_noarr_rv,
+		                     error_rv.get_mat(batch_entry_no),
+		                     gradient_bias_noarr_rv);
 	}
+
+	mat_element_wise_div(*gradient_bias_noarr_rv, batch_entry_count, gradient_bias_noarr_rv);
+}
+
+void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)
+{
+	const mat_arr& previous_activation_rv = layer_no == 0
+		                                        ? buffer->input_rv
+		                                        : buffer->activations_rv[layer_no - 1];
+
+	calculate_gradient_weight(previous_activation_rv, buffer->errors_rv[layer_no],
+	                          &buffer->gradient_weights_noarr[layer_no]);
+
+	if (weight_norm_penalty != nullptr)
+	{
+		weight_norm_penalty->add_penalty_to_gradient(weights_noarr[layer_no],
+		                                             &buffer->gradient_weights_noarr[layer_no]);
+	}
+
+	optimizer->adjust(buffer->gradient_weights_noarr[layer_no],
+	                  &weights_noarr[layer_no],
+	                  weights, layer_no);
+}
+
+void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
+{
+	calculate_gradient_bias(buffer->errors_rv[layer_no],
+	                        &buffer->gradient_biases_rv_noarr[layer_no]);
+
+	optimizer->adjust(buffer->gradient_biases_rv_noarr[layer_no],
+	                  &biases_noarr_rv[layer_no], biases, layer_no);
 }
 
 training_buffer::training_buffer(vector<unsigned> sizes, unsigned mini_batch_size)
@@ -214,4 +220,24 @@ void training_buffer::clear()
 	{
 		mat_set_all(0, ma);
 	}
+}
+
+mini_batch_builder::mini_batch_builder(training_data data)
+	: data(move(data)),
+	  distribution(0, data.input.count - 1),
+	  rng(random_device()())
+{
+}
+
+void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv)
+{
+	const unsigned mini_batch_size = input_rv->count;
+	vector<unsigned> batch_indices(mini_batch_size);
+	for (unsigned i = 0; i < mini_batch_size; i++)
+	{
+		batch_indices[i] = distribution(rng);
+	}
+
+	mat_select_mats(data.input, batch_indices, input_rv);
+	mat_select_mats(data.solution, batch_indices, solution_rv);
 }

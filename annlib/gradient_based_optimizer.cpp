@@ -17,44 +17,27 @@ void abstract_gradient_based_optimizer<buffers>::init(const vector<unsigned>& si
 {
 	size_t size = sizes.size() - 1;
 
-	weight_buffers = vector<array<mat_arr, buffers>>(size);
+	weights_buffers = vector<array<mat_arr, buffers>>(size);
 	biases_buffers = vector<array<mat_arr, buffers>>(size);
 	for (unsigned i = 0; i < size - 1; i++)
 	{
 		for (unsigned b = 0; b < buffers; b++)
 		{
-			(weight_buffers[i])[b] = mat_arr(1, sizes[i], sizes[i + 1]);
+			(weights_buffers[i])[b] = mat_arr(1, sizes[i], sizes[i + 1]);
 			(biases_buffers[i])[b] = mat_arr(1, 1, sizes[i + 1]);
 		}
 	}
 }
 
 template <size_t buffers>
-void abstract_gradient_based_optimizer<buffers>::adjust_weights(const vector<mat_arr>& gradient_weights_noarr,
-                                                                vector<mat_arr>* weights_noarr)
+void abstract_gradient_based_optimizer<buffers>::adjust(const mat_arr& gradient_noarr,
+                                                        mat_arr* target_noarr,
+                                                        const adjust_target& at,
+                                                        unsigned layer_no)
 {
-	const size_t size = gradient_weights_noarr.size();
-
-	for (unsigned i = 0; i < size; i++)
-	{
-		adjust(gradient_weights_noarr[i],
-		       &weight_buffers[i],
-		       &weights_noarr->operator[](i));
-	}
-}
-
-template <size_t buffers>
-void abstract_gradient_based_optimizer<buffers>::adjust_biases(const vector<mat_arr>& gradient_biases_rv_noarr,
-                                                               vector<mat_arr>* biases_rv_noarr)
-{
-	const size_t size = gradient_biases_rv_noarr.size();
-
-	for (unsigned i = 0; i < size; i++)
-	{
-		adjust(gradient_biases_rv_noarr[i],
-		       &biases_buffers[i],
-		       &biases_rv_noarr->operator[](i));
-	}
+	adjust(gradient_noarr,
+	       at == weights ? weights_buffers[layer_no] : biases_buffers[layer_no],
+	       target_noarr);
 }
 
 ordinary_sgd::ordinary_sgd(double learning_rate)
