@@ -204,11 +204,11 @@ training_buffer::training_buffer(vector<unsigned> sizes, unsigned mini_batch_siz
 vector<mat_arr*> training_buffer::all()
 {
 	vector<mat_arr*> result;
-	add_pointers(weighted_inputs_rv, &result);
-	add_pointers(activations_rv, &result);
-	add_pointers(errors_rv, &result);
-	add_pointers(gradient_biases_rv_noarr, &result);
-	add_pointers(gradient_weights_noarr, &result);
+	add_pointers(&weighted_inputs_rv, &result);
+	add_pointers(&activations_rv, &result);
+	add_pointers(&errors_rv, &result);
+	add_pointers(&gradient_biases_rv_noarr, &result);
+	add_pointers(&gradient_weights_noarr, &result);
 	result.emplace_back(&input_rv);
 	result.emplace_back(&solution_rv);
 	return result;

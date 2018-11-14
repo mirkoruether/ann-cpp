@@ -1,23 +1,20 @@
 add_library(annlib 
-trainingdata.h 
-networklayer.h			networklayer.cpp 
-neuralnetwork.h			neuralnetwork.cpp 
-sgdtrainer.h			sgdtrainer.cpp
-activation_function.h	activation_function.cpp
-costfunction.h			costfunction.cpp
-costfunctionreg.h		costfunctionreg.cpp 
-netinit.h				netinit.cpp)
+activation_function.h       activation_function.cpp
+cost_function.h             cost_function.cpp
+gradient_based_optimizer.h  gradient_based_optimizer.cpp
+sgd_trainer.h               sgd_trainer.cpp
+training_data.h
+weight_norm_penalty.h       weight_norm_penalty.cpp
+)
 
 add_dependencies(annlib linalg)
 
 install(TARGETS annlib DESTINATION lib)
 install(FILES 
-trainingdata.h 
-networklayer.h 
-neuralnetwork.h 
-sgdtrainer.h 
-activationfunction.h 
-costfunction.h 
-costfunctionreg.h 
-netinit.h
+activation_function.h     
+cost_function.h            
+gradient_based_optimizer.h  
+sgd_trainer.h               
+training_data.h
+weight_norm_penalty.h 
 DESTINATION include)

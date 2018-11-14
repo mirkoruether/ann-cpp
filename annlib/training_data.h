@@ -2,7 +2,6 @@
 #define TRAINING_DATA_H
 
 #include <utility>
-#include "dmatrix.h"
 #include "mat_arr.h"
 
 using namespace linalg;

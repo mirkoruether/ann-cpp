@@ -42,6 +42,10 @@ namespace linalg
 		double* start();
 
 		const double* start() const;
+
+		const double& operator[](unsigned index) const;
+
+		double& operator[](unsigned index);
 	};
 }
 

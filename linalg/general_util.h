@@ -20,7 +20,7 @@ namespace linalg
 	}
 
 	template <typename in_t, typename out_t>
-	vector<out_t> vector_select(const vector<out_t>& in, function<out_t(in_t)> f)
+	vector<out_t> vector_select(const vector<in_t>& in, function<out_t(in_t)> f)
 	{
 		vector<out_t> out(in.size());
 		for (unsigned i = 0; i < in.size(); i++)
@@ -31,11 +31,11 @@ namespace linalg
 	}
 
 	template <typename t>
-	void add_pointers(const vector<t>& in, vector<t*>* target)
+	void add_pointers(vector<t>* in, vector<t*>* target)
 	{
-		for (unsigned i = 0; i < in.size(); i++)
+		for (unsigned i = 0; i < in->size(); i++)
 		{
-			target->emplace_back(&in[i]);
+			target->emplace_back(&in->operator[](i));
 		}
 	}
 }

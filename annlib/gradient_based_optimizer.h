@@ -28,12 +28,12 @@ namespace annlib
 		                    unsigned layer_no) = 0;
 	};
 
-	template <size_t buffers>
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
 	{
 	public:
-		vector<array<mat_arr, buffers>> weights_buffers;
-		vector<array<mat_arr, buffers>> biases_buffers;
+		const size_t buffer_count;
+		vector<mat_arr> weights_buffers;
+		vector<mat_arr> biases_buffers;
 
 		void init(const vector<unsigned>& sizes) override;
 
@@ -41,13 +41,15 @@ namespace annlib
 		            mat_arr* target_noarr,
 		            const adjust_target& at,
 		            unsigned layer_no) override;
+	protected:
+		explicit abstract_gradient_based_optimizer(size_t buffer_count);
 
 		virtual void adjust(const mat_arr& gradient_noarr,
-		                    array<mat_arr, buffers>* buffers_noarr,
+		                    mat_arr* buffer,
 		                    mat_arr* target_noarr) = 0;
 	};
 
-	class ordinary_sgd : public abstract_gradient_based_optimizer<0>
+	class ordinary_sgd : public abstract_gradient_based_optimizer
 	{
 	public:
 		explicit ordinary_sgd(double learning_rate);
@@ -55,11 +57,11 @@ namespace annlib
 		double learning_rate;
 
 		void adjust(const mat_arr& gradient_noarr,
-		            array<mat_arr, 0>* buffers_noarr,
+		            mat_arr* buffer,
 		            mat_arr* target_noarr) override;
 	};
 
-	class momentum_sgd : public abstract_gradient_based_optimizer<1>
+	class momentum_sgd : public abstract_gradient_based_optimizer
 	{
 	public:
 		explicit momentum_sgd(double learning_rate, double alpha);
@@ -68,11 +70,11 @@ namespace annlib
 		double alpha;
 
 		void adjust(const mat_arr& gradient_noarr,
-		            array<mat_arr, 1>* buffers_noarr,
+		            mat_arr* buffer,
 		            mat_arr* target_noarr) override;
 	};
 
-	class adam : public abstract_gradient_based_optimizer<2>
+	class adam : public abstract_gradient_based_optimizer
 	{
 	public:
 		explicit adam(double alpha, double beta1, double beta2);
@@ -90,7 +92,7 @@ namespace annlib
 		void next_mini_batch() override;
 
 		void adjust(const mat_arr& gradient_noarr,
-		            array<mat_arr, 2>* buffers_noarr,
+		            mat_arr* buffer,
 		            mat_arr* target_noarr) override;
 	};
 }

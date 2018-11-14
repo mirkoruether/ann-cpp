@@ -66,3 +66,13 @@ const double* mat_arr::start() const
 {
 	return vec->data() + offset;
 }
+
+const double& mat_arr::operator[](unsigned index) const
+{
+	return *(start() + index);
+}
+
+double& mat_arr::operator[](unsigned index)
+{
+	return *(start() + index);
+}

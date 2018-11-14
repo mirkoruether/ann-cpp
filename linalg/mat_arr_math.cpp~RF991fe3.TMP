@@ -9,10 +9,10 @@ namespace linalg
 {
 #pragma region multiple_element_by_element_internal
 
-
-	void __mat_m_e_by_e_size_check(const vector<mat_arr*>& input, mat_arr* C)
+#pragma endregion
+	template <size_t input_count>
+	void __mat_m_e_by_e_size_check(const array<mat_arr*, input_count>& input, mat_arr* C)
 	{
-		const size_t input_count = input.size();
 		for (unsigned i = 0; i < input_count; i++)
 		{
 			if (C->rows != input[i]->rows)
@@ -32,30 +32,33 @@ namespace linalg
 		}
 	}
 
-	void __mat_multiple_e_by_e_operation(const vector<mat_arr*>& input, mat_arr* C,
-	                                     const function<double(vector<double>)>& f)
+	template <size_t input_count>
+	void __mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
+	                                     const function<double(array<double, input_count>)>& f)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
-		__mat_m_e_by_e_size_check(input, C);
+		__mat_m_e_by_e_size_check<input_count>(input, C);
 #endif
 
 		const unsigned rows_cols = C->rows * C->cols;
 		const unsigned count = C->count;
-		const size_t input_count = input.size();
 
-		auto input_starts = vector_select<mat_arr*, double*>(input, [](mat_arr* x) { return x->start(); });
+		array<double*, input_count> input_starts
+			= array_select<mat_arr*, double*, input_count>(input, [](mat_arr* x) { return x->start(); });
 
 		double* c = C->start();
+
+		array<double, input_count> input_elements{};
 
 		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
 			for (unsigned rc = 0; rc < rows_cols; rc++)
 			{
-				*(c + rc) = f(vector_select<double*, double>(input_starts,
-				                                             [&](const double* start)
-				                                             {
-					                                             return *(start + rc);
-				                                             }));
+				*(c + rc) = f(array_select<double*, double, input_count>(input_starts,
+				                                                         [&](const double* start)
+				                                                         {
+					                                                         return *(start + rc);
+				                                                         }));
 			}
 
 			for (unsigned i = 0; i < input_count; i++)
@@ -68,16 +71,16 @@ namespace linalg
 			c += rows_cols;
 		}
 	}
-#pragma endregion
-	mat_arr mat_multiple_e_by_e_operation(const vector<mat_arr*>& input, mat_arr* C,
-	                                      const function<double(vector<double>)>& f)
+
+	template <size_t input_count>
+	mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, input_count>& input, mat_arr* C,
+	                                      const function<double(array<double, input_count>)>& f)
 	{
 		if (C == nullptr)
 		{
 			const unsigned rows = input[0]->rows;
 			const unsigned cols = input[0]->cols;
 			unsigned count = input[0]->count;
-			const size_t input_count = input.size();
 			for (unsigned i = 0; i < input_count; i++)
 			{
 				if (input[i]->count > count)
@@ -86,12 +89,21 @@ namespace linalg
 				}
 			}
 			mat_arr tempC = mat_arr(count, rows, cols);
-			__mat_multiple_e_by_e_operation(input, &tempC, f);
+			__mat_multiple_e_by_e_operation<input_count>(input, &tempC, f);
 			return tempC;
 		}
-		__mat_multiple_e_by_e_operation(input, C, f);
+		__mat_multiple_e_by_e_operation<input_count>(input, C, f);
 		return *C;
 	}
+
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 2>& input, mat_arr* C,
+	                                               const function<double(array<double, 2>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 3>& input, mat_arr* C,
+	                                               const function<double(array<double, 3>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 4>& input, mat_arr* C,
+	                                               const function<double(array<double, 4>)>& f);
+	template mat_arr mat_multiple_e_by_e_operation(const array<mat_arr*, 5>& input, mat_arr* C,
+	                                               const function<double(array<double, 5>)>& f);
 
 #pragma region element_by_element_internal
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
