@@ -44,7 +44,7 @@ namespace linalg
 		const unsigned count = C->count;
 
 		array<double*, input_count> input_starts
-			= array_select(input, [](mat_arr* x) { return x->start(); });
+			= array_select<mat_arr*, double*, input_count>(input, [](mat_arr* x) { return x->start(); });
 
 		double* c = C->start();
 
@@ -54,11 +54,11 @@ namespace linalg
 		{
 			for (unsigned rc = 0; rc < rows_cols; rc++)
 			{
-				*(c + rc) = f(array_select(input_starts,
-				                           [&](const double* start)
-				                           {
-					                           return *(start + rc);
-				                           }));
+				*(c + rc) = f(array_select<double*, double, input_count>(input_starts,
+				                                                         [&](const double* start)
+				                                                         {
+					                                                         return *(start + rc);
+				                                                         }));
 			}
 
 			for (unsigned i = 0; i < input_count; i++)
@@ -80,7 +80,7 @@ namespace linalg
 		{
 			const unsigned rows = input[0]->rows;
 			const unsigned cols = input[0]->cols;
-			const unsigned count = input[0]->count;
+			unsigned count = input[0]->count;
 			for (unsigned i = 0; i < input_count; i++)
 			{
 				if (input[i]->count > count)
@@ -356,12 +356,13 @@ namespace linalg
 
 	void __mat_matrix_mul_add_case0(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
-		const unsigned count = A.count;
+		const unsigned count = C->count;
 		const unsigned l = A.rows;
 		const unsigned m = A.cols;
 		const unsigned n = B.cols;
 
-
+		// Cache miss analysis: Inner Loop
+		// A fixed, B row-wise, C row-wise
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
 			const double* a = A.start() + (matNo * l * m) % A.size();
@@ -370,18 +371,11 @@ namespace linalg
 
 			for (unsigned i = 0; i < l; i++)
 			{
-				const double* a_row = a + (i * m);
-				double* c_row = c + (i * n);
-				const double* b_element = b;
-				for (unsigned k = 0; k < m; k++)
+				for (unsigned j = 0; j < m; j++)
 				{
-					const double a_element_value = *(a_row + k);
-					double* c_element = c_row;
-					for (unsigned j = 0; j < n; j++)
+					for (unsigned k = 0; k < n; k++)
 					{
-						*c_element += a_element_value * *b_element;
-						b_element++;
-						c_element++;
+						*(c + (i * n + k)) += *(a + (i * m + j)) * *(b + (j * n + k));
 					}
 				}
 			}
@@ -390,17 +384,86 @@ namespace linalg
 
 	void __mat_matrix_mul_add_case1(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
-		throw runtime_error("Not supported yet");
+		const unsigned count = C->count;
+		const unsigned l = A.cols;
+		const unsigned m = A.rows;
+		const unsigned n = B.cols;
+
+		// Cache miss analysis: Inner Loop
+		// A fixed, B row-wise, C row-wise
+		for (unsigned matNo = 0; matNo < count; matNo++)
+		{
+			const double* a = A.start() + (matNo * l * m) % A.size();
+			const double* b = B.start() + (matNo * m * n) % B.size();
+			double* c = C->start() + (matNo * l * n);
+
+			for (unsigned j = 0; j < m; j++)
+			{
+				for (unsigned i = 0; i < l; i++)
+				{
+					for (unsigned k = 0; k < n; k++)
+					{
+						*(c + (i * n + k)) += *(a + (j * l + i)) * *(b + (j * n + k));
+					}
+				}
+			}
+		}
 	}
 
 	void __mat_matrix_mul_add_case2(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
-		throw runtime_error("Not supported yet");
+		const unsigned count = C->count;
+		const unsigned l = A.rows;
+		const unsigned m = A.cols;
+		const unsigned n = B.rows;
+
+		// Cache miss analysis: Inner Loop
+		// A row-wise, B row-wise, C fixed
+		for (unsigned matNo = 0; matNo < count; matNo++)
+		{
+			const double* a = A.start() + (matNo * l * m) % A.size();
+			const double* b = B.start() + (matNo * m * n) % B.size();
+			double* c = C->start() + (matNo * l * n);
+
+			for (unsigned i = 0; i < l; i++)
+			{
+				for (unsigned k = 0; k < n; k++)
+				{
+					for (unsigned j = 0; j < m; j++)
+					{
+						*(c + (i * n + k)) += *(a + (i * m + j)) * *(b + (k * m + j));
+					}
+				}
+			}
+		}
 	}
 
 	void __mat_matrix_mul_add_case3(const mat_arr& A, const mat_arr& B, mat_arr* C)
 	{
-		throw runtime_error("Not supported yet");
+		const unsigned count = C->count;
+		const unsigned l = A.cols;
+		const unsigned m = A.rows;
+		const unsigned n = B.rows;
+
+		// Cache miss analysis: Inner Loop
+		// A row-wise, B fixed, C column-wise (many cache misses!)
+		for (unsigned matNo = 0; matNo < count; matNo++)
+		{
+			const double* a = A.start() + (matNo * l * m) % A.size();
+			const double* b = B.start() + (matNo * m * n) % B.size();
+			double* c = C->start() + (matNo * l * n);
+
+			for (unsigned k = 0; k < n; k++)
+			{
+				for (unsigned j = 0; j < m; j++)
+				{
+					for (unsigned i = 0; i < l; i++)
+					{
+						*(c + (i * n + k)) += *(a + (j * l + i)) * *(b + (k * m + j));
+					}
+				}
+			}
+		}
 	}
 
 	void __mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)

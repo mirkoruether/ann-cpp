@@ -201,6 +201,14 @@ void testAddTranspose()
 	__testAddTranspose_check(C.start());
 }
 
+void testMatMul_CheckC(double * c)
+{
+	assert(*(c + 0) == 56);
+	assert(*(c + 1) == 62);
+	assert(*(c + 2) == 200);
+	assert(*(c + 3) == 224);
+}
+
 void testMatMul()
 {
 	mat_arr A(1, 2, 3);
@@ -224,11 +232,50 @@ void testMatMul()
 	mat_arr C(1, 2, 2);
 	mat_matrix_mul(A, B, &C);
 	double* c = C.start();
+	testMatMul_CheckC(c);	
+}
 
-	assert(*(c + 0) == 56);
-	assert(*(c + 1) == 62);
-	assert(*(c + 2) == 200);
-	assert(*(c + 3) == 224);
+void testMatMulTransposed()
+{
+	mat_arr A(1, 2, 3);
+	double* a = A.start();
+	*(a + 0) = 0;
+	*(a + 1) = 1;
+	*(a + 2) = 2;
+	*(a + 3) = 3;
+	*(a + 4) = 4;
+	*(a + 5) = 5;
+
+	mat_arr A_t(1, 3, 2);
+	mat_transpose(A, &A_t);
+
+	mat_arr B(1, 3, 2);
+	double* b = B.start();
+	*(b + 0) = 12;
+	*(b + 1) = 14;
+	*(b + 2) = 16;
+	*(b + 3) = 18;
+	*(b + 4) = 20;
+	*(b + 5) = 22;
+
+	mat_arr B_t(1, 2, 3);
+	mat_transpose(B, &B_t);
+
+	mat_arr C(1, 2, 2);
+	double* c = C.start();
+
+
+	mat_matrix_mul(A, B, &C, transpose_no);
+	testMatMul_CheckC(c);
+
+	mat_matrix_mul(A_t, B, &C, transpose_A);
+	testMatMul_CheckC(c);
+
+	mat_matrix_mul(A, B_t, &C, transpose_B);
+	testMatMul_CheckC(c);
+
+	mat_matrix_mul(A_t, B_t, &C, transpose_both);
+	testMatMul_CheckC(c);
 }
 
 int main()
@@ -236,6 +283,7 @@ int main()
 	timeExecution("testTranspose ", []() { testTranspose(); });
 	timeExecution("testAddTranspose ", []() { testAddTranspose(); });
 	timeExecution("testMatrixMul ", []() { testMatMul(); });
+	timeExecution("testMatrixMulTransposed ", []() { testMatMulTransposed(); });
 	//timeExecution("speedAddTranspose ", []() { speedAddTranspose(); });
 	cin.get();
 }
