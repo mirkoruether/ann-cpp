@@ -31,7 +31,7 @@ namespace annlib
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
 	{
 	public:
-		const size_t buffer_count;
+		const unsigned buffer_count;
 		vector<mat_arr> weights_buffers;
 		vector<mat_arr> biases_buffers;
 
@@ -42,7 +42,7 @@ namespace annlib
 		            const adjust_target& at,
 		            unsigned layer_no) override;
 	protected:
-		explicit abstract_gradient_based_optimizer(size_t buffer_count);
+		explicit abstract_gradient_based_optimizer(unsigned buffer_count);
 
 		virtual void adjust(const mat_arr& gradient_noarr,
 		                    mat_arr* buffer,

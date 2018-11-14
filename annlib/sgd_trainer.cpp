@@ -11,18 +11,24 @@ using namespace annlib;
 
 vector<unsigned> sgd_trainer::sizes() const
 {
-	vector<unsigned> sizes(weights_noarr.size() + 1);
+	const unsigned layer_count = get_layer_count();
+	vector<unsigned> sizes(layer_count + 1);
 	sizes[0] = weights_noarr[0].cols;
-	for (unsigned i = 1; i < sizes.size(); i++)
+	for (unsigned i = 0; i < layer_count; i++)
 	{
-		sizes[i] = biases_noarr_rv[i - 1].cols;
+		sizes[i + 1] = biases_noarr_rv[i].cols;
 	}
 	return sizes;
 }
 
+unsigned sgd_trainer::get_layer_count() const
+{
+	return static_cast<unsigned>(weights_noarr.size());
+}
+
 void sgd_trainer::init(vector<unsigned>& sizes)
 {
-	const unsigned layer_count = sizes.size();
+	const unsigned layer_count = get_layer_count();
 	weights_noarr.clear();
 	biases_noarr_rv.clear();
 
@@ -54,7 +60,7 @@ void sgd_trainer::train_epochs(const training_data& training_data, unsigned epoc
 
 		optimizer->next_mini_batch();
 
-		const size_t layer_count = weights_noarr.size();
+		const unsigned layer_count = get_layer_count();
 		for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
 		{
 			adjust_weights(layer_no, &buffer);
@@ -67,7 +73,7 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
                                         vector<mat_arr>* weighted_inputs_rv,
                                         vector<mat_arr>* activations_rv) const
 {
-	const size_t layer_count = weights_noarr.size();
+	const unsigned layer_count = get_layer_count();
 
 	const mat_arr* layerInput = &input;
 	for (unsigned layerNo = 0; layerNo < layer_count; layerNo++)
@@ -93,7 +99,7 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
                                   const vector<mat_arr>& weighted_inputs_rv,
                                   vector<mat_arr>* errors_rv) const
 {
-	const size_t layer_count = weights_noarr.size();
+	const unsigned layer_count = get_layer_count();
 
 	cost_f->calculate_output_layer_error(net_output_rv,
 	                                     solution_rv,
@@ -124,7 +130,7 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
                                             const mat_arr& error_rv,
                                             mat_arr* gradient_weight_noarr) const
 {
-	const size_t batch_entry_count = previous_activation_rv.count;
+	const unsigned batch_entry_count = previous_activation_rv.count;
 	mat_set_all(0, gradient_weight_noarr);
 
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
@@ -141,7 +147,7 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
 void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
                                           mat_arr* gradient_bias_noarr_rv) const
 {
-	const size_t batch_entry_count = error_rv.count;
+	const unsigned batch_entry_count = error_rv.count;
 	mat_set_all(0, gradient_bias_noarr_rv);
 
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
@@ -187,7 +193,7 @@ training_buffer::training_buffer(vector<unsigned> sizes, unsigned mini_batch_siz
 	: input_rv(mini_batch_size, 1, sizes.front()),
 	  solution_rv(mini_batch_size, 1, sizes.back())
 {
-	const unsigned layer_count = sizes.size() - 1;
+	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
 	for (unsigned i = 0; i < layer_count; i++)
 	{
 		const unsigned layer_size = sizes[i + 1];

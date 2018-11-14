@@ -12,7 +12,7 @@ namespace linalg
 	array<out_t, count> array_select(const array<in_t, count>& in, function<out_t(in_t)> f)
 	{
 		array<out_t, count> out{};
-		for (unsigned i = 0; i < count; i++)
+		for (size_t i = 0; i < count; i++)
 		{
 			out[i] = f(in[i]);
 		}
@@ -23,7 +23,7 @@ namespace linalg
 	vector<out_t> vector_select(const vector<in_t>& in, function<out_t(in_t)> f)
 	{
 		vector<out_t> out(in.size());
-		for (unsigned i = 0; i < in.size(); i++)
+		for (size_t i = 0; i < in.size(); i++)
 		{
 			out[i] = f(in[i]);
 		}
@@ -33,7 +33,7 @@ namespace linalg
 	template <typename t>
 	void add_pointers(vector<t>* in, vector<t*>* target)
 	{
-		for (unsigned i = 0; i < in->size(); i++)
+		for (size_t i = 0; i < in->size(); i++)
 		{
 			target->emplace_back(&in->operator[](i));
 		}

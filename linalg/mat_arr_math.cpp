@@ -12,7 +12,7 @@ namespace linalg
 
 	void __mat_m_e_by_e_size_check(const vector<mat_arr*>& input, mat_arr* C)
 	{
-		const size_t input_count = input.size();
+		const auto input_count = static_cast<unsigned>(input.size());
 		for (unsigned i = 0; i < input_count; i++)
 		{
 			if (C->rows != input[i]->rows)
@@ -41,7 +41,7 @@ namespace linalg
 
 		const unsigned rows_cols = C->rows * C->cols;
 		const unsigned count = C->count;
-		const size_t input_count = input.size();
+		const auto input_count = static_cast<unsigned>(input.size());
 
 		auto input_starts = vector_select<mat_arr*, double*>(input, [](mat_arr* x) { return x->start(); });
 
@@ -77,7 +77,7 @@ namespace linalg
 			const unsigned rows = input[0]->rows;
 			const unsigned cols = input[0]->cols;
 			unsigned count = input[0]->count;
-			const size_t input_count = input.size();
+			const auto input_count = static_cast<unsigned>(input.size());
 			for (unsigned i = 0; i < input_count; i++)
 			{
 				if (input[i]->count > count)
@@ -610,7 +610,7 @@ namespace linalg
 
 	void __mat_concat_size_check(const vector<mat_arr>& mats, mat_arr* C)
 	{
-		const size_t mats_count = mats.size();
+		const auto mats_count = static_cast<unsigned>(mats.size());
 		unsigned count_sum = 0;
 		for (unsigned i = 0; i < mats_count; i++)
 		{
@@ -638,7 +638,7 @@ namespace linalg
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_concat_size_check(mats, C);
 #endif
-		const unsigned mat_arr_count = mats.size();
+		const auto mat_arr_count = static_cast<unsigned>(mats.size());
 		const unsigned row_col = C->rows * C->cols;
 		double* c = C->start();
 
@@ -685,7 +685,7 @@ namespace linalg
 			throw runtime_error("Column count does not fit");
 		}
 
-		if (C->count != indices.size())
+		if (indices.size() != C->count)
 		{
 			throw runtime_error("Array sizes do not fit");
 		}
@@ -697,7 +697,7 @@ namespace linalg
 		__mat_select_mats_size_check(A, indices, C);
 #endif
 
-		const unsigned mat_count = indices.size();
+		const auto mat_count = static_cast<unsigned>(indices.size());
 		const unsigned row_col = C->rows * C->cols;
 		double* c = C->start();
 		for (unsigned mat_no = 0; mat_no < mat_count; mat_no++)
@@ -716,7 +716,7 @@ namespace linalg
 	{
 		if (C == nullptr)
 		{
-			mat_arr tempC = mat_arr(indices.size(), A.rows, A.cols);
+			mat_arr tempC = mat_arr(static_cast<unsigned>(indices.size()), A.rows, A.cols);
 			__mat_select_mats(A, indices, &tempC);
 			return tempC;
 		}

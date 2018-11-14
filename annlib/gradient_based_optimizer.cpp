@@ -14,7 +14,7 @@ void gradient_based_optimizer::next_mini_batch()
 
 void abstract_gradient_based_optimizer::init(const vector<unsigned>& sizes)
 {
-	const size_t size = sizes.size() - 1;
+	const auto size = static_cast<unsigned>(sizes.size() - 1);
 
 	for (unsigned i = 0; i < size; i++)
 	{
@@ -33,7 +33,7 @@ void abstract_gradient_based_optimizer::adjust(const mat_arr& gradient_noarr,
 	       target_noarr);
 }
 
-abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(size_t buffer_count)
+abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(unsigned buffer_count)
 	: buffer_count(buffer_count)
 {
 }
@@ -116,12 +116,12 @@ void adam::adjust(const mat_arr& gradient_noarr,
 		                                 return beta2 * v + (1 - beta2) * pow(grad, 2);
 	                                 });
 
-	const array<mat_arr*, 3> in{{target_noarr, &m_buf, &v_buf}};
-	mat_multiple_e_by_e_operation<3>(in, target_noarr,
-	                                 [&](const array<double, 3>& arr)
-	                                 {
-		                                 return arr[0]
-			                                 - alpha_t * arr[1]
-			                                 / (sqrt(arr[2]) + 1e-8);
-	                                 });
+	const vector<mat_arr*> in{{target_noarr, &m_buf, &v_buf}};
+	mat_multiple_e_by_e_operation(in, target_noarr,
+	                              [&](const vector<double>& arr)
+	                              {
+		                              return arr[0]
+			                              - alpha_t * arr[1]
+			                              / (sqrt(arr[2]) + 1e-8);
+	                              });
 }

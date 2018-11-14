@@ -1,7 +1,7 @@
 #ifndef WEIGHT_NORM_PENALTY_H
 #define WEIGHT_NORM_PENALTY_H
 
-#include "mat_arr.h";
+#include "mat_arr.h"
 
 using namespace linalg;
 
@@ -23,8 +23,8 @@ namespace annlib
 	public:
 		double regularization_parameter;
 
-		virtual void add_penalty_to_gradient(const mat_arr& weights_noarr,
-		                                     mat_arr* decay_noarr) const override;
+		void add_penalty_to_gradient(const mat_arr& weights_noarr,
+		                             mat_arr* gradient_noarr) const override;
 
 		virtual void add_penalty_to_gradient(const mat_arr& weights_noarr,
 		                                     double regularization_parameter,

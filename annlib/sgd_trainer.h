@@ -28,6 +28,8 @@ namespace annlib
 
 		vector<unsigned> sizes() const;
 
+		unsigned get_layer_count() const;
+
 		void init(vector<unsigned>& sizes);
 
 		void train_epochs(const training_data& training_data, unsigned epoch_count);

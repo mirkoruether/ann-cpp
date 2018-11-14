@@ -28,12 +28,12 @@ training_data mnist_load_combined(const string& image_file, const string& label_
 	const mat_arr images = mnist_load_images(image_file);
 	vector<int> labels = mnist_load_labels(label_file);
 
-	if (images.count != labels.size())
+	if (labels.size() != images.count)
 	{
 		throw runtime_error("Image and label size do not match");
 	}
 
-	mat_arr solution(labels.size(), 1, 10);
+	mat_arr solution(static_cast<unsigned>(labels.size()), 1, 10);
 	double* sol = solution.start();
 	for (unsigned i = 0; i < solution.count; i++)
 	{
@@ -91,7 +91,6 @@ vector<int> mnist_load_labels(const string& file)
 	{
 		labels[i] = read_next_byte(&ifs);
 	}
-
 	ifs.close();
 	return labels;
 }
