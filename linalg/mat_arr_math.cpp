@@ -371,11 +371,15 @@ namespace linalg
 
 			for (unsigned i = 0; i < l; i++)
 			{
+				const double* a_row = a + i * m;
+				double* c_row = c + i * n;
 				for (unsigned j = 0; j < m; j++)
 				{
+					const double a_val = *(a_row + j);
+					const double* b_row = b + j * n;
 					for (unsigned k = 0; k < n; k++)
 					{
-						*(c + (i * n + k)) += *(a + (i * m + j)) * *(b + (j * n + k));
+						*(c_row + k) += a_val * *(b_row + k);
 					}
 				}
 			}
@@ -399,11 +403,15 @@ namespace linalg
 
 			for (unsigned j = 0; j < m; j++)
 			{
+				const double* a_row = a + j * l;
+				const double* b_row = b + j * n;
 				for (unsigned i = 0; i < l; i++)
 				{
+					const double a_val = *(a_row + i);
+					double* c_row = c + i * n;
 					for (unsigned k = 0; k < n; k++)
 					{
-						*(c + (i * n + k)) += *(a + (j * l + i)) * *(b + (j * n + k));
+						*(c_row + k) += a_val * *(b_row + k);
 					}
 				}
 			}
@@ -427,12 +435,17 @@ namespace linalg
 
 			for (unsigned i = 0; i < l; i++)
 			{
+				const double* a_row = a + i * m;
+				double* c_row = c + i * n;
 				for (unsigned k = 0; k < n; k++)
 				{
+					const double* b_row = b + k * m;
+					double c_val = *(c_row + k);
 					for (unsigned j = 0; j < m; j++)
 					{
-						*(c + (i * n + k)) += *(a + (i * m + j)) * *(b + (k * m + j));
+						c_val += *(a_row + j) * *(b_row + j);
 					}
+					*(c_row + k) = c_val;
 				}
 			}
 		}
@@ -455,11 +468,14 @@ namespace linalg
 
 			for (unsigned k = 0; k < n; k++)
 			{
+				const double* b_row = b + k * m;
 				for (unsigned j = 0; j < m; j++)
 				{
+					const double* a_row = a + j * l;
+					const double b_val = *(b_row + j);
 					for (unsigned i = 0; i < l; i++)
 					{
-						*(c + (i * n + k)) += *(a + (j * l + i)) * *(b + (k * m + j));
+						*(c + (i * n + k)) += *(a_row + i) * b_val;
 					}
 				}
 			}
