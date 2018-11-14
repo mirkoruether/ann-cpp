@@ -1,11 +1,10 @@
 #include "mnist.h"
-#include "dmatrix.h"
 #include <fstream>
 
 using namespace std;
 using namespace linalg;
 
-int readNextInt(ifstream* ifs)
+int read_next_int(ifstream* ifs)
 {
 	char buffer[4];
 	ifs->read(buffer, 4);
@@ -16,7 +15,7 @@ int readNextInt(ifstream* ifs)
 		| (buffer[3] & 0xff) << 0;
 }
 
-int readNextByte(ifstream* ifs)
+int read_next_byte(ifstream* ifs)
 {
 	char buffer[1];
 	ifs->read(buffer, 1);
@@ -24,31 +23,31 @@ int readNextByte(ifstream* ifs)
 	return buffer[0] & 0xff;
 }
 
-vector<TrainingData> MNISTLoadCombined(const string& imageFile, const string& labelFile)
+training_data mnist_load_combined(const string& image_file, const string& label_file)
 {
-	vector<DRowVector> images = MNISTLoadImages(imageFile);
-	vector<int> labels = MNISTLoadLabels(labelFile);
+	const mat_arr images = mnist_load_images(image_file);
+	vector<int> labels = mnist_load_labels(label_file);
 
-	if (images.size() != labels.size())
+	if (images.count != labels.size())
 	{
 		throw runtime_error("Image and label size do not match");
 	}
 
-	vector<TrainingData> result;
-	for (unsigned i = 0; i < images.size(); i++)
+	mat_arr solution(labels.size(), 1, 10);
+	double* sol = solution.start();
+	for (unsigned i = 0; i < solution.count; i++)
 	{
-		DRowVector label(10);
-		label[labels[i]] = 1.0;
-		result.emplace_back(images[i], label);
+		*(sol + labels[i]) = 1.0;
+		sol += 10;
 	}
-	return result;
+	return training_data(images, solution);
 }
 
-vector<DRowVector> MNISTLoadImages(const string& file)
+mat_arr mnist_load_images(const string& file)
 {
 	ifstream ifs = ifstream(file.c_str(), ios::in | ios::binary);
 
-	const int magicNum = readNextInt(&ifs);
+	const int magicNum = read_next_int(&ifs);
 
 	if (magicNum != 2051)
 	{
@@ -56,31 +55,28 @@ vector<DRowVector> MNISTLoadImages(const string& file)
 		throw runtime_error("This file is no image file");
 	}
 
-	const int count = readNextInt(&ifs);
-	const int rows = readNextInt(&ifs);
-	const int cols = readNextInt(&ifs);
+	const int count = read_next_int(&ifs);
+	const int rows = read_next_int(&ifs);
+	const int cols = read_next_int(&ifs);
+	const int size = count * rows * cols;
 
-	vector<DRowVector> images;
+	mat_arr images(count, 1, rows * cols);
+	double* im = images.start();
 
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i < size; i++)
 	{
-		DRowVector image(rows * cols);
-		for (int j = 0; j < rows * cols; j++)
-		{
-			image[j] = readNextByte(&ifs) / 255.0;
-		}
-		images.emplace_back(image);
+		*(im + i) = read_next_byte(&ifs) / 255.0;
 	}
 
 	ifs.close();
 	return images;
 }
 
-vector<int> MNISTLoadLabels(const string& file)
+vector<int> mnist_load_labels(const string& file)
 {
 	ifstream ifs = ifstream(file.c_str(), ios::in | ios::binary);
 
-	const int magicNum = readNextInt(&ifs);
+	const int magicNum = read_next_int(&ifs);
 
 	if (magicNum != 2049)
 	{
@@ -88,12 +84,12 @@ vector<int> MNISTLoadLabels(const string& file)
 		throw runtime_error("This file is no label file");
 	}
 
-	const int count = readNextInt(&ifs);
+	const int count = read_next_int(&ifs);
 
 	vector<int> labels(count);
 	for (int i = 0; i < count; i++)
 	{
-		labels[i] = readNextByte(&ifs);
+		labels[i] = read_next_byte(&ifs);
 	}
 
 	ifs.close();
