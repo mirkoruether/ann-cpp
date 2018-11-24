@@ -9,6 +9,8 @@
 #include "training_data.h"
 #include "gradient_based_optimizer.h"
 #include <random>
+#include "net_init.h"
+#include "neural_network.h"
 
 using namespace std;
 using namespace linalg;
@@ -25,6 +27,7 @@ namespace annlib
 		shared_ptr<cost_function> cost_f;
 		shared_ptr<weight_norm_penalty> weight_norm_penalty;
 		shared_ptr<gradient_based_optimizer> optimizer;
+		shared_ptr<net_init> net_init;
 
 		vector<unsigned> sizes() const;
 
@@ -32,7 +35,9 @@ namespace annlib
 
 		void init(vector<unsigned>& sizes);
 
-		void train_epochs(const training_data& training_data, unsigned epoch_count);
+		void train_epochs(const training_data& training_data, double epoch_count);
+
+		neural_network to_neural_network(bool copy_parameters = false);
 
 	private:
 		vector<mat_arr> weights_noarr;
@@ -84,7 +89,7 @@ namespace annlib
 		void build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv);
 	private:
 		const uniform_int_distribution<unsigned> distribution;
-		mt19937 rng;
+		default_random_engine rng;
 	};
 }
 #endif

@@ -3,7 +3,6 @@
 
 using namespace linalg;
 
-
 mat_arr::mat_arr(shared_ptr<vector<double>> vector, unsigned offset,
                  unsigned count, unsigned rows, unsigned cols)
 	: vec(std::move(vector)),
@@ -23,24 +22,20 @@ mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
 {
 }
 
-
 mat_arr::mat_arr(array<unsigned, 3> dim)
 	: mat_arr(dim[0], dim[1], dim[2])
 {
 }
-
 
 mat_arr mat_arr::get_mat(unsigned index) const
 {
 	return mat_arr(vec, index * rows * cols, 1, rows, cols);
 }
 
-
 unsigned mat_arr::index(unsigned index, unsigned row, unsigned col) const
 {
 	return index * rows * cols + row * cols + col;
 }
-
 
 array<unsigned, 3> mat_arr::dim() const
 {
@@ -50,12 +45,10 @@ array<unsigned, 3> mat_arr::dim() const
 	};
 }
 
-
 unsigned mat_arr::size() const
 {
 	return count * rows * cols;
 }
-
 
 double* mat_arr::start()
 {
@@ -75,4 +68,12 @@ const double& mat_arr::operator[](unsigned index) const
 double& mat_arr::operator[](unsigned index)
 {
 	return *(start() + index);
+}
+
+mat_arr mat_arr::duplicate()
+{
+	mat_arr result(dim());
+	const double* a = start();
+	std::copy(a, a + size(), result.start());
+	return result;
 }

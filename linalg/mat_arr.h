@@ -20,11 +20,9 @@ namespace linalg
 		const unsigned rows;
 		const unsigned cols;
 
-
 	protected:
 		mat_arr(shared_ptr<vector<double>> vector, unsigned offset,
 		        unsigned count, unsigned rows, unsigned cols);
-
 
 	public:
 		mat_arr(unsigned count, unsigned rows, unsigned cols);
@@ -46,6 +44,8 @@ namespace linalg
 		const double& operator[](unsigned index) const;
 
 		double& operator[](unsigned index);
+
+		mat_arr duplicate();
 	};
 }
 

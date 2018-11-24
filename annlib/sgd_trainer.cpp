@@ -8,7 +8,6 @@ using namespace std;
 using namespace linalg;
 using namespace annlib;
 
-
 vector<unsigned> sgd_trainer::sizes() const
 {
 	const unsigned layer_count = get_layer_count();
@@ -36,14 +35,17 @@ void sgd_trainer::init(vector<unsigned>& sizes)
 	{
 		weights_noarr.emplace_back(1, sizes[i], sizes[i + 1]);
 		biases_noarr_rv.emplace_back(1, 1, sizes[i + 1]);
+
+		net_init->init_weights(&weights_noarr[i]);
+		net_init->init_biases(&biases_noarr_rv[i]);
 	}
 
 	optimizer->init(sizes);
 }
 
-void sgd_trainer::train_epochs(const training_data& training_data, unsigned epoch_count)
+void sgd_trainer::train_epochs(const training_data& training_data, const double epoch_count)
 {
-	const unsigned batch_count = epoch_count * (training_data.input.count / mini_batch_size);
+	const unsigned batch_count = (epoch_count / mini_batch_size) * training_data.input.count;
 
 	training_buffer buffer(sizes(), mini_batch_size);
 	mini_batch_builder mb_builder(training_data);
@@ -67,6 +69,24 @@ void sgd_trainer::train_epochs(const training_data& training_data, unsigned epoc
 			adjust_biases(layer_no, &buffer);
 		}
 	}
+}
+
+neural_network sgd_trainer::to_neural_network(bool copy_parameters)
+{
+	if (!copy_parameters)
+	{
+		return neural_network(weights_noarr, biases_noarr_rv, activation_f->f);
+	}
+
+	vector<mat_arr> weights_copy_noarr;
+	vector<mat_arr> biases_copy_noarr_rv;
+
+	for (unsigned i = 0; i < biases_noarr_rv.size(); i++)
+	{
+		weights_copy_noarr.emplace_back(weights_noarr[i].duplicate());
+		biases_copy_noarr_rv.emplace_back(biases_noarr_rv[i].duplicate());
+	}
+	return neural_network(weights_copy_noarr, biases_copy_noarr_rv, activation_f->f);
 }
 
 void sgd_trainer::feed_forward_detailed(const mat_arr& input,
@@ -230,8 +250,7 @@ void training_buffer::clear()
 
 mini_batch_builder::mini_batch_builder(training_data data)
 	: data(move(data)),
-	  distribution(0, data.input.count - 1),
-	  rng(random_device()())
+	  distribution(0, data.input.count - 1)
 {
 }
 
