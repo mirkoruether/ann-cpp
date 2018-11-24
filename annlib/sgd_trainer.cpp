@@ -8,11 +8,21 @@ using namespace std;
 using namespace linalg;
 using namespace annlib;
 
+sgd_trainer::sgd_trainer()
+	: mini_batch_size(16),
+	  activation_f(make_shared<logistic_activation_function>(1.0)),
+	  cost_f(make_shared<cross_entropy_costs>()),
+	  weight_norm_penalty(nullptr),
+	  optimizer(make_shared<ordinary_sgd>(1.0)),
+	  net_init(make_shared<normalized_gaussian_net_init>())
+{
+}
+
 vector<unsigned> sgd_trainer::sizes() const
 {
 	const unsigned layer_count = get_layer_count();
 	vector<unsigned> sizes(layer_count + 1);
-	sizes[0] = weights_noarr[0].cols;
+	sizes[0] = weights_noarr[0].rows;
 	for (unsigned i = 0; i < layer_count; i++)
 	{
 		sizes[i + 1] = biases_noarr_rv[i].cols;
@@ -27,7 +37,7 @@ unsigned sgd_trainer::get_layer_count() const
 
 void sgd_trainer::init(vector<unsigned>& sizes)
 {
-	const unsigned layer_count = get_layer_count();
+	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
 	weights_noarr.clear();
 	biases_noarr_rv.clear();
 
@@ -45,7 +55,7 @@ void sgd_trainer::init(vector<unsigned>& sizes)
 
 void sgd_trainer::train_epochs(const training_data& training_data, const double epoch_count)
 {
-	const unsigned batch_count = (epoch_count / mini_batch_size) * training_data.input.count;
+	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
 	training_buffer buffer(sizes(), mini_batch_size);
 	mini_batch_builder mb_builder(training_data);
@@ -86,7 +96,7 @@ neural_network sgd_trainer::to_neural_network(bool copy_parameters)
 		weights_copy_noarr.emplace_back(weights_noarr[i].duplicate());
 		biases_copy_noarr_rv.emplace_back(biases_noarr_rv[i].duplicate());
 	}
-	return neural_network(weights_copy_noarr, biases_copy_noarr_rv, activation_f->f);
+	return neural_network(move(weights_copy_noarr), move(biases_copy_noarr_rv), activation_f->f);
 }
 
 void sgd_trainer::feed_forward_detailed(const mat_arr& input,

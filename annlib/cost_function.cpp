@@ -1,5 +1,6 @@
 #include "cost_function.h"
 #include "mat_arr_math.h"
+#include <cmath>
 
 using namespace linalg;
 using namespace annlib;

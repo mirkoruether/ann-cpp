@@ -685,7 +685,7 @@ namespace linalg
 			throw runtime_error("Column count does not fit");
 		}
 
-		if (indices.size() != C->count)
+		if (static_cast<unsigned>(indices.size()) != C->count)
 		{
 			throw runtime_error("Array sizes do not fit");
 		}

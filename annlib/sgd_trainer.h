@@ -22,6 +22,8 @@ namespace annlib
 	class sgd_trainer
 	{
 	public:
+		sgd_trainer();
+
 		unsigned mini_batch_size;
 		shared_ptr<activation_function> activation_f;
 		shared_ptr<cost_function> cost_f;

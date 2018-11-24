@@ -32,12 +32,12 @@ void neural_network::feed_forward_result_nonnull(const mat_arr& input, mat_arr* 
 	}
 }
 
-neural_network::neural_network(const vector<mat_arr>& weights_noarr,
-                               const vector<mat_arr>& biases_noarr_rv,
-                               const function<double(double)>& activation_function)
-	: weights_noarr(weights_noarr),
-	  biases_noarr_rv(biases_noarr_rv),
-	  activation_function(activation_function)
+neural_network::neural_network(vector<mat_arr> weights_noarr,
+                               vector<mat_arr> biases_noarr_rv,
+                               function<double(double)> activation_function)
+	: weights_noarr(move(weights_noarr)),
+	  biases_noarr_rv(move(biases_noarr_rv)),
+	  activation_function(move(activation_function))
 {
 }
 
@@ -47,7 +47,7 @@ vector<mat_arr> neural_network::build_buffer(unsigned count) const
 	const size_t layer_count = biases_noarr_rv.size();
 	for (unsigned i = 0; i < layer_count - 1; i++)
 	{
-		buf.emplace_back(count, 1, biases_noarr_rv[i].rows);
+		buf.emplace_back(count, 1, biases_noarr_rv[i].cols);
 	}
 	return buf;
 }

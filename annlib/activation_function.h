@@ -10,8 +10,8 @@ namespace annlib
 	class activation_function
 	{
 	public:
-		function<double(double)> f;
-		function<double(double)> df;
+		const function<double(double)> f;
+		const function<double(double)> df;
 
 		activation_function(function<double(double)> f, function<double(double)> df);
 

@@ -22,8 +22,8 @@ namespace annlib
 	}
 
 	logistic_activation_function::logistic_activation_function(double T)
-		: activation_function([&](double d) { return 1 / (1 + exp(-d / T)); },
-		                      [&](double d) { return exp(d / T) / (T * pow(exp(d / T) + 1.0, 2.0)); })
+		: activation_function([=](double d) { return 1 / (1 + exp(-d / T)); },
+		                      [=](double d) { return exp(d / T) / (T * pow(exp(d / T) + 1.0, 2.0)); })
 	{
 	}
 }

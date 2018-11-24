@@ -3,7 +3,7 @@
 #include "mnist.h"
 #include "mat_arr.h"
 #include "mat_arr_math.h"
-#include <cassert>
+#include "sgd_trainer.h"
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -11,7 +11,7 @@ using namespace std;
 using namespace chrono;
 using namespace linalg;
 
-void randomMatrixArr(mat_arr* m)
+void random_matrix_arr(mat_arr* m)
 {
 	const unsigned size = m->size();
 	double* mat = m->start();
@@ -21,7 +21,7 @@ void randomMatrixArr(mat_arr* m)
 	}
 }
 
-unsigned getMaxIndex(const mat_arr& vec)
+unsigned get_max_index(const mat_arr& vec)
 {
 	double max = -1000.0;
 	unsigned maxIndex = 0;
@@ -36,13 +36,24 @@ unsigned getMaxIndex(const mat_arr& vec)
 	return maxIndex;
 }
 
-void timeExecution(const string& name, const function<void()>& func)
+template <typename T>
+T time_execution_func(const string& name, const function<T()>& func)
 {
 	cout << name << " started" << endl;
 	const auto calcStart = Clock::now();
-	func();
+	T result = func();
 	const double gpu_calc_millis = duration_cast<nanoseconds>(Clock::now() - calcStart).count() / double(1e6);
 	cout << name << " finished, time elapsed: " << gpu_calc_millis << " ms" << endl;
+	return result;
+}
+
+void time_execution(const string& name, const function<void()>& func)
+{
+	time_execution_func<bool>(name, [&]()
+	{
+		func();
+		return true;
+	});
 }
 
 void speedAddTranspose()
@@ -56,177 +67,80 @@ void speedAddTranspose()
 	mat_arr* c_addr = &c;
 	mat_arr* a_t_addr = &a_t;
 
-	randomMatrixArr(&a);
-	randomMatrixArr(&b);
-	randomMatrixArr(&b_t);
-	randomMatrixArr(&c);
+	random_matrix_arr(&a);
+	random_matrix_arr(&b);
+	random_matrix_arr(&b_t);
+	random_matrix_arr(&c);
 
-	timeExecution("transpose", [a, a_t_addr]() { mat_transpose(a, a_t_addr); });
-	timeExecution("noTranspose add", [a, b, c_addr]() { mat_element_wise_add(a, b, c_addr, transpose_no); });
-	timeExecution("transposeA add", [a_t, b, c_addr]() { mat_element_wise_add(a_t, b, c_addr, transpose_A); });
-	timeExecution("transposeB add", [a, b_t, c_addr]() { mat_element_wise_add(a, b_t, c_addr, transpose_B); });
-	timeExecution("transposeBoth add", [a_t, b_t, c_addr]()
+	time_execution("transpose", [a, a_t_addr]() { mat_transpose(a, a_t_addr); });
+	time_execution("noTranspose add", [a, b, c_addr]() { mat_element_wise_add(a, b, c_addr, transpose_no); });
+	time_execution("transposeA add", [a_t, b, c_addr]() { mat_element_wise_add(a_t, b, c_addr, transpose_A); });
+	time_execution("transposeB add", [a, b_t, c_addr]() { mat_element_wise_add(a, b_t, c_addr, transpose_B); });
+	time_execution("transposeBoth add", [a_t, b_t, c_addr]()
 	{
 		mat_element_wise_add(a_t, b_t, c_addr, transpose_both);
 	});
 }
 
-void testTranspose()
+double test_network_accuracy(neural_network net, training_data test_data)
 {
-	mat_arr A(1, 2, 3);
-	double* a = A.start();
-	*(a + 0) = 0;
-	*(a + 1) = 1;
-	*(a + 2) = 2;
-	*(a + 3) = 3;
-	*(a + 4) = 4;
-	*(a + 5) = 5;
-
-	mat_arr C(1, 3, 2);
-	mat_transpose(A, &C);
-	double* c = C.start();
-
-	assert(*(c+0) == 0);
-	assert(*(c+1) == 3);
-	assert(*(c+2) == 1);
-	assert(*(c+3) == 4);
-	assert(*(c+4) == 2);
-	assert(*(c+5) == 5);
-}
-
-void __testAddTranspose_check(double* c)
-{
-	assert(*(c + 0) == 12);
-	assert(*(c + 1) == 15);
-	assert(*(c + 2) == 18);
-	assert(*(c + 3) == 21);
-	assert(*(c + 4) == 24);
-	assert(*(c + 5) == 27);
-}
-
-void testAddTranspose()
-{
-	mat_arr A(1, 2, 3);
-	double* a = A.start();
-	*(a + 0) = 0;
-	*(a + 1) = 1;
-	*(a + 2) = 2;
-	*(a + 3) = 3;
-	*(a + 4) = 4;
-	*(a + 5) = 5;
-
-	mat_arr B(1, 2, 3);
-	double* b = B.start();
-	*(b + 0) = 12;
-	*(b + 1) = 14;
-	*(b + 2) = 16;
-	*(b + 3) = 18;
-	*(b + 4) = 20;
-	*(b + 5) = 22;
-
-	mat_arr A_t(1, 3, 2);
-	mat_transpose(A, &A_t);
-
-	mat_arr B_t(1, 3, 2);
-	mat_transpose(B, &B_t);
-
-	mat_arr C(1, 2, 3);
-	mat_element_wise_add(A, B, &C);
-	__testAddTranspose_check(C.start());
-
-	mat_element_wise_add(A_t, B, &C, transpose_A);
-	__testAddTranspose_check(C.start());
-
-	mat_element_wise_add(A, B_t, &C, transpose_B);
-	__testAddTranspose_check(C.start());
-
-	mat_element_wise_add(A_t, B_t, &C, transpose_both);
-	__testAddTranspose_check(C.start());
-}
-
-void testMatMul_CheckC(double * c)
-{
-	assert(*(c + 0) == 56);
-	assert(*(c + 1) == 62);
-	assert(*(c + 2) == 200);
-	assert(*(c + 3) == 224);
-}
-
-void testMatMul()
-{
-	mat_arr A(1, 2, 3);
-	double* a = A.start();
-	*(a + 0) = 0;
-	*(a + 1) = 1;
-	*(a + 2) = 2;
-	*(a + 3) = 3;
-	*(a + 4) = 4;
-	*(a + 5) = 5;
-
-	mat_arr B(1, 3, 2);
-	double* b = B.start();
-	*(b + 0) = 12;
-	*(b + 1) = 14;
-	*(b + 2) = 16;
-	*(b + 3) = 18;
-	*(b + 4) = 20;
-	*(b + 5) = 22;
-
-	mat_arr C(1, 2, 2);
-	mat_matrix_mul(A, B, &C);
-	double* c = C.start();
-	testMatMul_CheckC(c);	
-}
-
-void testMatMulTransposed()
-{
-	mat_arr A(1, 2, 3);
-	double* a = A.start();
-	*(a + 0) = 0;
-	*(a + 1) = 1;
-	*(a + 2) = 2;
-	*(a + 3) = 3;
-	*(a + 4) = 4;
-	*(a + 5) = 5;
-
-	mat_arr A_t(1, 3, 2);
-	mat_transpose(A, &A_t);
-
-	mat_arr B(1, 3, 2);
-	double* b = B.start();
-	*(b + 0) = 12;
-	*(b + 1) = 14;
-	*(b + 2) = 16;
-	*(b + 3) = 18;
-	*(b + 4) = 20;
-	*(b + 5) = 22;
-
-	mat_arr B_t(1, 2, 3);
-	mat_transpose(B, &B_t);
-
-	mat_arr C(1, 2, 2);
-	double* c = C.start();
-
-
-	mat_matrix_mul(A, B, &C, transpose_no);
-	testMatMul_CheckC(c);
-
-	mat_matrix_mul(A_t, B, &C, transpose_A);
-	testMatMul_CheckC(c);
-
-	mat_matrix_mul(A, B_t, &C, transpose_B);
-	testMatMul_CheckC(c);
-
-	mat_matrix_mul(A_t, B_t, &C, transpose_both);
-	testMatMul_CheckC(c);
+	const mat_arr net_output = net.feed_forward(test_data.input);
+	unsigned correct = 0;
+	for (unsigned i = 0; i < net_output.count; i++)
+	{
+		const mat_arr& output = net_output.get_mat(i);
+		const mat_arr& solution = test_data.solution.get_mat(i);
+		if (get_max_index(output) == get_max_index(solution))
+		{
+			correct++;
+		}
+	}
+	return (100.0 * correct) / net_output.count;
 }
 
 int main()
 {
-	timeExecution("testTranspose ", []() { testTranspose(); });
-	timeExecution("testAddTranspose ", []() { testAddTranspose(); });
-	timeExecution("testMatrixMul ", []() { testMatMul(); });
-	timeExecution("testMatrixMulTransposed ", []() { testMatMulTransposed(); });
-	//timeExecution("speedAddTranspose ", []() { speedAddTranspose(); });
+	const string folder = "C:\\";
+	const string trainingImages = folder + "train-images.idx3-ubyte";
+	const string trainingLabels = folder + "train-labels.idx1-ubyte";
+	const string testImages = folder + "t10k-images.idx3-ubyte";
+	const string testLabels = folder + "t10k-labels.idx1-ubyte";
+
+	/*const training_data mnist_training
+		= time_execution_func<training_data>("Load MNIST training data", [&]()
+		{
+			return mnist_load_combined(trainingImages, trainingLabels);
+		});*/
+
+	const training_data mnist_test
+		= time_execution_func<training_data>("Load MNIST test data", [&]()
+		{
+			return mnist_load_combined(testImages, testLabels);
+		});
+
+	sgd_trainer trainer;
+	trainer.mini_batch_size = 16;
+	trainer.activation_f = make_shared<logistic_activation_function>(1.0);
+	trainer.cost_f = make_shared<cross_entropy_costs>();
+	trainer.weight_norm_penalty = nullptr;
+	trainer.optimizer = make_shared<ordinary_sgd>(1.0);
+	trainer.net_init = make_shared<normalized_gaussian_net_init>();
+
+	vector<unsigned> sizes{{784, 100, 10}};
+	trainer.init(sizes);
+
+	time_execution("Train one epoch", [&]()
+	{
+		trainer.train_epochs(mnist_test, 1);
+	});
+
+	neural_network net = trainer.to_neural_network(true);
+
+	const auto accuracy = time_execution_func<double>("Test", [&]()
+	{
+		return test_network_accuracy(net, mnist_test);
+	});
+
+	cout << "Test accuracy: " << accuracy << "%" << endl;
 	cin.get();
 }

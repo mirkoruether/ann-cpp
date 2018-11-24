@@ -31,6 +31,4 @@ add_executable(ann_cpp main.cpp mnist.h mnist.cpp)
 
 add_dependencies(ann_cpp annlib linalg)
 
-#add_subdirectory(test)
-
 target_link_libraries(ann_cpp annlib linalg)
