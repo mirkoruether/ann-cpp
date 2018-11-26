@@ -191,14 +191,23 @@ namespace linalg
 			const double* b = B.start();
 			double* c = C->start();
 
-			const unsigned size_A = A.size();
-			const unsigned size_B = B.size();
-			const unsigned size_C = C->size();
+			const unsigned count = C->count;
+			const unsigned row_col = C->rows * C->cols;
+			const bool a_is_array = A.count > 1;
+			const bool b_is_array = B.count > 1;
 
-			for (unsigned i = 0; i < size_C; ++i)
+			for (unsigned mat_no = 0; mat_no < count; mat_no++)
 			{
-				*(c + i) = f(*(a + (i % size_A)),
-				             *(b + (i % size_B)));
+				for (unsigned i = 0; i < row_col; ++i)
+				{
+					*(c + i) = f(*(a + i), *(b + i));
+				}
+
+				if (a_is_array)
+					a += row_col;
+
+				if (b_is_array)
+					b += row_col;
 			}
 		}
 	}
