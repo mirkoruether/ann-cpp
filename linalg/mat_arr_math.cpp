@@ -208,6 +208,8 @@ namespace linalg
 
 				if (b_is_array)
 					b += row_col;
+
+				c += row_col;
 			}
 		}
 	}
