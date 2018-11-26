@@ -90,5 +90,6 @@ void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output
                                                        const function<double(double)>& derivative_activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
+	//TODO Check for logistic activation function
 	mat_element_wise_sub(net_output_rv, solution_rv, output_layer_error_rv);
 }

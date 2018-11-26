@@ -5,7 +5,7 @@ gradient_based_optimizer.h  gradient_based_optimizer.cpp
 net_init.h                  net_init.cpp
 neural_network.h			neural_network.cpp
 sgd_trainer.h               sgd_trainer.cpp
-training_data.h
+training_data.h             training_data.cpp
 weight_norm_penalty.h       weight_norm_penalty.cpp
 )
 

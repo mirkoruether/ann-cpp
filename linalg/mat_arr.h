@@ -45,7 +45,9 @@ namespace linalg
 
 		double& operator[](unsigned index);
 
-		mat_arr duplicate();
+		mat_arr duplicate() const;
+
+		bool only_real() const;
 	};
 }
 

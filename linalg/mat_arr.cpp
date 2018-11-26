@@ -70,10 +70,25 @@ double& mat_arr::operator[](unsigned index)
 	return *(start() + index);
 }
 
-mat_arr mat_arr::duplicate()
+mat_arr mat_arr::duplicate() const
 {
 	mat_arr result(dim());
 	const double* a = start();
 	std::copy(a, a + size(), result.start());
 	return result;
+}
+
+bool mat_arr::only_real() const
+{
+	const unsigned s = size();
+	const double* a = start();
+	for (unsigned i = 0; i < s; i++)
+	{
+		const double val = *(a + i);
+		if (!isnormal(val) && val != 0.0)
+		{
+			return false;
+		}
+	}
+	return true;
 }

@@ -101,37 +101,37 @@ double test_network_accuracy(neural_network net, training_data test_data)
 int main()
 {
 	const string folder = "C:\\";
-	const string trainingImages = folder + "train-images.idx3-ubyte";
-	const string trainingLabels = folder + "train-labels.idx1-ubyte";
-	const string testImages = folder + "t10k-images.idx3-ubyte";
-	const string testLabels = folder + "t10k-labels.idx1-ubyte";
+	const string training_images = folder + "train-images.idx3-ubyte";
+	const string training_labels = folder + "train-labels.idx1-ubyte";
+	const string test_images = folder + "t10k-images.idx3-ubyte";
+	const string test_labels = folder + "t10k-labels.idx1-ubyte";
 
-	/*const training_data mnist_training
+	const training_data mnist_training
 		= time_execution_func<training_data>("Load MNIST training data", [&]()
 		{
-			return mnist_load_combined(trainingImages, trainingLabels);
-		});*/
+			return mnist_load_combined(training_images, training_labels);
+		});
 
 	const training_data mnist_test
 		= time_execution_func<training_data>("Load MNIST test data", [&]()
 		{
-			return mnist_load_combined(testImages, testLabels);
+			return mnist_load_combined(test_images, test_labels);
 		});
 
 	sgd_trainer trainer;
-	trainer.mini_batch_size = 16;
+	trainer.mini_batch_size = 8;
 	trainer.activation_f = make_shared<logistic_activation_function>(1.0);
 	trainer.cost_f = make_shared<cross_entropy_costs>();
-	trainer.weight_norm_penalty = nullptr;
-	trainer.optimizer = make_shared<ordinary_sgd>(1.0);
+	trainer.weight_norm_penalty = make_shared<L2_regularization>(3.0 / mnist_training.entry_count());
+	trainer.optimizer = make_shared<momentum_sgd>(5.0, 0.0);
 	trainer.net_init = make_shared<normalized_gaussian_net_init>();
 
-	vector<unsigned> sizes{{784, 100, 10}};
+	vector<unsigned> sizes{{784, 30, 10}};
 	trainer.init(sizes);
 
-	time_execution("Train one epoch", [&]()
+	time_execution("Train five epochs", [&]()
 	{
-		trainer.train_epochs(mnist_test, 1);
+		trainer.train_epochs(mnist_training, 5);
 	});
 
 	neural_network net = trainer.to_neural_network(true);

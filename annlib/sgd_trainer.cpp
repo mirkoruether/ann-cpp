@@ -9,7 +9,7 @@ using namespace linalg;
 using namespace annlib;
 
 sgd_trainer::sgd_trainer()
-	: mini_batch_size(16),
+	: mini_batch_size(8),
 	  activation_f(make_shared<logistic_activation_function>(1.0)),
 	  cost_f(make_shared<cross_entropy_costs>()),
 	  weight_norm_penalty(nullptr),
@@ -144,14 +144,12 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
 		               &errors_rv->operator[](layer_no),
 		               transpose_B);
 
-		const function<double(double)>& actv_df = activation_f->df;
-
 		mat_element_by_element_operation(errors_rv->operator[](layer_no),
 		                                 weighted_inputs_rv[layer_no],
 		                                 &errors_rv->operator[](layer_no),
-		                                 [actv_df](double mat_mul_result, double wi)
+		                                 [=](double mat_mul_result, double wi)
 		                                 {
-			                                 return mat_mul_result * actv_df(wi);
+			                                 return mat_mul_result * activation_f->df(wi);
 		                                 });
 	}
 }
