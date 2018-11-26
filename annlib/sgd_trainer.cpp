@@ -3,6 +3,7 @@
 #include "mat_arr_math.h"
 #include <random>
 #include "general_util.h"
+#include <future>
 
 using namespace std;
 using namespace linalg;
@@ -73,10 +74,24 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 		optimizer->next_mini_batch();
 
 		const unsigned layer_count = get_layer_count();
+		vector<future<void>> futures;
+		futures.reserve(layer_count * 2);
 		for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
 		{
-			adjust_weights(layer_no, &buffer);
-			adjust_biases(layer_no, &buffer);
+			futures.emplace_back(async(launch::async, [layer_no, &buffer, this]
+			{
+				adjust_weights(layer_no, &buffer);
+			}));
+
+			futures.emplace_back(async(launch::async, [layer_no, &buffer, this]
+			{
+				adjust_biases(layer_no, &buffer);
+			}));
+		}
+
+		for (auto& future : futures)
+		{
+			future.get();
 		}
 	}
 }
