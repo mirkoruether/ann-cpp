@@ -8,8 +8,6 @@ using namespace linalg;
 namespace linalg
 {
 #pragma region multiple_element_by_element_internal
-
-
 	void __mat_m_e_by_e_size_check(const vector<mat_arr*>& input, mat_arr* C)
 	{
 		const auto input_count = static_cast<unsigned>(input.size());
@@ -133,19 +131,23 @@ namespace linalg
 		                    count, rows, cols);
 #endif
 
-		double* c = C->start();
-
 		const bool a_is_array = A.count > 1;
 		const bool b_is_array = B.count > 1;
 		const unsigned row_col = rows * cols;
 
-		const double* a = A.start();
-		const double* b = B.start();
+		const double* a_start = A.start();
+		const double* b_start = B.start();
+		double* c_start = C->start();
 
 		for (unsigned mat_no = 0; mat_no > count; ++mat_no)
 		{
 			unsigned i_normal = 0;
 			unsigned i_transposed = 0;
+
+			const unsigned offset = mat_no * row_col;
+			const double* a = a_is_array ? a_start + offset : a_start;
+			const double* b = b_is_array ? b_start + offset : b_start;
+			double* c = c_start + offset;
 
 			for (unsigned row = 0; row < rows; ++row)
 			{
@@ -158,12 +160,6 @@ namespace linalg
 				}
 				i_transposed -= (cols * rows - 1);
 			}
-
-			if (a_is_array)
-				a += row_col;
-
-			if (b_is_array)
-				b += row_col;
 		}
 	}
 
@@ -187,9 +183,9 @@ namespace linalg
 			                    B.count, B.rows, B.cols,
 			                    C->count, C->rows, C->cols);
 #endif
-			const double* a = A.start();
-			const double* b = B.start();
-			double* c = C->start();
+			const double* a_start = A.start();
+			const double* b_start = B.start();
+			double* c_start = C->start();
 
 			const unsigned count = C->count;
 			const unsigned row_col = C->rows * C->cols;
@@ -198,18 +194,15 @@ namespace linalg
 
 			for (unsigned mat_no = 0; mat_no < count; mat_no++)
 			{
+				const unsigned offset = mat_no * row_col;
+				const double* a = a_is_array ? a_start + offset : a_start;
+				const double* b = b_is_array ? b_start + offset : b_start;
+				double* c = c_start + offset;
+
 				for (unsigned i = 0; i < row_col; ++i)
 				{
 					*(c + i) = f(*(a + i), *(b + i));
 				}
-
-				if (a_is_array)
-					a += row_col;
-
-				if (b_is_array)
-					b += row_col;
-
-				c += row_col;
 			}
 		}
 	}
@@ -264,13 +257,22 @@ namespace linalg
 		}
 #endif
 
-		const double* a = A.start();
-		double* c = C->start();
+		const double* a_start = A.start();
+		double* c_start = C->start();
 
-		const unsigned size = C->size();
-		for (unsigned i = 0; i < size; i++)
+		const unsigned count = C->count;
+		const unsigned row_col = C->rows * C->cols;
+
+		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
-			*(c + i) = f(*(a + i));
+			const unsigned offset = mat_no * row_col;
+			const double* a = a_start + offset;
+			double* c = c_start + offset;
+
+			for (unsigned i = 0; i < row_col; i++)
+			{
+				*(c + i) = f(*(a + i));
+			}
 		}
 	}
 #pragma endregion
@@ -360,13 +362,20 @@ namespace linalg
 		const unsigned m = A.cols;
 		const unsigned n = B.cols;
 
+		const double* a_start = A.start();
+		const double* b_start = B.start();
+		double* c_start = C->start();
+
+		const bool a_is_array = A.count > 1;
+		const bool b_is_array = B.count > 1;
+
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const double* a = A.start() + (matNo * l * m) % A.size();
-			const double* b = B.start() + (matNo * m * n) % B.size();
-			double* c = C->start() + (matNo * l * n);
+			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
+			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
+			double* c = c_start + (matNo * l * n);
 
 			for (unsigned i = 0; i < l; i++)
 			{
@@ -392,13 +401,20 @@ namespace linalg
 		const unsigned m = A.rows;
 		const unsigned n = B.cols;
 
+		const double* a_start = A.start();
+		const double* b_start = B.start();
+		double* c_start = C->start();
+
+		const bool a_is_array = A.count > 1;
+		const bool b_is_array = B.count > 1;
+
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const double* a = A.start() + (matNo * l * m) % A.size();
-			const double* b = B.start() + (matNo * m * n) % B.size();
-			double* c = C->start() + (matNo * l * n);
+			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
+			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
+			double* c = c_start + (matNo * l * n);
 
 			for (unsigned j = 0; j < m; j++)
 			{
@@ -424,13 +440,20 @@ namespace linalg
 		const unsigned m = A.cols;
 		const unsigned n = B.rows;
 
+		const double* a_start = A.start();
+		const double* b_start = B.start();
+		double* c_start = C->start();
+
+		const bool a_is_array = A.count > 1;
+		const bool b_is_array = B.count > 1;
+
 		// Cache miss analysis: Inner Loop
 		// A row-wise, B row-wise, C fixed
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const double* a = A.start() + (matNo * l * m) % A.size();
-			const double* b = B.start() + (matNo * m * n) % B.size();
-			double* c = C->start() + (matNo * l * n);
+			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
+			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
+			double* c = c_start + (matNo * l * n);
 
 			for (unsigned i = 0; i < l; i++)
 			{
@@ -457,13 +480,20 @@ namespace linalg
 		const unsigned m = A.rows;
 		const unsigned n = B.rows;
 
+		const double* a_start = A.start();
+		const double* b_start = B.start();
+		double* c_start = C->start();
+
+		const bool a_is_array = A.count > 1;
+		const bool b_is_array = B.count > 1;
+
 		// Cache miss analysis: Inner Loop
 		// A row-wise, B fixed, C column-wise (many cache misses!)
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const double* a = A.start() + (matNo * l * m) % A.size();
-			const double* b = B.start() + (matNo * m * n) % B.size();
-			double* c = C->start() + (matNo * l * n);
+			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
+			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
+			double* c = c_start + (matNo * l * n);
 
 			for (unsigned k = 0; k < n; k++)
 			{
@@ -570,24 +600,31 @@ namespace linalg
 		                       C->count, C->rows, C->cols);
 #endif
 
-		const double* a = A.start();
-		double* c = C->start();
+		const double* a_start = A.start();
+		double* c_start = C->start();
 
+		const unsigned count = C->count;
 		const unsigned rows = C->rows;
-		const unsigned rows_count = C->count * C->rows;
 		const unsigned cols = C->cols;
 
-		int i_normal = 0;
-		int i_transposed = 0;
-		for (unsigned i = 0; i < rows_count; ++i)
+		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
-			for (unsigned col = 0; col < cols; ++col)
+			const unsigned offset = mat_no * rows * cols;
+			const double* a = a_start + offset;
+			double* c = c_start + offset;
+
+			unsigned i_normal = 0;
+			unsigned i_transposed = 0;
+			for (unsigned i = 0; i < rows; ++i)
 			{
-				*(c + i_normal) = *(a + i_transposed);
-				i_normal++;
-				i_transposed += rows;
+				for (unsigned col = 0; col < cols; ++col)
+				{
+					*(c + i_normal) = *(a + i_transposed);
+					i_normal++;
+					i_transposed += rows;
+				}
+				i_transposed -= (cols * rows - 1);
 			}
-			i_transposed -= (cols * rows - 1);
 		}
 	}
 #pragma endregion
@@ -710,15 +747,18 @@ namespace linalg
 
 		const auto mat_count = static_cast<unsigned>(indices.size());
 		const unsigned row_col = C->rows * C->cols;
-		double* c = C->start();
+
+		const double* a_start = A.start();
+		double* c_start = C->start();
+
 		for (unsigned mat_no = 0; mat_no < mat_count; mat_no++)
 		{
-			const double* a = A.start() + indices[mat_no] * row_col;
-			for (unsigned rc = 0; rc < row_col; rc++)
+			const double* a = a_start + indices[mat_no] * row_col;
+			double* c = c_start + (mat_no * row_col);
+
+			for (unsigned i = 0; i < row_col; i++)
 			{
-				*c = *a;
-				a++;
-				c++;
+				*(c + i) = *(a + i);
 			}
 		}
 	}
