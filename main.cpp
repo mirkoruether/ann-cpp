@@ -4,6 +4,7 @@
 #include "mat_arr.h"
 #include "mat_arr_math.h"
 #include "sgd_trainer.h"
+#include <thread>
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -100,6 +101,9 @@ double test_network_accuracy(neural_network net, training_data test_data)
 
 int main()
 {
+	const unsigned n_threads = std::thread::hardware_concurrency();
+	std::cout << n_threads << " concurrent threads are supported.\n";
+
 	const string folder = "C:\\";
 	const string training_images = folder + "train-images.idx3-ubyte";
 	const string training_labels = folder + "train-labels.idx1-ubyte";

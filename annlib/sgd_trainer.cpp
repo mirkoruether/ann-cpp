@@ -58,41 +58,16 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
-	training_buffer buffer(sizes(), mini_batch_size);
+	training_buffer buffer(sizes(), mini_batch_size, std::thread::hardware_concurrency());
 	mini_batch_builder mb_builder(training_data);
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
 	{
 		mb_builder.build_mini_batch(&buffer.input_rv, &buffer.solution_rv);
 
-		feed_forward_detailed(buffer.input_rv,
-		                      &buffer.weighted_inputs_rv, &buffer.activations_rv);
+		do_feed_forward_and_backprop(&buffer);
 
-		calculate_error(buffer.activations_rv.back(), buffer.solution_rv, buffer.weighted_inputs_rv,
-		                &buffer.errors_rv);
-
-		optimizer->next_mini_batch();
-
-		const unsigned layer_count = get_layer_count();
-		vector<future<void>> futures;
-		futures.reserve(layer_count * 2);
-		for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
-		{
-			futures.emplace_back(async(launch::async, [layer_no, &buffer, this]
-			{
-				adjust_weights(layer_no, &buffer);
-			}));
-
-			futures.emplace_back(async(launch::async, [layer_no, &buffer, this]
-			{
-				adjust_biases(layer_no, &buffer);
-			}));
-		}
-
-		for (auto& future : futures)
-		{
-			future.get();
-		}
+		do_adjustments(&buffer);
 	}
 }
 
@@ -232,10 +207,61 @@ void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
 	                  &biases_noarr_rv[layer_no], biases, layer_no);
 }
 
+void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
+{
+	const auto part_count = buffer->part_count();
+	vector<future<void>> futures;
+	futures.reserve(part_count);
+	for (unsigned part_no = 0; part_no < part_count; part_no++)
+	{
+		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
+		futures.emplace_back(async(launch::async, [=]
+		{
+			feed_forward_detailed(part_buf->input_rv,
+			                      &part_buf->weighted_inputs_rv, &part_buf->activations_rv);
+
+			calculate_error(part_buf->activations_rv.back(), part_buf->solution_rv, part_buf->weighted_inputs_rv,
+			                &part_buf->errors_rv);
+		}));
+	}
+
+	for (auto& future : futures)
+	{
+		future.get();
+	}
+}
+
+void sgd_trainer::do_adjustments(training_buffer* buffer)
+{
+	optimizer->next_mini_batch();
+
+	const unsigned layer_count = get_layer_count();
+	vector<future<void>> futures;
+	futures.reserve(layer_count * 2);
+	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
+	{
+		futures.emplace_back(async(launch::async, [=]
+		{
+			adjust_weights(layer_no, buffer);
+		}));
+
+		futures.emplace_back(async(launch::async, [=]
+		{
+			adjust_biases(layer_no, buffer);
+		}));
+	}
+
+	for (auto& future : futures)
+	{
+		future.get();
+	}
+}
+
 
 mini_batch_builder::mini_batch_builder(training_data data)
-	: data(move(data)),
-	  distribution(0, data.input.count - 1)
+	:
+	data(move(data)),
+	distribution(0, data.input.count - 1)
 {
 }
 

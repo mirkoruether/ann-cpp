@@ -64,6 +64,9 @@ namespace annlib
 
 		void adjust_weights(unsigned layer_no, training_buffer* buffer);
 		void adjust_biases(unsigned layer_no, training_buffer* buffer);
+
+		void do_feed_forward_and_backprop(training_buffer* buffer) const;
+		void do_adjustments(training_buffer* buffer);
 	};
 
 	class mini_batch_builder

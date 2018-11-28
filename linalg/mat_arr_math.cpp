@@ -37,33 +37,31 @@ namespace linalg
 		__mat_m_e_by_e_size_check(input, C);
 #endif
 
-		const unsigned rows_cols = C->rows * C->cols;
+		const unsigned row_col = C->rows * C->cols;
 		const unsigned count = C->count;
 		const auto input_count = static_cast<unsigned>(input.size());
 
-		auto input_starts = vector_select<mat_arr*, double*>(input, [](mat_arr* x) { return x->start(); });
-
-		double* c = C->start();
+		auto ins_start = vector_select<mat_arr*, double*>(input, [](mat_arr* x) { return x->start(); });
+		double* c_start = C->start();
 
 		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
-			for (unsigned rc = 0; rc < rows_cols; rc++)
-			{
-				*(c + rc) = f(vector_select<double*, double>(input_starts,
-				                                             [&](const double* start)
-				                                             {
-					                                             return *(start + rc);
-				                                             }));
-			}
-
+			const unsigned offset = mat_no * row_col;
+			auto ins = vector<double*>(input_count);
 			for (unsigned i = 0; i < input_count; i++)
 			{
-				if (input[i]->count > 1)
-				{
-					input_starts[i] += rows_cols;
-				}
+				ins[i] = input[i]->count > 1 ? ins_start[i] + offset : ins_start[i];
 			}
-			c += rows_cols;
+			double* c = c_start + offset;
+
+			for (unsigned i = 0; i < row_col; i++)
+			{
+				*(c + i) = f(vector_select<double*, double>(ins_start,
+				                                            [&](const double* in)
+				                                            {
+					                                            return *(in + i);
+				                                            }));
+			}
 		}
 	}
 #pragma endregion

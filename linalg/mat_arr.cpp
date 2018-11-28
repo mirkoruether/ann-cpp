@@ -27,9 +27,34 @@ mat_arr::mat_arr(array<unsigned, 3> dim)
 {
 }
 
-mat_arr mat_arr::get_mat(unsigned index) const
+mat_arr mat_arr::get_mat(unsigned index)
 {
-	return mat_arr(vec, index * rows * cols, 1, rows, cols);
+	return get_mats(index, 1);
+}
+
+const mat_arr mat_arr::get_mat(unsigned index) const
+{
+	return get_mats(index, 1);
+}
+
+mat_arr mat_arr::get_mats(unsigned start, unsigned count)
+{
+	if (count + start > this->count)
+	{
+		throw runtime_error("Out of bounds");
+	}
+
+	return mat_arr(vec, start * rows * cols, count, rows, cols);
+}
+
+const mat_arr mat_arr::get_mats(unsigned start, unsigned count) const
+{
+	if (count + start > this->count)
+	{
+		throw runtime_error("Out of bounds");
+	}
+
+	return mat_arr(vec, start * rows * cols, count, rows, cols);
 }
 
 unsigned mat_arr::index(unsigned index, unsigned row, unsigned col) const

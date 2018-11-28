@@ -29,7 +29,13 @@ namespace linalg
 
 		explicit mat_arr(array<unsigned, 3> dim);
 
-		mat_arr get_mat(unsigned index) const;
+		mat_arr get_mat(unsigned index);
+
+		const mat_arr get_mat(unsigned index) const;
+
+		mat_arr get_mats(unsigned start, unsigned count);
+
+		const mat_arr get_mats(unsigned start, unsigned count) const;
 
 		unsigned index(unsigned index, unsigned row, unsigned col) const;
 
