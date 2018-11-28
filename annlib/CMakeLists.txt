@@ -5,6 +5,7 @@ gradient_based_optimizer.h  gradient_based_optimizer.cpp
 net_init.h                  net_init.cpp
 neural_network.h			neural_network.cpp
 sgd_trainer.h               sgd_trainer.cpp
+training_buffer.h			training_buffer.cpp
 training_data.h             training_data.cpp
 weight_norm_penalty.h       weight_norm_penalty.cpp
 )
@@ -18,7 +19,8 @@ cost_function.h
 gradient_based_optimizer.h  
 net_init.h
 neural_network.h
-sgd_trainer.h               
+sgd_trainer.h       
+training_buffer.h
 training_data.h
 weight_norm_penalty.h 
 DESTINATION include)

@@ -11,6 +11,7 @@
 #include <random>
 #include "net_init.h"
 #include "neural_network.h"
+#include "training_buffer.h"
 
 using namespace std;
 using namespace linalg;
@@ -63,23 +64,6 @@ namespace annlib
 
 		void adjust_weights(unsigned layer_no, training_buffer* buffer);
 		void adjust_biases(unsigned layer_no, training_buffer* buffer);
-	};
-
-	class training_buffer
-	{
-	public:
-		training_buffer(vector<unsigned> sizes, unsigned mini_batch_size);
-
-		vector<mat_arr> weighted_inputs_rv;
-		vector<mat_arr> activations_rv;
-		vector<mat_arr> errors_rv;
-		vector<mat_arr> gradient_biases_rv_noarr;
-		vector<mat_arr> gradient_weights_noarr;
-		mat_arr input_rv;
-		mat_arr solution_rv;
-
-		vector<mat_arr*> all();
-		void clear();
 	};
 
 	class mini_batch_builder
