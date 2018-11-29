@@ -28,7 +28,7 @@ namespace linalg
 	}
 
 	void __mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
-	                                     const std::function<double(std::vector<double>)>& f)
+										 const std::function<double(std::vector<double>)>& f)
 	{
 		__mat_m_e_by_e_size_check(input, C);
 
@@ -51,17 +51,16 @@ namespace linalg
 
 			for (unsigned i = 0; i < row_col; i++)
 			{
-				*(c + i) = f(vector_select<double*, double>(ins_start,
-				                                            [&](const double* in)
-				                                            {
-					                                            return *(in + i);
-				                                            }));
+				c[i] = f(vector_select<double*, double>(ins_start,
+														[&](const double* in) {
+															return in[i];
+														}));
 			}
 		}
 	}
 
 	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
-	                                      const std::function<double(std::vector<double>)>& f)
+										  const std::function<double(std::vector<double>)>& f)
 	{
 		if (C == nullptr)
 		{
@@ -85,8 +84,8 @@ namespace linalg
 	}
 
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
-	                                const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
-	                                const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
+									const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
+									const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
 	{
 		if (count_a != 1 && count_b != 1 && count_a != count_b)
 		{
@@ -110,16 +109,16 @@ namespace linalg
 	}
 
 	void __mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                        const std::function<double(double, double)>& f,
-	                                        const bool transpose_a, const bool transpose_b)
+											const std::function<double(double, double)>& f,
+											const bool transpose_a, const bool transpose_b)
 	{
 		const unsigned count = C->count;
 		const unsigned rows = C->rows;
 		const unsigned cols = C->cols;
 
 		__e_by_e_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
-		                    B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
-		                    count, rows, cols);
+							B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
+							count, rows, cols);
 
 		const bool a_is_array = A.count > 1;
 		const bool b_is_array = B.count > 1;
@@ -143,8 +142,8 @@ namespace linalg
 			{
 				for (unsigned col = 0; col < cols; ++col)
 				{
-					*(c + i_normal) = f(*(a + (transpose_a ? i_transposed : i_normal)),
-					                    *(b + (transpose_b ? i_transposed : i_normal)));
+					c[i_normal] = f(a[transpose_a ? i_transposed : i_normal],
+									b[transpose_b ? i_transposed : i_normal]);
 					i_normal++;
 					i_transposed += rows;
 				}
@@ -154,7 +153,7 @@ namespace linalg
 	}
 
 	void __mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                        const std::function<double(double, double)>& f, const mat_tr tr)
+											const std::function<double(double, double)>& f, const mat_tr tr)
 	{
 		switch (tr)
 		{
@@ -170,8 +169,8 @@ namespace linalg
 		default:
 
 			__e_by_e_size_check(A.count, A.rows, A.cols,
-			                    B.count, B.rows, B.cols,
-			                    C->count, C->rows, C->cols);
+								B.count, B.rows, B.cols,
+								C->count, C->rows, C->cols);
 
 			const double* a_start = A.start();
 			const double* b_start = B.start();
@@ -191,21 +190,21 @@ namespace linalg
 
 				for (unsigned i = 0; i < row_col; ++i)
 				{
-					*(c + i) = f(*(a + i), *(b + i));
+					c[i] = f(a[i], b[i]);
 				}
 			}
 		}
 	}
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                         const std::function<double(double, double)>& f, mat_tr tr)
+											 const std::function<double(double, double)>& f, mat_tr tr)
 	{
 		if (C == nullptr)
 		{
 			const bool tr_A = (tr == transpose_A || tr == transpose_both);
 			mat_arr tempC = mat_arr(std::max(A.count, B.count),
-			                        tr_A ? A.cols : A.rows,
-			                        tr_A ? A.rows : A.cols);
+									tr_A ? A.cols : A.rows,
+									tr_A ? A.rows : A.cols);
 			__mat_element_by_element_operation(A, B, &tempC, f, tr);
 			return tempC;
 		}
@@ -234,11 +233,9 @@ namespace linalg
 	}
 
 	void __mat_element_wise_operation(const mat_arr& A, mat_arr* C,
-	                                  const std::function<double(double)>& f)
+									  const std::function<double(double)>& f)
 	{
-		if (A.rows != C->rows
-			|| A.cols != C->cols
-			|| A.rows != C->rows)
+		if (A.rows != C->rows || A.cols != C->cols || A.rows != C->rows)
 		{
 			throw std::runtime_error("Sizes do not fit");
 		}
@@ -257,7 +254,7 @@ namespace linalg
 
 			for (unsigned i = 0; i < row_col; i++)
 			{
-				*(c + i) = f(*(a + i));
+				c[i] = f(a[i]);
 			}
 		}
 	}
@@ -315,8 +312,8 @@ namespace linalg
 	}
 
 	inline void __matrix_mul_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
-	                                    const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
-	                                    const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
+										const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
+										const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
 	{
 		if (count_a != 1 && count_b != 1 && count_a != count_b)
 		{
@@ -339,106 +336,61 @@ namespace linalg
 		}
 	}
 
-	void __mat_matrix_mul_add_case0(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	struct _mat_mul_case0_kernel
 	{
-		const unsigned count = C->count;
-		const unsigned l = A.rows;
-		const unsigned m = A.cols;
-		const unsigned n = B.cols;
-
-		const double* a_start = A.start();
-		const double* b_start = B.start();
-		double* c_start = C->start();
-
-		const bool a_is_array = A.count > 1;
-		const bool b_is_array = B.count > 1;
-
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
-		for (unsigned matNo = 0; matNo < count; matNo++)
+		void operator()(unsigned l, unsigned m, unsigned n,
+						const double* a, const double* b, double* c)
 		{
-			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
-			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
-			double* c = c_start + (matNo * l * n);
-
 			for (unsigned i = 0; i < l; i++)
 			{
 				const double* a_row = a + i * m;
 				double* c_row = c + i * n;
 				for (unsigned j = 0; j < m; j++)
 				{
-					const double a_val = *(a_row + j);
+					const double a_val = a_row[j];
 					const double* b_row = b + j * n;
 					for (unsigned k = 0; k < n; k++)
 					{
-						*(c_row + k) += a_val * *(b_row + k);
+						c_row[k] += a_val * b_row[k];
 					}
 				}
 			}
-		}
-	}
+		};
+	};
 
-	void __mat_matrix_mul_add_case1(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	struct _mat_mul_case1_kernel
 	{
-		const unsigned count = C->count;
-		const unsigned l = A.cols;
-		const unsigned m = A.rows;
-		const unsigned n = B.cols;
-
-		const double* a_start = A.start();
-		const double* b_start = B.start();
-		double* c_start = C->start();
-
-		const bool a_is_array = A.count > 1;
-		const bool b_is_array = B.count > 1;
-
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
-		for (unsigned matNo = 0; matNo < count; matNo++)
+		void operator()(unsigned l, unsigned m, unsigned n,
+						const double* a, const double* b, double* c)
 		{
-			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
-			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
-			double* c = c_start + (matNo * l * n);
-
 			for (unsigned j = 0; j < m; j++)
 			{
 				const double* a_row = a + j * l;
 				const double* b_row = b + j * n;
 				for (unsigned i = 0; i < l; i++)
 				{
-					const double a_val = *(a_row + i);
+					const double a_val = a_row[i];
 					double* c_row = c + i * n;
 					for (unsigned k = 0; k < n; k++)
 					{
-						*(c_row + k) += a_val * *(b_row + k);
+						c_row[k] += a_val * b_row[k];
 					}
 				}
 			}
-		}
-	}
+		};
+	};
 
-	void __mat_matrix_mul_add_case2(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	struct _mat_mul_case2_kernel
 	{
-		const unsigned count = C->count;
-		const unsigned l = A.rows;
-		const unsigned m = A.cols;
-		const unsigned n = B.rows;
-
-		const double* a_start = A.start();
-		const double* b_start = B.start();
-		double* c_start = C->start();
-
-		const bool a_is_array = A.count > 1;
-		const bool b_is_array = B.count > 1;
-
 		// Cache miss analysis: Inner Loop
 		// A row-wise, B row-wise, C fixed
-		for (unsigned matNo = 0; matNo < count; matNo++)
+		void operator()(unsigned l, unsigned m, unsigned n,
+						const double* a, const double* b, double* c)
 		{
-			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
-			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
-			double* c = c_start + (matNo * l * n);
-
 			for (unsigned i = 0; i < l; i++)
 			{
 				const double* a_row = a + i * m;
@@ -446,23 +398,45 @@ namespace linalg
 				for (unsigned k = 0; k < n; k++)
 				{
 					const double* b_row = b + k * m;
-					double c_val = *(c_row + k);
+					double c_val = c_row[k];
 					for (unsigned j = 0; j < m; j++)
 					{
-						c_val += *(a_row + j) * *(b_row + j);
+						c_val += a_row[j] * b_row[j];
 					}
-					*(c_row + k) = c_val;
+					c_row[k] = c_val;
 				}
 			}
-		}
-	}
+		};
+	};
 
-	void __mat_matrix_mul_add_case3(const mat_arr& A, const mat_arr& B, mat_arr* C)
+	struct _mat_mul_case3_kernel
+	{
+		// Cache miss analysis: Inner Loop
+		// A row-wise, B fixed, C column-wise (many cache misses!)
+		void operator()(unsigned l, unsigned m, unsigned n,
+						const double* a, const double* b, double* c)
+		{
+			for (unsigned k = 0; k < n; k++)
+			{
+				const double* b_row = b + k * m;
+				for (unsigned j = 0; j < m; j++)
+				{
+					const double* a_row = a + j * l;
+					const double b_val = b_row[j];
+					for (unsigned i = 0; i < l; i++)
+					{
+						c[i * n + k] += a_row[i] * b_val;
+					}
+				}
+			}
+		};
+	};
+
+	template <typename Case>
+	void __mat_matrix_mul_add_launch(const mat_arr& A, const mat_arr& B, mat_arr* C,
+									 unsigned l, unsigned m, unsigned n, Case cs)
 	{
 		const unsigned count = C->count;
-		const unsigned l = A.cols;
-		const unsigned m = A.rows;
-		const unsigned n = B.rows;
 
 		const double* a_start = A.start();
 		const double* b_start = B.start();
@@ -471,27 +445,13 @@ namespace linalg
 		const bool a_is_array = A.count > 1;
 		const bool b_is_array = B.count > 1;
 
-		// Cache miss analysis: Inner Loop
-		// A row-wise, B fixed, C column-wise (many cache misses!)
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
 			const double* a = a_is_array ? a_start + (matNo * l * m) : a_start;
 			const double* b = b_is_array ? b_start + (matNo * m * n) : b_start;
 			double* c = c_start + (matNo * l * n);
 
-			for (unsigned k = 0; k < n; k++)
-			{
-				const double* b_row = b + k * m;
-				for (unsigned j = 0; j < m; j++)
-				{
-					const double* a_row = a + j * l;
-					const double b_val = *(b_row + j);
-					for (unsigned i = 0; i < l; i++)
-					{
-						*(c + (i * n + k)) += *(a_row + i) * b_val;
-					}
-				}
-			}
+			cs(l, m, n, a, b, c);
 		}
 	}
 
@@ -500,8 +460,8 @@ namespace linalg
 		const bool transpose_a = tr == transpose_A || tr == transpose_both;
 		const bool transpose_b = tr == transpose_B || tr == transpose_both;
 		__matrix_mul_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
-		                        B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
-		                        C->count, C->rows, C->cols);
+								B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
+								C->count, C->rows, C->cols);
 
 		if (A.start() == C->start() || B.start() == C->start())
 		{
@@ -511,16 +471,20 @@ namespace linalg
 		switch (tr)
 		{
 		case transpose_no:
-			__mat_matrix_mul_add_case0(A, B, C);
+			__mat_matrix_mul_add_launch(A, B, C, A.rows, A.cols, B.cols,
+										_mat_mul_case0_kernel());
 			return;
 		case transpose_A:
-			__mat_matrix_mul_add_case1(A, B, C);
+			__mat_matrix_mul_add_launch(A, B, C, A.cols, A.rows, B.cols,
+										_mat_mul_case1_kernel());
 			return;
 		case transpose_B:
-			__mat_matrix_mul_add_case2(A, B, C);
+			__mat_matrix_mul_add_launch(A, B, C, A.rows, A.cols, B.rows,
+										_mat_mul_case2_kernel());
 			return;
 		case transpose_both:
-			__mat_matrix_mul_add_case3(A, B, C);
+			__mat_matrix_mul_add_launch(A, B, C, A.cols, A.rows, B.rows,
+										_mat_mul_case3_kernel());
 			return;
 		}
 	}
@@ -536,8 +500,8 @@ namespace linalg
 		if (C == nullptr)
 		{
 			mat_arr tempC = mat_arr(std::max(A.count, B.count),
-			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
-			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
+									(tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
+									(tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
 			__mat_matrix_mul_add(A, B, &tempC, tr);
 			return tempC;
 		}
@@ -550,8 +514,8 @@ namespace linalg
 		if (C == nullptr)
 		{
 			mat_arr tempC = mat_arr(std::max(A.count, B.count),
-			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
-			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
+									(tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
+									(tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
 			__mat_matrix_mul(A, B, &tempC, tr);
 			return tempC;
 		}
@@ -560,7 +524,7 @@ namespace linalg
 	}
 
 	void __transpose_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
-	                            const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
+								const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
 	{
 		if (count_a != count_c)
 		{
@@ -576,7 +540,7 @@ namespace linalg
 	void __mat_transpose(const mat_arr& A, mat_arr* C)
 	{
 		__transpose_size_check(A.count, A.rows, A.cols,
-		                       C->count, C->rows, C->cols);
+							   C->count, C->rows, C->cols);
 
 		const double* a_start = A.start();
 		double* c_start = C->start();
@@ -597,7 +561,7 @@ namespace linalg
 			{
 				for (unsigned col = 0; col < cols; ++col)
 				{
-					*(c + i_normal) = *(a + i_transposed);
+					c[i_normal] = a[i_transposed];
 					i_normal++;
 					i_transposed += rows;
 				}
@@ -628,7 +592,7 @@ namespace linalg
 		double* c = C->start();
 		for (unsigned i = 0; i < size; i++)
 		{
-			*(c + i) = val;
+			c[i] = val;
 		}
 		return *C;
 	}
@@ -731,7 +695,7 @@ namespace linalg
 
 			for (unsigned i = 0; i < row_col; i++)
 			{
-				*(c + i) = *(a + i);
+				c[i] = a[i];
 			}
 		}
 	}

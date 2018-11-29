@@ -2,7 +2,8 @@
     "files.associations": {
         "future": "cpp",
         "xstring": "cpp",
-        "string": "cpp"
+        "string": "cpp",
+        "random": "cpp"
     },
     "C_Cpp.clang_format_style": "file"
 }
