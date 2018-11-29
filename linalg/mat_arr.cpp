@@ -1,9 +1,12 @@
 #include "mat_arr.h"
 #include <utility>
+#include <cmath>
+#include <memory>
+#include <vector>
 
 using namespace linalg;
 
-mat_arr::mat_arr(shared_ptr<vector<double>> vector, unsigned offset,
+mat_arr::mat_arr(std::shared_ptr<std::vector<double>> vector, unsigned offset,
                  unsigned count, unsigned rows, unsigned cols)
 	: vec(std::move(vector)),
 	  offset(offset),
@@ -14,7 +17,7 @@ mat_arr::mat_arr(shared_ptr<vector<double>> vector, unsigned offset,
 }
 
 mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
-	: vec(make_shared<vector<double>>(count * rows * cols)),
+	: vec(std::make_shared<std::vector<double>>(count * rows * cols)),
 	  offset(0),
 	  count(count),
 	  rows(rows),
@@ -22,7 +25,7 @@ mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
 {
 }
 
-mat_arr::mat_arr(array<unsigned, 3> dim)
+mat_arr::mat_arr(std::array<unsigned, 3> dim)
 	: mat_arr(dim[0], dim[1], dim[2])
 {
 }
@@ -41,7 +44,7 @@ mat_arr mat_arr::get_mats(unsigned start, unsigned count)
 {
 	if (count + start > this->count)
 	{
-		throw runtime_error("Out of bounds");
+		throw std::runtime_error("Out of bounds");
 	}
 
 	return mat_arr(vec, start * rows * cols, count, rows, cols);
@@ -51,7 +54,7 @@ const mat_arr mat_arr::get_mats(unsigned start, unsigned count) const
 {
 	if (count + start > this->count)
 	{
-		throw runtime_error("Out of bounds");
+		throw std::runtime_error("Out of bounds");
 	}
 
 	return mat_arr(vec, start * rows * cols, count, rows, cols);
@@ -62,9 +65,9 @@ unsigned mat_arr::index(unsigned index, unsigned row, unsigned col) const
 	return index * rows * cols + row * cols + col;
 }
 
-array<unsigned, 3> mat_arr::dim() const
+std::array<unsigned, 3> mat_arr::dim() const
 {
-	return array<unsigned, 3>
+	return std::array<unsigned, 3>
 	{
 		count, rows, cols
 	};
@@ -110,7 +113,7 @@ bool mat_arr::only_real() const
 	for (unsigned i = 0; i < s; i++)
 	{
 		const double val = *(a + i);
-		if (!isnormal(val) && val != 0.0)
+		if (!std::isnormal(val) && val != 0.0)
 		{
 			return false;
 		}

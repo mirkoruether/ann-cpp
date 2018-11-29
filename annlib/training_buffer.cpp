@@ -4,7 +4,7 @@
 
 using namespace annlib;
 
-training_buffer::training_buffer(vector<unsigned> sizes, unsigned mini_batch_size, unsigned part_count)
+training_buffer::training_buffer(std::vector<unsigned> sizes, unsigned mini_batch_size, unsigned part_count)
 	: input_rv(mini_batch_size, 1, sizes.front()),
 	  solution_rv(mini_batch_size, 1, sizes.back())
 {
@@ -32,9 +32,9 @@ training_buffer::training_buffer(vector<unsigned> sizes, unsigned mini_batch_siz
 }
 
 
-vector<mat_arr*> training_buffer::all()
+std::vector<mat_arr*> training_buffer::all()
 {
-	vector<mat_arr*> result;
+	std::vector<mat_arr*> result;
 	add_pointers(&weighted_inputs_rv, &result);
 	add_pointers(&activations_rv, &result);
 	add_pointers(&errors_rv, &result);

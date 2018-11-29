@@ -4,7 +4,7 @@
 
 using namespace annlib;
 
-void gradient_based_optimizer::init(const vector<unsigned>& sizes)
+void gradient_based_optimizer::init(const std::vector<unsigned>& sizes)
 {
 }
 
@@ -12,7 +12,7 @@ void gradient_based_optimizer::next_mini_batch()
 {
 }
 
-void abstract_gradient_based_optimizer::init(const vector<unsigned>& sizes)
+void abstract_gradient_based_optimizer::init(const std::vector<unsigned>& sizes)
 {
 	const auto size = static_cast<unsigned>(sizes.size() - 1);
 
@@ -81,7 +81,7 @@ adam::adam(double alpha, double beta1, double beta2)
 {
 }
 
-void adam::init(const vector<unsigned>& sizes)
+void adam::init(const std::vector<unsigned>& sizes)
 {
 	beta1_pow_t = 1.0;
 	beta2_pow_t = 1.0;
@@ -113,15 +113,15 @@ void adam::adjust(const mat_arr& gradient_noarr,
 	mat_element_by_element_operation(v_buf, gradient_noarr, &v_buf,
 	                                 [&](double v, double grad)
 	                                 {
-		                                 return beta2 * v + (1 - beta2) * pow(grad, 2);
+		                                 return beta2 * v + (1 - beta2) * grad * grad;
 	                                 });
 
-	const vector<mat_arr*> in{{target_noarr, &m_buf, &v_buf}};
+	const std::vector<mat_arr*> in{{target_noarr, &m_buf, &v_buf}};
 	mat_multiple_e_by_e_operation(in, target_noarr,
-	                              [&](const vector<double>& arr)
+	                              [&](const std::vector<double>& arr)
 	                              {
 		                              return arr[0]
 			                              - alpha_t * arr[1]
-			                              / (sqrt(arr[2]) + 1e-8);
+			                              / (std::sqrt(arr[2]) + 1e-8);
 	                              });
 }

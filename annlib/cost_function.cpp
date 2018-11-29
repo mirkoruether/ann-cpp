@@ -8,7 +8,7 @@ using namespace annlib;
 void cost_function::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                  const mat_arr& solution_rv,
                                                  const mat_arr& output_layer_weighted_input_rv,
-                                                 const function<double(double)>& derivative_activation_function,
+                                                 const std::function<double(double)>& derivative_activation_function,
                                                  mat_arr* output_layer_error_rv) const
 {
 	calculate_gradient(net_output_rv, solution_rv, output_layer_error_rv);
@@ -25,7 +25,7 @@ double quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_
 	const size_t size = net_output_rv.size();
 	if (solution_rv.size() != size)
 	{
-		throw runtime_error("sizes differ");
+		throw std::runtime_error("sizes differ");
 	}
 
 	const double* no_element = net_output_rv.start();
@@ -54,7 +54,7 @@ double cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 	const size_t size = net_output_rv.size();
 	if (solution_rv.size() != size)
 	{
-		throw runtime_error("sizes differ");
+		throw std::runtime_error("sizes differ");
 	}
 
 	const double* no_element = net_output_rv.start();
@@ -87,7 +87,7 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                        const mat_arr& solution_rv,
                                                        const mat_arr& output_layer_weighted_input_rv,
-                                                       const function<double(double)>& derivative_activation_function,
+                                                       const std::function<double(double)>& derivative_activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
 	//TODO Check for logistic activation function

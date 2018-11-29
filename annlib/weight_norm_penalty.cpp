@@ -29,7 +29,7 @@ void L1_regularization::add_penalty_to_gradient(const mat_arr& weights_noarr,
                                                 double regularization_parameter,
                                                 mat_arr* gradient_noarr) const
 {
-	const function<double(double)> sgn = [](double x) { return x > 0 ? 1.0 : -1.0; };
+	const std::function<double(double)> sgn = [](double x) { return x > 0 ? 1.0 : -1.0; };
 
 	mat_element_by_element_operation(*gradient_noarr, weights_noarr, gradient_noarr,
 	                                 [&](double d, double w)

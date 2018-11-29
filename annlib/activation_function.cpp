@@ -5,9 +5,9 @@ using namespace annlib;
 
 namespace annlib
 {
-	activation_function::activation_function(function<double(double)> f,
-	                                         function<double(double)> df)
-		: f(move(f)), df(move(df))
+	activation_function::activation_function(std::function<double(double)> f,
+	                                         std::function<double(double)> df)
+		: f(std::move(f)), df(std::move(df))
 	{
 	}
 
@@ -25,8 +25,8 @@ namespace annlib
 		: activation_function([=](double d) { return 1 / (1 + exp(-d / T)); },
 		                      [=](double d)
 		                      {
-			                      const double v = exp(d / T) + 1.0;
-			                      return exp(d / T) / (T * v * v);
+			                      const double v = std::exp(d / T) + 1.0;
+			                      return std::exp(d / T) / (T * v * v);
 		                      })
 	{
 	}

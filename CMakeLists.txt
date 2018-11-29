@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.9)
 project(ann_cpp)
 
+message(">>>>>>>VORHER")
+message("${CMAKE_CXX_FLAGS_RELEASE}")
+
 set(CMAKE_CXX_STANDARD 17)
+string(REPLACE "/O2" "/OX" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}" )
+
+message(">>>>>>>NACHHER")
+message("${CMAKE_CXX_FLAGS_RELEASE}")
 
 include(CheckLanguage)
 option(TRY_ENABLE_CUDA "Search for CUDA?" ON)

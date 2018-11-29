@@ -2,27 +2,25 @@
 #include "mat_arr.h"
 #include "mat_arr_math.h"
 #include <random>
-#include "general_util.h"
 #include <future>
 
-using namespace std;
 using namespace linalg;
 using namespace annlib;
 
 sgd_trainer::sgd_trainer()
 	: mini_batch_size(8),
-	  activation_f(make_shared<logistic_activation_function>(1.0)),
-	  cost_f(make_shared<cross_entropy_costs>()),
+	  activation_f(std::make_shared<logistic_activation_function>(1.0)),
+	  cost_f(std::make_shared<cross_entropy_costs>()),
 	  weight_norm_penalty(nullptr),
-	  optimizer(make_shared<ordinary_sgd>(1.0)),
-	  net_init(make_shared<normalized_gaussian_net_init>())
+	  optimizer(std::make_shared<ordinary_sgd>(1.0)),
+	  net_init(std::make_shared<normalized_gaussian_net_init>())
 {
 }
 
-vector<unsigned> sgd_trainer::sizes() const
+std::vector<unsigned> sgd_trainer::sizes() const
 {
 	const unsigned layer_count = get_layer_count();
-	vector<unsigned> sizes(layer_count + 1);
+	std::vector<unsigned> sizes(layer_count + 1);
 	sizes[0] = weights_noarr[0].rows;
 	for (unsigned i = 0; i < layer_count; i++)
 	{
@@ -36,7 +34,7 @@ unsigned sgd_trainer::get_layer_count() const
 	return static_cast<unsigned>(weights_noarr.size());
 }
 
-void sgd_trainer::init(vector<unsigned>& sizes)
+void sgd_trainer::init(std::vector<unsigned>& sizes)
 {
 	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
 	weights_noarr.clear();
@@ -78,20 +76,20 @@ neural_network sgd_trainer::to_neural_network(bool copy_parameters)
 		return neural_network(weights_noarr, biases_noarr_rv, activation_f->f);
 	}
 
-	vector<mat_arr> weights_copy_noarr;
-	vector<mat_arr> biases_copy_noarr_rv;
+	std::vector<mat_arr> weights_copy_noarr;
+	std::vector<mat_arr> biases_copy_noarr_rv;
 
 	for (unsigned i = 0; i < biases_noarr_rv.size(); i++)
 	{
 		weights_copy_noarr.emplace_back(weights_noarr[i].duplicate());
 		biases_copy_noarr_rv.emplace_back(biases_noarr_rv[i].duplicate());
 	}
-	return neural_network(move(weights_copy_noarr), move(biases_copy_noarr_rv), activation_f->f);
+	return neural_network(move(weights_copy_noarr), std::move(biases_copy_noarr_rv), activation_f->f);
 }
 
 void sgd_trainer::feed_forward_detailed(const mat_arr& input,
-                                        vector<mat_arr>* weighted_inputs_rv,
-                                        vector<mat_arr>* activations_rv) const
+                                        std::vector<mat_arr>* weighted_inputs_rv,
+                                        std::vector<mat_arr>* activations_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
@@ -116,8 +114,8 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 
 void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
                                   const mat_arr& solution_rv,
-                                  const vector<mat_arr>& weighted_inputs_rv,
-                                  vector<mat_arr>* errors_rv) const
+                                  const std::vector<mat_arr>& weighted_inputs_rv,
+                                  std::vector<mat_arr>* errors_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
@@ -210,12 +208,12 @@ void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
 void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 {
 	const auto part_count = buffer->part_count();
-	vector<future<void>> futures;
+	std::vector<std::future<void>> futures;
 	futures.reserve(part_count);
 	for (unsigned part_no = 0; part_no < part_count; part_no++)
 	{
 		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
-		futures.emplace_back(async(launch::async, [=]
+		futures.emplace_back(std::async(std::launch::async, [=]
 		{
 			feed_forward_detailed(part_buf->input_rv,
 			                      &part_buf->weighted_inputs_rv, &part_buf->activations_rv);
@@ -236,16 +234,16 @@ void sgd_trainer::do_adjustments(training_buffer* buffer)
 	optimizer->next_mini_batch();
 
 	const unsigned layer_count = get_layer_count();
-	vector<future<void>> futures;
+	std::vector<std::future<void>> futures;
 	futures.reserve(layer_count * 2);
 	for (unsigned layer_no = 0; layer_no < layer_count; layer_no++)
 	{
-		futures.emplace_back(async(launch::async, [=]
+		futures.emplace_back(std::async(std::launch::async, [=]
 		{
 			adjust_weights(layer_no, buffer);
 		}));
 
-		futures.emplace_back(async(launch::async, [=]
+		futures.emplace_back(std::async(std::launch::async, [=]
 		{
 			adjust_biases(layer_no, buffer);
 		}));
@@ -260,7 +258,7 @@ void sgd_trainer::do_adjustments(training_buffer* buffer)
 
 mini_batch_builder::mini_batch_builder(training_data data)
 	:
-	data(move(data)),
+	data(std::move(data)),
 	distribution(0, data.input.count - 1)
 {
 }
@@ -268,7 +266,7 @@ mini_batch_builder::mini_batch_builder(training_data data)
 void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv)
 {
 	const unsigned mini_batch_size = input_rv->count;
-	vector<unsigned> batch_indices(mini_batch_size);
+	std::vector<unsigned> batch_indices(mini_batch_size);
 	for (unsigned i = 0; i < mini_batch_size; i++)
 	{
 		batch_indices[i] = distribution(rng);

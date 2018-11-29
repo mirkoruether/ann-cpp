@@ -8,8 +8,8 @@
 
 typedef std::chrono::high_resolution_clock Clock;
 
-using namespace std;
-using namespace chrono;
+using namespace annlib;
+using namespace std::chrono;
 using namespace linalg;
 
 void random_matrix_arr(mat_arr* m)
@@ -38,17 +38,17 @@ unsigned get_max_index(const mat_arr& vec)
 }
 
 template <typename T>
-T time_execution_func(const string& name, const function<T()>& func)
+T time_execution_func(const std::string& name, const std::function<T()>& func)
 {
-	cout << name << " started" << endl;
+	std::cout << name << " started" << std::endl;
 	const auto calcStart = Clock::now();
 	T result = func();
 	const double gpu_calc_millis = duration_cast<nanoseconds>(Clock::now() - calcStart).count() / double(1e6);
-	cout << name << " finished, time elapsed: " << gpu_calc_millis << " ms" << endl;
+	std::cout << name << " finished, time elapsed: " << gpu_calc_millis << " ms" << std::endl;
 	return result;
 }
 
-void time_execution(const string& name, const function<void()>& func)
+void time_execution(const std::string& name, const std::function<void()>& func)
 {
 	time_execution_func<bool>(name, [&]()
 	{
@@ -99,16 +99,205 @@ double test_network_accuracy(neural_network net, training_data test_data)
 	return (100.0 * correct) / net_output.count;
 }
 
+struct add3
+{
+	double operator()(double a, double b) const { return a + b; }
+};
+
+double test_add(double a, double b)
+{
+	return a + b;
+}
+
+template <typename F>
+void test_add_3(const mat_arr& mat_a, const mat_arr& mat_b, mat_arr* mat_c, F f)
+{
+	const unsigned n3 = mat_a.size();
+	for (unsigned iterations = 0; iterations < 10; iterations++)
+	{
+		const double* a = mat_a.start();
+		const double* b = mat_b.start();
+		double* c = mat_c->start();
+
+		for (unsigned i = 0; i < n3; i++)
+		{
+			c[i] = f(a[i], b[i]);
+		}
+	}
+}
+
+void mat_arr_math_add_speed_test2()
+{
+	const unsigned n = 200;
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	mat_set_all(1, &mat_a);
+	mat_set_all(2, &mat_b);
+
+	test_add_3(mat_a, mat_b, &mat_c, add3());
+}
+
+void mat_arr_math_add_speed_test()
+{
+	mat_arr_math_add_speed_test2();
+	const unsigned n = 200;
+	const unsigned n3 = n * n * n;
+	std::vector<double> vec_a(n3);
+	std::vector<double> vec_b(n3);
+	std::vector<double> vec_c(n3);
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	time_execution("mat add", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			mat_element_wise_add(mat_a, mat_b, &mat_c);
+		}
+	});
+
+	time_execution("mat add 2", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			double* a = mat_a.start();
+			double* b = mat_b.start();
+			double* c = mat_c.start();
+
+			for (unsigned i = 0; i < n3; i++)
+			{
+				*(c + i) = *(a + i) + *(b + i);
+			}
+		}
+	});
+
+	time_execution("mat add 3", [&]
+	{
+		const std::function<double(double, double)> add = [](double a, double b) { return a + b; };
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			double* a = mat_a.start();
+			double* b = mat_b.start();
+			double* c = mat_c.start();
+
+			for (unsigned i = 0; i < n3; i++)
+			{
+				*(c + i) = add(*(a + i), *(b + i));
+			}
+		}
+	});
+
+	time_execution("mat add 4", [&]
+	{
+		test_add_3(mat_a, mat_b, & mat_c, test_add);
+	});
+
+	time_execution("mat add 5", [&]
+	{
+		test_add_3(mat_a, mat_b, &mat_c, add3());
+	});
+
+	time_execution("vector add", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			for (unsigned i = 0; i < n3; i++)
+			{
+				vec_c[i] = vec_a[i] + vec_b[i];
+			}
+		}
+	});
+}
+
+void mat_arr_math_mat_mul_speed_test()
+{
+	const unsigned n = 100;
+	const unsigned n2 = n * n;
+	const unsigned n3 = n * n * n;
+	std::vector<double> vec_a(n3);
+	std::vector<double> vec_b(n3);
+	std::vector<double> vec_c(n3);
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	time_execution("mat mul", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			mat_matrix_mul(mat_a, mat_b, &mat_c);
+		}
+	});
+
+	time_execution("mat mul 2", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			for (unsigned matNo = 0; matNo < n; matNo++)
+			{
+				const double* a = mat_a.start() + (matNo * n2);
+				const double* b = mat_b.start() + (matNo * n2);
+				double* c = mat_c.start() + (matNo * n2);
+
+				for (unsigned i = 0; i < n; i++)
+				{
+					for (unsigned j = 0; j < n; j++)
+					{
+						for (unsigned k = 0; k < n; k++)
+						{
+							*(c + (i * n + k)) += *(a + (i * n + j)) * *(b + (j * n + k));
+						}
+					}
+				}
+			}
+		}
+	});
+
+	time_execution("vector mul", [&]
+	{
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			for (unsigned mat_no = 0; mat_no < n; mat_no++)
+			{
+				for (unsigned i = 0; i < n; i++)
+				{
+					for (unsigned j = 0; j < n; j++)
+					{
+						for (unsigned k = 0; k < n; k++)
+						{
+							vec_c[mat_no * n2 + i * n + k]
+								= vec_a[mat_no * n2 + i * n + j]
+								* vec_b[mat_no * n2 + j * n + k];
+						}
+					}
+				}
+			}
+		}
+	});
+}
+
 int main()
 {
+	mat_arr_math_add_speed_test();
+
 	const unsigned n_threads = std::thread::hardware_concurrency();
 	std::cout << n_threads << " concurrent threads are supported.\n";
 
-	const string folder = "C:\\";
-	const string training_images = folder + "train-images.idx3-ubyte";
-	const string training_labels = folder + "train-labels.idx1-ubyte";
-	const string test_images = folder + "t10k-images.idx3-ubyte";
-	const string test_labels = folder + "t10k-labels.idx1-ubyte";
+#ifdef __linux__
+	const string folder = "/mnt/c/";
+#else
+	const std::string folder = "C:\\\\";
+#endif
+
+	const std::string training_images = folder + "train-images.idx3-ubyte";
+	const std::string training_labels = folder + "train-labels.idx1-ubyte";
+	const std::string test_images = folder + "t10k-images.idx3-ubyte";
+	const std::string test_labels = folder + "t10k-labels.idx1-ubyte";
 
 	const training_data mnist_training
 		= time_execution_func<training_data>("Load MNIST training data", [&]()
@@ -124,13 +313,13 @@ int main()
 
 	sgd_trainer trainer;
 	trainer.mini_batch_size = 8;
-	trainer.activation_f = make_shared<logistic_activation_function>(1.0);
-	trainer.cost_f = make_shared<cross_entropy_costs>();
-	trainer.weight_norm_penalty = make_shared<L2_regularization>(3.0 / mnist_training.entry_count());
-	trainer.optimizer = make_shared<momentum_sgd>(5.0, 0.0);
-	trainer.net_init = make_shared<normalized_gaussian_net_init>();
+	trainer.activation_f = std::make_shared<logistic_activation_function>(1.0);
+	trainer.cost_f = std::make_shared<cross_entropy_costs>();
+	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(3.0 / mnist_training.entry_count());
+	trainer.optimizer = std::make_shared<momentum_sgd>(5.0, 0.0);
+	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 
-	vector<unsigned> sizes{{784, 30, 10}};
+	std::vector<unsigned> sizes{{784, 30, 10}};
 	trainer.init(sizes);
 
 	time_execution("Train five epochs", [&]()
@@ -145,6 +334,6 @@ int main()
 		return test_network_accuracy(net, mnist_test);
 	});
 
-	cout << "Test accuracy: " << accuracy << "%" << endl;
-	cin.get();
+	std::cout << "Test accuracy: " << accuracy << "%" << std::endl;
+	std::cin.get();
 }

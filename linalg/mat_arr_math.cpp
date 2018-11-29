@@ -8,30 +8,30 @@ using namespace linalg;
 namespace linalg
 {
 #pragma region multiple_element_by_element_internal
-	void __mat_m_e_by_e_size_check(const vector<mat_arr*>& input, mat_arr* C)
+	void __mat_m_e_by_e_size_check(const std::vector<mat_arr*>& input, mat_arr* C)
 	{
 		const auto input_count = static_cast<unsigned>(input.size());
 		for (unsigned i = 0; i < input_count; i++)
 		{
 			if (C->rows != input[i]->rows)
 			{
-				throw runtime_error("Row count does not fit");
+				throw std::runtime_error("Row count does not fit");
 			}
 
 			if (C->cols != input[i]->cols)
 			{
-				throw runtime_error("Column count does not fit");
+				throw std::runtime_error("Column count does not fit");
 			}
 
 			if (input[i]->count != 1 && C->cols != input[i]->cols)
 			{
-				throw runtime_error("Wrong input array sizes");
+				throw std::runtime_error("Wrong input array sizes");
 			}
 		}
 	}
 
-	void __mat_multiple_e_by_e_operation(const vector<mat_arr*>& input, mat_arr* C,
-	                                     const function<double(vector<double>)>& f)
+	void __mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
+	                                     const std::function<double(std::vector<double>)>& f)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_m_e_by_e_size_check(input, C);
@@ -47,7 +47,7 @@ namespace linalg
 		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
 			const unsigned offset = mat_no * row_col;
-			auto ins = vector<double*>(input_count);
+			auto ins = std::vector<double*>(input_count);
 			for (unsigned i = 0; i < input_count; i++)
 			{
 				ins[i] = input[i]->count > 1 ? ins_start[i] + offset : ins_start[i];
@@ -65,8 +65,8 @@ namespace linalg
 		}
 	}
 #pragma endregion
-	mat_arr mat_multiple_e_by_e_operation(const vector<mat_arr*>& input, mat_arr* C,
-	                                      const function<double(vector<double>)>& f)
+	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
+	                                      const std::function<double(std::vector<double>)>& f)
 	{
 		if (C == nullptr)
 		{
@@ -96,27 +96,27 @@ namespace linalg
 	{
 		if (count_a != 1 && count_b != 1 && count_a != count_b)
 		{
-			throw runtime_error("Wrong input array sizes");
+			throw std::runtime_error("Wrong input array sizes");
 		}
 
-		if (count_c != max(count_a, count_b))
+		if (count_c != std::max(count_a, count_b))
 		{
-			throw runtime_error("Wrong output array sizes");
+			throw std::runtime_error("Wrong output array sizes");
 		}
 
 		if (rows_a != rows_b || rows_b != rows_c)
 		{
-			throw runtime_error("Row count does not fit");
+			throw std::runtime_error("Row count does not fit");
 		}
 
 		if (cols_a != cols_b || cols_b != cols_c)
 		{
-			throw runtime_error("Column count does not fit");
+			throw std::runtime_error("Column count does not fit");
 		}
 	}
 
 	void __mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                        const function<double(double, double)>& f,
+	                                        const std::function<double(double, double)>& f,
 	                                        const bool transpose_a, const bool transpose_b)
 	{
 		const unsigned count = C->count;
@@ -162,7 +162,7 @@ namespace linalg
 	}
 
 	void __mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                        const function<double(double, double)>& f, const mat_tr tr)
+	                                        const std::function<double(double, double)>& f, const mat_tr tr)
 	{
 		switch (tr)
 		{
@@ -207,12 +207,12 @@ namespace linalg
 #pragma endregion
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                         const function<double(double, double)>& f, mat_tr tr)
+	                                         const std::function<double(double, double)>& f, mat_tr tr)
 	{
 		if (C == nullptr)
 		{
 			const bool tr_A = (tr == transpose_A || tr == transpose_both);
-			mat_arr tempC = mat_arr(max(A.count, B.count),
+			mat_arr tempC = mat_arr(std::max(A.count, B.count),
 			                        tr_A ? A.cols : A.rows,
 			                        tr_A ? A.rows : A.cols);
 			__mat_element_by_element_operation(A, B, &tempC, f, tr);
@@ -244,14 +244,14 @@ namespace linalg
 
 #pragma region element_wise_internal
 	void __mat_element_wise_operation(const mat_arr& A, mat_arr* C,
-	                                  const function<double(double)>& f)
+	                                  const std::function<double(double)>& f)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		if (A.rows != C->rows
 			|| A.cols != C->cols
 			|| A.rows != C->rows)
 		{
-			throw runtime_error("Sizes do not fit");
+			throw std::runtime_error("Sizes do not fit");
 		}
 #endif
 
@@ -275,7 +275,7 @@ namespace linalg
 	}
 #pragma endregion
 
-	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C, const function<double(double)>& f)
+	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C, const std::function<double(double)>& f)
 	{
 		if (C == nullptr)
 		{
@@ -334,22 +334,22 @@ namespace linalg
 	{
 		if (count_a != 1 && count_b != 1 && count_a != count_b)
 		{
-			throw runtime_error("Wrong input array sizes");
+			throw std::runtime_error("Wrong input array sizes");
 		}
 
-		if (count_c != max(count_a, count_b))
+		if (count_c != std::max(count_a, count_b))
 		{
-			throw runtime_error("Wrong output array sizes");
+			throw std::runtime_error("Wrong output array sizes");
 		}
 
 		if (cols_a != rows_b)
 		{
-			throw runtime_error("A and B cannot be multiplied");
+			throw std::runtime_error("A and B cannot be multiplied");
 		}
 
 		if (rows_a != rows_c || cols_b != cols_c)
 		{
-			throw runtime_error("C has wrong size");
+			throw std::runtime_error("C has wrong size");
 		}
 	}
 
@@ -520,7 +520,7 @@ namespace linalg
 
 		if (A.start() == C->start() || B.start() == C->start())
 		{
-			throw runtime_error("Matrix mul in place not possible");
+			throw std::runtime_error("Matrix mul in place not possible");
 		}
 #endif
 
@@ -552,7 +552,7 @@ namespace linalg
 	{
 		if (C == nullptr)
 		{
-			mat_arr tempC = mat_arr(max(A.count, B.count),
+			mat_arr tempC = mat_arr(std::max(A.count, B.count),
 			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
 			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
 			__mat_matrix_mul_add(A, B, &tempC, tr);
@@ -566,7 +566,7 @@ namespace linalg
 	{
 		if (C == nullptr)
 		{
-			mat_arr tempC = mat_arr(max(A.count, B.count),
+			mat_arr tempC = mat_arr(std::max(A.count, B.count),
 			                        (tr == transpose_A || tr == transpose_both) ? A.cols : A.rows,
 			                        (tr == transpose_B || tr == transpose_both) ? B.rows : B.cols);
 			__mat_matrix_mul(A, B, &tempC, tr);
@@ -582,12 +582,12 @@ namespace linalg
 	{
 		if (count_a != count_c)
 		{
-			throw runtime_error("Wrong array sizes");
+			throw std::runtime_error("Wrong array sizes");
 		}
 
 		if (rows_a != cols_c || cols_a != rows_c)
 		{
-			throw runtime_error("Wrong matrix dimensions");
+			throw std::runtime_error("Wrong matrix dimensions");
 		}
 	}
 
@@ -643,7 +643,7 @@ namespace linalg
 	{
 		if (C == nullptr)
 		{
-			throw runtime_error("C is nullptr");
+			throw std::runtime_error("C is nullptr");
 		}
 		const unsigned size = C->size();
 		double* c = C->start();
@@ -654,7 +654,7 @@ namespace linalg
 		return *C;
 	}
 
-	void __mat_concat_size_check(const vector<mat_arr>& mats, mat_arr* C)
+	void __mat_concat_size_check(const std::vector<mat_arr>& mats, mat_arr* C)
 	{
 		const auto mats_count = static_cast<unsigned>(mats.size());
 		unsigned count_sum = 0;
@@ -662,12 +662,12 @@ namespace linalg
 		{
 			if (C->rows != mats[i].rows)
 			{
-				throw runtime_error("Row count does not fit");
+				throw std::runtime_error("Row count does not fit");
 			}
 
 			if (C->cols != mats[i].cols)
 			{
-				throw runtime_error("Column count does not fit");
+				throw std::runtime_error("Column count does not fit");
 			}
 
 			count_sum += mats[i].count;
@@ -675,11 +675,11 @@ namespace linalg
 
 		if (C->count != count_sum)
 		{
-			throw runtime_error("Array sizes do not fit");
+			throw std::runtime_error("Array sizes do not fit");
 		}
 	}
 
-	void __mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C)
+	void __mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_concat_size_check(mats, C);
@@ -702,7 +702,7 @@ namespace linalg
 		}
 	}
 
-	mat_arr mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C)
+	mat_arr mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C)
 	{
 		if (C == nullptr)
 		{
@@ -719,25 +719,25 @@ namespace linalg
 		return *C;
 	}
 
-	void __mat_select_mats_size_check(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	void __mat_select_mats_size_check(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C)
 	{
 		if (C->rows != A.rows)
 		{
-			throw runtime_error("Row count does not fit");
+			throw std::runtime_error("Row count does not fit");
 		}
 
 		if (C->cols != A.cols)
 		{
-			throw runtime_error("Column count does not fit");
+			throw std::runtime_error("Column count does not fit");
 		}
 
 		if (static_cast<unsigned>(indices.size()) != C->count)
 		{
-			throw runtime_error("Array sizes do not fit");
+			throw std::runtime_error("Array sizes do not fit");
 		}
 	}
 
-	void __mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	void __mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C)
 	{
 #ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_select_mats_size_check(A, indices, C);
@@ -761,7 +761,7 @@ namespace linalg
 		}
 	}
 
-	mat_arr mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C)
+	mat_arr mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C)
 	{
 		if (C == nullptr)
 		{

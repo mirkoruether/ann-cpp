@@ -13,7 +13,6 @@
 #include "neural_network.h"
 #include "training_buffer.h"
 
-using namespace std;
 using namespace linalg;
 
 namespace annlib
@@ -26,34 +25,34 @@ namespace annlib
 		sgd_trainer();
 
 		unsigned mini_batch_size;
-		shared_ptr<activation_function> activation_f;
-		shared_ptr<cost_function> cost_f;
-		shared_ptr<weight_norm_penalty> weight_norm_penalty;
-		shared_ptr<gradient_based_optimizer> optimizer;
-		shared_ptr<net_init> net_init;
+		std::shared_ptr<activation_function> activation_f;
+		std::shared_ptr<cost_function> cost_f;
+		std::shared_ptr<weight_norm_penalty> weight_norm_penalty;
+		std::shared_ptr<gradient_based_optimizer> optimizer;
+		std::shared_ptr<net_init> net_init;
 
-		vector<unsigned> sizes() const;
+		std::vector<unsigned> sizes() const;
 
 		unsigned get_layer_count() const;
 
-		void init(vector<unsigned>& sizes);
+		void init(std::vector<unsigned>& sizes);
 
 		void train_epochs(const training_data& training_data, double epoch_count);
 
 		neural_network to_neural_network(bool copy_parameters = false);
 
 	private:
-		vector<mat_arr> weights_noarr;
-		vector<mat_arr> biases_noarr_rv;
+		std::vector<mat_arr> weights_noarr;
+		std::vector<mat_arr> biases_noarr_rv;
 
 		void feed_forward_detailed(const mat_arr& input,
-		                           vector<mat_arr>* weighted_inputs_rv,
-		                           vector<mat_arr>* activations_rv) const;
+		                           std::vector<mat_arr>* weighted_inputs_rv,
+		                           std::vector<mat_arr>* activations_rv) const;
 
 		void calculate_error(const mat_arr& net_output_rv,
 		                     const mat_arr& solution_rv,
-		                     const vector<mat_arr>& weighted_inputs_rv,
-		                     vector<mat_arr>* errors_rv) const;
+		                     const std::vector<mat_arr>& weighted_inputs_rv,
+		                     std::vector<mat_arr>* errors_rv) const;
 
 		void calculate_gradient_weight(const mat_arr& previous_activation_rv,
 		                               const mat_arr& error_rv,
@@ -77,8 +76,8 @@ namespace annlib
 
 		void build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv);
 	private:
-		const uniform_int_distribution<unsigned> distribution;
-		default_random_engine rng;
+		std::uniform_int_distribution<unsigned> distribution;
+		std::default_random_engine rng;
 	};
 }
 #endif

@@ -18,8 +18,8 @@ namespace annlib
 	class gaussian_net_init : public net_init
 	{
 	private:
-		normal_distribution<double> distribution;
-		default_random_engine rng;
+		std::normal_distribution<double> distribution;
+		std::default_random_engine rng;
 	public:
 		gaussian_net_init();
 		void fill_with_gaussian(mat_arr* mat);

@@ -22,7 +22,7 @@ namespace annlib
 
 		virtual void calculate_output_layer_error(const mat_arr& net_output_rv, const mat_arr& solution_rv,
 		                                          const mat_arr& output_layer_weighted_input_rv,
-		                                          const function<double(double)>& derivative_activation_function,
+		                                          const std::function<double(double)>& derivative_activation_function,
 		                                          mat_arr* output_layer_error_rv) const;
 	};
 
@@ -48,7 +48,7 @@ namespace annlib
 		void calculate_output_layer_error(const mat_arr& net_output_rv,
 		                                  const mat_arr& solution_rv,
 		                                  const mat_arr& output_layer_weighted_input_rv,
-		                                  const function<double(double)>& derivative_activation_function,
+		                                  const std::function<double(double)>& derivative_activation_function,
 		                                  mat_arr* output_layer_error_rv) const override;
 	};
 }

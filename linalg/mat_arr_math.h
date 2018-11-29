@@ -3,7 +3,6 @@
 
 #include "mat_arr.h"
 #include <functional>
-#include <array>
 
 using namespace linalg;
 
@@ -17,11 +16,11 @@ namespace linalg
 		transpose_both
 	};
 
-	mat_arr mat_multiple_e_by_e_operation(const vector<mat_arr*>& input, mat_arr* C,
-	                                      const function<double(vector<double>)>& f);
+	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
+	                                      const std::function<double(std::vector<double>)>& f);
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
-	                                         const function<double(double, double)>& f,
+	                                         const std::function<double(double, double)>& f,
 	                                         mat_tr tr = transpose_no);
 
 	mat_arr mat_element_wise_add(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
@@ -37,7 +36,7 @@ namespace linalg
 	                             mat_tr tr = transpose_no);
 
 	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C,
-	                                   const function<double(double)>& f);
+	                                   const std::function<double(double)>& f);
 
 	mat_arr mat_element_wise_add(const mat_arr& A, double b, mat_arr* C = nullptr);
 
@@ -65,8 +64,8 @@ namespace linalg
 
 	mat_arr mat_set_all(double val, mat_arr* C);
 
-	mat_arr mat_concat_mats(const vector<mat_arr>& mats, mat_arr* C);
+	mat_arr mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C);
 
-	mat_arr mat_select_mats(const mat_arr& A, const vector<unsigned>& indices, mat_arr* C);
+	mat_arr mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C);
 }
 #endif

@@ -1,7 +1,7 @@
 #include "neural_network.h"
 #include "mat_arr_math.h"
 
-void neural_network::feed_forward_internal(const mat_arr& input, mat_arr* result, vector<mat_arr>* buffer) const
+void neural_network::feed_forward_internal(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const
 {
 	const size_t layer_count = biases_noarr_rv.size();
 	const mat_arr* in = &input;
@@ -19,7 +19,8 @@ void neural_network::feed_forward_internal(const mat_arr& input, mat_arr* result
 	}
 }
 
-void neural_network::feed_forward_result_nonnull(const mat_arr& input, mat_arr* result, vector<mat_arr>* buffer) const
+void neural_network::feed_forward_result_nonnull(const mat_arr& input, mat_arr* result,
+                                                 std::vector<mat_arr>* buffer) const
 {
 	if (buffer == nullptr)
 	{
@@ -32,18 +33,18 @@ void neural_network::feed_forward_result_nonnull(const mat_arr& input, mat_arr* 
 	}
 }
 
-neural_network::neural_network(vector<mat_arr> weights_noarr,
-                               vector<mat_arr> biases_noarr_rv,
-                               function<double(double)> activation_function)
+neural_network::neural_network(std::vector<mat_arr> weights_noarr,
+                               std::vector<mat_arr> biases_noarr_rv,
+                               std::function<double(double)> activation_function)
 	: weights_noarr(move(weights_noarr)),
 	  biases_noarr_rv(move(biases_noarr_rv)),
 	  activation_function(move(activation_function))
 {
 }
 
-vector<mat_arr> neural_network::build_buffer(unsigned count) const
+std::vector<mat_arr> neural_network::build_buffer(unsigned count) const
 {
-	vector<mat_arr> buf;
+	std::vector<mat_arr> buf;
 	const size_t layer_count = biases_noarr_rv.size();
 	for (unsigned i = 0; i < layer_count - 1; i++)
 	{
@@ -52,7 +53,7 @@ vector<mat_arr> neural_network::build_buffer(unsigned count) const
 	return buf;
 }
 
-mat_arr neural_network::feed_forward(const mat_arr& input, mat_arr* result, vector<mat_arr>* buffer) const
+mat_arr neural_network::feed_forward(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const
 {
 	const size_t layer_count = biases_noarr_rv.size();
 	if (result == nullptr)

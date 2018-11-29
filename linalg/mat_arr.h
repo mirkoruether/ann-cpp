@@ -5,14 +5,12 @@
 #include <vector>
 #include <array>
 
-using namespace std;
-
 namespace linalg
 {
 	class mat_arr
 	{
 	private:
-		const shared_ptr<vector<double>> vec;
+		const std::shared_ptr<std::vector<double>> vec;
 		const unsigned offset;
 
 	public:
@@ -21,13 +19,13 @@ namespace linalg
 		const unsigned cols;
 
 	protected:
-		mat_arr(shared_ptr<vector<double>> vector, unsigned offset,
+		mat_arr(std::shared_ptr<std::vector<double>> vector, unsigned offset,
 		        unsigned count, unsigned rows, unsigned cols);
 
 	public:
 		mat_arr(unsigned count, unsigned rows, unsigned cols);
 
-		explicit mat_arr(array<unsigned, 3> dim);
+		explicit mat_arr(std::array<unsigned, 3> dim);
 
 		mat_arr get_mat(unsigned index);
 
@@ -39,7 +37,7 @@ namespace linalg
 
 		unsigned index(unsigned index, unsigned row, unsigned col) const;
 
-		array<unsigned, 3> dim() const;
+		std::array<unsigned, 3> dim() const;
 
 		unsigned size() const;
 

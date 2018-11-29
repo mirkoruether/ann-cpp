@@ -2,7 +2,6 @@
 #define GRADIENT_BASED_OPTIMIZER_H
 
 #include "mat_arr.h"
-using namespace std;
 using namespace linalg;
 
 namespace annlib
@@ -18,7 +17,7 @@ namespace annlib
 	public:
 		virtual ~gradient_based_optimizer() = default;
 
-		virtual void init(const vector<unsigned>& sizes);
+		virtual void init(const std::vector<unsigned>& sizes);
 
 		virtual void next_mini_batch();
 
@@ -32,10 +31,10 @@ namespace annlib
 	{
 	public:
 		const unsigned buffer_count;
-		vector<mat_arr> weights_buffers;
-		vector<mat_arr> biases_buffers;
+		std::vector<mat_arr> weights_buffers;
+		std::vector<mat_arr> biases_buffers;
 
-		void init(const vector<unsigned>& sizes) override;
+		void init(const std::vector<unsigned>& sizes) override;
 
 		void adjust(const mat_arr& gradient_noarr,
 		            mat_arr* target_noarr,
@@ -87,7 +86,7 @@ namespace annlib
 		double beta2_pow_t;
 		double alpha_t;
 
-		void init(const vector<unsigned>& sizes) override;
+		void init(const std::vector<unsigned>& sizes) override;
 
 		void next_mini_batch() override;
 

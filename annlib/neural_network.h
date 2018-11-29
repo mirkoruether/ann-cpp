@@ -9,21 +9,21 @@ using namespace linalg;
 class neural_network
 {
 private:
-	const vector<mat_arr> weights_noarr;
-	const vector<mat_arr> biases_noarr_rv;
-	const function<double(double)> activation_function;
+	const std::vector<mat_arr> weights_noarr;
+	const std::vector<mat_arr> biases_noarr_rv;
+	const std::function<double(double)> activation_function;
 
-	void feed_forward_internal(const mat_arr& input, mat_arr* result, vector<mat_arr>* buffer) const;
-	void feed_forward_result_nonnull(const mat_arr& input, mat_arr* result, vector<mat_arr>* buffer) const;
+	void feed_forward_internal(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const;
+	void feed_forward_result_nonnull(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const;
 
 public:
-	neural_network(vector<mat_arr> weights_noarr,
-	               vector<mat_arr> biases_noarr_rv,
-	               function<double(double)> activation_function);
+	neural_network(std::vector<mat_arr> weights_noarr,
+	               std::vector<mat_arr> biases_noarr_rv,
+	               std::function<double(double)> activation_function);
 
-	vector<mat_arr> build_buffer(unsigned count) const;
+	std::vector<mat_arr> build_buffer(unsigned count) const;
 
-	mat_arr feed_forward(const mat_arr& input, mat_arr* result = nullptr, vector<mat_arr>* buffer = nullptr) const;
+	mat_arr feed_forward(const mat_arr& input, mat_arr* result = nullptr, std::vector<mat_arr>* buffer = nullptr) const;
 };
 
 #endif
