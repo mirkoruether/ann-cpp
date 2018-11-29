@@ -206,10 +206,10 @@ void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
 
 void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 {
-	const auto part_count = buffer->part_count();
+	const int part_count = static_cast<int>(buffer->part_count());
 
 #pragma omp parallel for
-	for (unsigned part_no = 0; part_no < part_count; part_no++)
+	for (int part_no = 0; part_no < part_count; part_no++)
 	{
 		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
 		feed_forward_detailed(part_buf->input_rv,
@@ -224,10 +224,10 @@ void sgd_trainer::do_adjustments(training_buffer* buffer)
 {
 	optimizer->next_mini_batch();
 
-	const unsigned layer_count = get_layer_count();
+	const int iterations = 2 * static_cast<int>(get_layer_count());
 
 #pragma omp parallel for
-	for (int i = 0; i < layer_count * 2; i++)
+	for (int i = 0; i < iterations; i++)
 	{
 		unsigned layer_no = i / 2;
 		if (i % 2 == 0)

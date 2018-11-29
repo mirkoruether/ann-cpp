@@ -1,10 +1,14 @@
-#include <iostream>
-#include <chrono>
-#include "mnist.h"
 #include "mat_arr.h"
 #include "mat_arr_math.h"
+#include "mnist.h"
 #include "sgd_trainer.h"
+#include <chrono>
+#include <iostream>
 #include <thread>
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
 typedef std::chrono::high_resolution_clock Clock;
 
@@ -50,8 +54,7 @@ T time_execution_func(const std::string& name, const std::function<T()>& func)
 
 void time_execution(const std::string& name, const std::function<void()>& func)
 {
-	time_execution_func<bool>(name, [&]()
-	{
+	time_execution_func<bool>(name, [&]() {
 		func();
 		return true;
 	});
@@ -77,8 +80,7 @@ void speedAddTranspose()
 	time_execution("noTranspose add", [a, b, c_addr]() { mat_element_wise_add(a, b, c_addr, transpose_no); });
 	time_execution("transposeA add", [a_t, b, c_addr]() { mat_element_wise_add(a_t, b, c_addr, transpose_A); });
 	time_execution("transposeB add", [a, b_t, c_addr]() { mat_element_wise_add(a, b_t, c_addr, transpose_B); });
-	time_execution("transposeBoth add", [a_t, b_t, c_addr]()
-	{
+	time_execution("transposeBoth add", [a_t, b_t, c_addr]() {
 		mat_element_wise_add(a_t, b_t, c_addr, transpose_both);
 	});
 }
@@ -152,16 +154,14 @@ void mat_arr_math_add_speed_test()
 	mat_arr mat_b(n, n, n);
 	mat_arr mat_c(n, n, n);
 
-	time_execution("mat add", [&]
-	{
+	time_execution("mat add", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_element_wise_add(mat_a, mat_b, &mat_c);
 		}
 	});
 
-	time_execution("mat add 2", [&]
-	{
+	time_execution("mat add 2", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			double* a = mat_a.start();
@@ -175,8 +175,7 @@ void mat_arr_math_add_speed_test()
 		}
 	});
 
-	time_execution("mat add 3", [&]
-	{
+	time_execution("mat add 3", [&] {
 		const std::function<double(double, double)> add = [](double a, double b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
@@ -191,18 +190,15 @@ void mat_arr_math_add_speed_test()
 		}
 	});
 
-	time_execution("mat add 4", [&]
-	{
-		test_add_3(mat_a, mat_b, & mat_c, test_add);
+	time_execution("mat add 4", [&] {
+		test_add_3(mat_a, mat_b, &mat_c, test_add);
 	});
 
-	time_execution("mat add 5", [&]
-	{
+	time_execution("mat add 5", [&] {
 		test_add_3(mat_a, mat_b, &mat_c, add3());
 	});
 
-	time_execution("vector add", [&]
-	{
+	time_execution("vector add", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned i = 0; i < n3; i++)
@@ -226,16 +222,14 @@ void mat_arr_math_mat_mul_speed_test()
 	mat_arr mat_b(n, n, n);
 	mat_arr mat_c(n, n, n);
 
-	time_execution("mat mul", [&]
-	{
+	time_execution("mat mul", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_matrix_mul(mat_a, mat_b, &mat_c);
 		}
 	});
 
-	time_execution("mat mul 2", [&]
-	{
+	time_execution("mat mul 2", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned matNo = 0; matNo < n; matNo++)
@@ -258,8 +252,7 @@ void mat_arr_math_mat_mul_speed_test()
 		}
 	});
 
-	time_execution("vector mul", [&]
-	{
+	time_execution("vector mul", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned mat_no = 0; mat_no < n; mat_no++)
@@ -270,9 +263,7 @@ void mat_arr_math_mat_mul_speed_test()
 					{
 						for (unsigned k = 0; k < n; k++)
 						{
-							vec_c[mat_no * n2 + i * n + k]
-								= vec_a[mat_no * n2 + i * n + j]
-								* vec_b[mat_no * n2 + j * n + k];
+							vec_c[mat_no * n2 + i * n + k] = vec_a[mat_no * n2 + i * n + j] * vec_b[mat_no * n2 + j * n + k];
 						}
 					}
 				}
@@ -288,6 +279,16 @@ int main()
 	const unsigned n_threads = std::thread::hardware_concurrency();
 	std::cout << n_threads << " concurrent threads are supported.\n";
 
+#ifdef _OPENMP
+#pragma omp parallel num_threads(4)
+	{
+#pragma omp critical
+		std::cout << "tid = " << omp_get_thread_num() << std::endl;
+	}
+#else
+	std::cout << "OpenMP disabled" << std::endl;
+#endif
+
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
 #else
@@ -299,17 +300,13 @@ int main()
 	const std::string test_images = folder + "t10k-images.idx3-ubyte";
 	const std::string test_labels = folder + "t10k-labels.idx1-ubyte";
 
-	const training_data mnist_training
-		= time_execution_func<training_data>("Load MNIST training data", [&]()
-		{
-			return mnist_load_combined(training_images, training_labels);
-		});
+	const training_data mnist_training = time_execution_func<training_data>("Load MNIST training data", [&]() {
+		return mnist_load_combined(training_images, training_labels);
+	});
 
-	const training_data mnist_test
-		= time_execution_func<training_data>("Load MNIST test data", [&]()
-		{
-			return mnist_load_combined(test_images, test_labels);
-		});
+	const training_data mnist_test = time_execution_func<training_data>("Load MNIST test data", [&]() {
+		return mnist_load_combined(test_images, test_labels);
+	});
 
 	sgd_trainer trainer;
 	trainer.mini_batch_size = 8;
@@ -322,15 +319,13 @@ int main()
 	std::vector<unsigned> sizes{{784, 30, 10}};
 	trainer.init(sizes);
 
-	time_execution("Train five epochs", [&]()
-	{
+	time_execution("Train five epochs", [&]() {
 		trainer.train_epochs(mnist_training, 5);
 	});
 
 	neural_network net = trainer.to_neural_network(true);
 
-	const auto accuracy = time_execution_func<double>("Test", [&]()
-	{
+	const auto accuracy = time_execution_func<double>("Test", [&]() {
 		return test_network_accuracy(net, mnist_test);
 	});
 
