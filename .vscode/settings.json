@@ -3,5 +3,6 @@
         "future": "cpp",
         "xstring": "cpp",
         "string": "cpp"
-    }
+    },
+    "C_Cpp.clang_format_style": "file"
 }
