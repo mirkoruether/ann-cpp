@@ -3,7 +3,7 @@
 void do_assert(bool b)
 {
 	if (!b) {
-		throw runtime_error("Assertion failed");
+		throw std::runtime_error("Assertion failed");
 	}
 }
 

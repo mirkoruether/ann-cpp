@@ -31,6 +31,9 @@
 *.out
 *.app
 
+/.idea/*
 /.vs/*
 /cmake-build-*
-/.idea/workspace.xml
+/build/
+
+

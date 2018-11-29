@@ -289,7 +289,7 @@ int main()
 	std::cout << n_threads << " concurrent threads are supported.\n";
 
 #ifdef __linux__
-	const string folder = "/mnt/c/";
+	const std::string folder = "/mnt/c/";
 #else
 	const std::string folder = "C:\\\\";
 #endif

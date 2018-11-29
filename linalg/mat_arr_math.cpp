@@ -1,5 +1,3 @@
-#define MAT_ARR_MATH_SIZE_CHECK 1
-
 #include "mat_arr_math.h"
 #include "general_util.h"
 
@@ -7,7 +5,6 @@ using namespace linalg;
 
 namespace linalg
 {
-#pragma region multiple_element_by_element_internal
 	void __mat_m_e_by_e_size_check(const std::vector<mat_arr*>& input, mat_arr* C)
 	{
 		const auto input_count = static_cast<unsigned>(input.size());
@@ -33,9 +30,7 @@ namespace linalg
 	void __mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
 	                                     const std::function<double(std::vector<double>)>& f)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_m_e_by_e_size_check(input, C);
-#endif
 
 		const unsigned row_col = C->rows * C->cols;
 		const unsigned count = C->count;
@@ -64,7 +59,7 @@ namespace linalg
 			}
 		}
 	}
-#pragma endregion
+
 	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C,
 	                                      const std::function<double(std::vector<double>)>& f)
 	{
@@ -89,7 +84,6 @@ namespace linalg
 		return *C;
 	}
 
-#pragma region element_by_element_internal
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 	                                const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
 	                                const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
@@ -123,11 +117,9 @@ namespace linalg
 		const unsigned rows = C->rows;
 		const unsigned cols = C->cols;
 
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		__e_by_e_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
 		                    B.count, transpose_b ? B.cols : B.rows, transpose_b ? B.rows : B.cols,
 		                    count, rows, cols);
-#endif
 
 		const bool a_is_array = A.count > 1;
 		const bool b_is_array = B.count > 1;
@@ -176,11 +168,11 @@ namespace linalg
 			__mat_element_by_element_operation(A, B, C, f, true, true);
 			return;
 		default:
-#ifdef MAT_ARR_MATH_SIZE_CHECK
+
 			__e_by_e_size_check(A.count, A.rows, A.cols,
 			                    B.count, B.rows, B.cols,
 			                    C->count, C->rows, C->cols);
-#endif
+
 			const double* a_start = A.start();
 			const double* b_start = B.start();
 			double* c_start = C->start();
@@ -204,7 +196,6 @@ namespace linalg
 			}
 		}
 	}
-#pragma endregion
 
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
 	                                         const std::function<double(double, double)>& f, mat_tr tr)
@@ -242,18 +233,15 @@ namespace linalg
 		return mat_element_by_element_operation(A, B, C, [](double a, double b) { return a / b; }, tr);
 	}
 
-#pragma region element_wise_internal
 	void __mat_element_wise_operation(const mat_arr& A, mat_arr* C,
 	                                  const std::function<double(double)>& f)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		if (A.rows != C->rows
 			|| A.cols != C->cols
 			|| A.rows != C->rows)
 		{
 			throw std::runtime_error("Sizes do not fit");
 		}
-#endif
 
 		const double* a_start = A.start();
 		double* c_start = C->start();
@@ -273,7 +261,6 @@ namespace linalg
 			}
 		}
 	}
-#pragma endregion
 
 	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C, const std::function<double(double)>& f)
 	{
@@ -327,7 +314,6 @@ namespace linalg
 		return mat_element_wise_operation(B, C, [a](double b) { return a / b; });
 	}
 
-#pragma region matrix_mul_internal
 	inline void __matrix_mul_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 	                                    const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
 	                                    const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
@@ -511,7 +497,6 @@ namespace linalg
 
 	void __mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		const bool transpose_a = tr == transpose_A || tr == transpose_both;
 		const bool transpose_b = tr == transpose_B || tr == transpose_both;
 		__matrix_mul_size_check(A.count, transpose_a ? A.cols : A.rows, transpose_a ? A.rows : A.cols,
@@ -522,7 +507,6 @@ namespace linalg
 		{
 			throw std::runtime_error("Matrix mul in place not possible");
 		}
-#endif
 
 		switch (tr)
 		{
@@ -546,7 +530,6 @@ namespace linalg
 		mat_set_all(0, C);
 		__mat_matrix_mul_add(A, B, C, tr);
 	}
-#pragma endregion
 
 	mat_arr mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
@@ -576,7 +559,6 @@ namespace linalg
 		return *C;
 	}
 
-#pragma region transpose_internal
 	void __transpose_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 	                            const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
 	{
@@ -593,10 +575,8 @@ namespace linalg
 
 	void __mat_transpose(const mat_arr& A, mat_arr* C)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		__transpose_size_check(A.count, A.rows, A.cols,
 		                       C->count, C->rows, C->cols);
-#endif
 
 		const double* a_start = A.start();
 		double* c_start = C->start();
@@ -625,7 +605,6 @@ namespace linalg
 			}
 		}
 	}
-#pragma endregion
 
 	mat_arr mat_transpose(const mat_arr& A, mat_arr* C)
 	{
@@ -681,9 +660,7 @@ namespace linalg
 
 	void __mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_concat_size_check(mats, C);
-#endif
 		const auto mat_arr_count = static_cast<unsigned>(mats.size());
 		const unsigned row_col = C->rows * C->cols;
 		double* c = C->start();
@@ -739,9 +716,7 @@ namespace linalg
 
 	void __mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C)
 	{
-#ifdef MAT_ARR_MATH_SIZE_CHECK
 		__mat_select_mats_size_check(A, indices, C);
-#endif
 
 		const auto mat_count = static_cast<unsigned>(indices.size());
 		const unsigned row_col = C->rows * C->cols;
