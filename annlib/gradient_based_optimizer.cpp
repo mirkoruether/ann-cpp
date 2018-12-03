@@ -74,8 +74,13 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
 	mat_element_wise_add(*target_noarr, *buffer, target_noarr);
 }
 
+adam::adam()
+	:adam(0.001, 0.9, 0.99) 
+{
+}
+
 adam::adam(double alpha, double beta1, double beta2)
-	: abstract_gradient_based_optimizer(2),
+	: abstract_gradient_based_optimizer(3),
 	  alpha(alpha), beta1(beta1), beta2(beta2),
 	  beta1_pow_t(1.0), beta2_pow_t(1.0), alpha_t(0.0)
 {
@@ -104,6 +109,8 @@ void adam::adjust(const mat_arr& gradient_noarr,
 	mat_arr m_buf = buffer->get_mat(0);
 	mat_arr v_buf = buffer->get_mat(1);
 
+	mat_arr delta = buffer->get_mat(2);
+
 	mat_element_by_element_operation(m_buf, gradient_noarr, &m_buf,
 	                                 [&](double m, double grad)
 	                                 {
@@ -116,12 +123,11 @@ void adam::adjust(const mat_arr& gradient_noarr,
 		                                 return beta2 * v + (1 - beta2) * grad * grad;
 	                                 });
 
-	const std::vector<mat_arr*> in{{target_noarr, &m_buf, &v_buf}};
-	mat_multiple_e_by_e_operation(in, target_noarr,
-	                              [&](const std::vector<double>& arr)
-	                              {
-		                              return arr[0]
-			                              - alpha_t * arr[1]
-			                              / (std::sqrt(arr[2]) + 1e-8);
-	                              });
+	mat_element_by_element_operation(m_buf, v_buf, &delta, 
+									 [&](double m, double v) 
+									 {
+										 return alpha_t * m / (std::sqrt(v) + 1e-8);
+									 });
+
+	mat_element_wise_sub(*target_noarr, delta, target_noarr);
 }

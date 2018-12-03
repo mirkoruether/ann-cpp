@@ -2,7 +2,6 @@
 #define MAT_ARR_MATH_H
 
 #include "mat_arr.h"
-#include "general_util.h"
 
 using namespace linalg;
 
@@ -15,9 +14,6 @@ namespace linalg
 		transpose_B,
 		transpose_both
 	};
-
-	template <typename Fc>
-	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C, const Fc& f);
 
 	template <typename Fc>
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
@@ -67,84 +63,6 @@ namespace linalg
 	mat_arr mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C);
 
 	mat_arr mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C);
-
-	inline void __mat_m_e_by_e_size_check(const std::vector<mat_arr*>& input, mat_arr* C)
-	{
-		const auto input_count = static_cast<unsigned>(input.size());
-		for (unsigned i = 0; i < input_count; i++)
-		{
-			if (C->rows != input[i]->rows)
-			{
-				throw std::runtime_error("Row count does not fit");
-			}
-
-			if (C->cols != input[i]->cols)
-			{
-				throw std::runtime_error("Column count does not fit");
-			}
-
-			if (input[i]->count != 1 && C->cols != input[i]->cols)
-			{
-				throw std::runtime_error("Wrong input array sizes");
-			}
-		}
-	}
-
-	template <typename Fc>
-	void __mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C, const Fc& f)
-	{
-		__mat_m_e_by_e_size_check(input, C);
-
-		const unsigned row_col = C->rows * C->cols;
-		const unsigned count = C->count;
-		const auto input_count = static_cast<unsigned>(input.size());
-
-		auto ins_start = vector_select<mat_arr*, double*>(input, [](mat_arr* x) { return x->start(); });
-		double* c_start = C->start();
-
-		for (unsigned mat_no = 0; mat_no < count; mat_no++)
-		{
-			const unsigned offset = mat_no * row_col;
-			auto ins = std::vector<double*>(input_count);
-			for (unsigned i = 0; i < input_count; i++)
-			{
-				ins[i] = input[i]->count > 1 ? ins_start[i] + offset : ins_start[i];
-			}
-			double* c = c_start + offset;
-
-			for (unsigned i = 0; i < row_col; i++)
-			{
-				c[i] = f(vector_select<double*, double>(ins_start,
-														[&](const double* in) {
-															return in[i];
-														}));
-			}
-		}
-	}
-
-	template <typename Fc>
-	mat_arr mat_multiple_e_by_e_operation(const std::vector<mat_arr*>& input, mat_arr* C, const Fc& f)
-	{
-		if (C == nullptr)
-		{
-			const unsigned rows = input[0]->rows;
-			const unsigned cols = input[0]->cols;
-			unsigned count = input[0]->count;
-			const auto input_count = static_cast<unsigned>(input.size());
-			for (unsigned i = 0; i < input_count; i++)
-			{
-				if (input[i]->count > count)
-				{
-					count = input[i]->count;
-				}
-			}
-			mat_arr tempC = mat_arr(count, rows, cols);
-			__mat_multiple_e_by_e_operation(input, &tempC, f);
-			return tempC;
-		}
-		__mat_multiple_e_by_e_operation(input, C, f);
-		return *C;
-	}
 
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 									const unsigned count_b, const unsigned rows_b, const unsigned cols_b,

@@ -1,5 +1,4 @@
 #include "mat_arr_math.h"
-#include "general_util.h"
 
 using namespace linalg;
 

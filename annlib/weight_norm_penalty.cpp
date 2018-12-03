@@ -1,5 +1,6 @@
 #include "weight_norm_penalty.h"
 #include "mat_arr_math.h"
+#include <functional>
 
 using namespace annlib;
 

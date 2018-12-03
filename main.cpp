@@ -368,10 +368,6 @@ void mat_arr_math_addmul_speed_test()
 	std::cout << std::endl;
 	mat_arr_math_add_speed_test2();
 	const unsigned n = 200;
-	const unsigned n3 = n * n * n;
-	std::vector<double> vec_a(n3);
-	std::vector<double> vec_b(n3);
-	std::vector<double> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_b(n, n, n);
@@ -384,29 +380,65 @@ void mat_arr_math_addmul_speed_test()
 	double factor = 4;
 
 	time_execution("mat add mul with std::function", [&] {
-		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
-			mat_element_by_element_operation(mat_a, mat_b, &mat_c, 
-				[&](double a, double b)
-			{
-				return a + factor * b;
-			});
+			mat_element_by_element_operation(mat_a, mat_b, &mat_c,
+											 [&](double a, double b) {
+												 return a + factor * b;
+											 });
 		}
 	});
 
 	time_execution("mat add mul with struct       ", [&] {
-		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c, addmul(factor));
 		}
 	});
 
 	time_execution("mat add mul with fixed struct ", [&] {
-		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c, addmul_fixed4());
 		}
 	});
+	std::cout << std::endl;
+}
+
+void mat_arr_math_multipleadd_speed_test()
+{
+	std::cout << std::endl;
+	mat_arr_math_add_speed_test2();
+	const unsigned n = 200;
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	mat_arr mat_d(n, n, n);
+	mat_arr mat_temp(n, n, n);
+
+	random_matrix_arr(&mat_a);
+	random_matrix_arr(&mat_b);
+	random_matrix_arr(&mat_c);
+
+	time_execution("add twice     ", [&] {
+		for (unsigned iterations = 0; iterations < 100; iterations++)
+		{
+			mat_element_wise_add(mat_a, mat_b, &mat_temp);
+			mat_element_wise_add(mat_temp, mat_c, &mat_d);
+		}
+	});
+
+	/*time_execution("add three     ", [&] {
+		for (unsigned iterations = 0; iterations < 100; iterations++)
+		{
+			std::vector<mat_arr*> in = {{&mat_a, &mat_b, &mat_c}};
+			mat_multiple_e_by_e_operation(in, &mat_d, [&](const std::vector<double>& vec) {
+				return vec[0] + vec[1] + vec[2];
+			});
+		}
+	});*/
 	std::cout << std::endl;
 }
 
@@ -416,6 +448,7 @@ int main()
 	mat_arr_math_mat_mul_speed_test();
 	mat_arr_math_scalar_mul_speed_test();
 	mat_arr_math_addmul_speed_test();
+	mat_arr_math_multipleadd_speed_test();
 
 	const unsigned n_threads = std::thread::hardware_concurrency();
 	std::cout << n_threads << " concurrent threads are supported.\n"
@@ -457,6 +490,7 @@ int main()
 	trainer.cost_f = std::make_shared<cross_entropy_costs>();
 	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(3.0 / mnist_training.entry_count());
 	trainer.optimizer = std::make_shared<momentum_sgd>(5.0, 0.0);
+	//trainer.optimizer = std::make_shared<adam>();
 	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 
 	std::vector<unsigned> sizes{{784, 30, 10}};

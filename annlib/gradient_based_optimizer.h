@@ -76,6 +76,8 @@ namespace annlib
 	class adam : public abstract_gradient_based_optimizer
 	{
 	public:
+		adam();
+
 		explicit adam(double alpha, double beta1, double beta2);
 
 		double alpha;
