@@ -44,11 +44,11 @@ unsigned get_max_index(const mat_arr& vec)
 template <typename T>
 T time_execution_func(const std::string& name, const std::function<T()>& func)
 {
-	std::cout << name << " started" << std::endl;
+	std::cout << name.c_str() << " started" << std::endl;
 	const auto calcStart = Clock::now();
 	T result = func();
 	const double gpu_calc_millis = duration_cast<nanoseconds>(Clock::now() - calcStart).count() / double(1e6);
-	std::cout << name << " finished, time elapsed: " << gpu_calc_millis << " ms" << std::endl;
+	std::cout << name.c_str() << " finished, time elapsed: " << gpu_calc_millis << " ms" << std::endl;
 	return result;
 }
 
@@ -143,6 +143,7 @@ void mat_arr_math_add_speed_test2()
 
 void mat_arr_math_add_speed_test()
 {
+	std::cout << std::endl;
 	mat_arr_math_add_speed_test2();
 	const unsigned n = 200;
 	const unsigned n3 = n * n * n;
@@ -154,14 +155,22 @@ void mat_arr_math_add_speed_test()
 	mat_arr mat_b(n, n, n);
 	mat_arr mat_c(n, n, n);
 
-	time_execution("mat add", [&] {
+	time_execution("mat add                                ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_element_wise_add(mat_a, mat_b, &mat_c);
 		}
 	});
 
-	time_execution("mat add 2", [&] {
+	time_execution("mat e by e operation with std::function", [&] {
+		const std::function<double(double, double)> func = [](double a, double b) { return a + b; };
+		for (unsigned iterations = 0; iterations < 10; iterations++)
+		{
+			mat_element_by_element_operation(mat_a, mat_b, &mat_c, func);
+		}
+	});
+
+	time_execution("mat add loop                           ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			double* a = mat_a.start();
@@ -175,7 +184,7 @@ void mat_arr_math_add_speed_test()
 		}
 	});
 
-	time_execution("mat add 3", [&] {
+	time_execution("mat add loop with std::function call   ", [&] {
 		const std::function<double(double, double)> add = [](double a, double b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
@@ -190,15 +199,15 @@ void mat_arr_math_add_speed_test()
 		}
 	});
 
-	time_execution("mat add 4", [&] {
+	time_execution("mat add template function with function", [&] {
 		test_add_3(mat_a, mat_b, &mat_c, test_add);
 	});
 
-	time_execution("mat add 5", [&] {
+	time_execution("mat add template function with struct  ", [&] {
 		test_add_3(mat_a, mat_b, &mat_c, add3());
 	});
 
-	time_execution("vector add", [&] {
+	time_execution("vector add                             ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned i = 0; i < n3; i++)
@@ -207,10 +216,12 @@ void mat_arr_math_add_speed_test()
 			}
 		}
 	});
+	std::cout << std::endl;
 }
 
 void mat_arr_math_mat_mul_speed_test()
 {
+	std::cout << std::endl;
 	const unsigned n = 100;
 	const unsigned n2 = n * n;
 	const unsigned n3 = n * n * n;
@@ -222,14 +233,14 @@ void mat_arr_math_mat_mul_speed_test()
 	mat_arr mat_b(n, n, n);
 	mat_arr mat_c(n, n, n);
 
-	time_execution("mat mul", [&] {
+	time_execution("mat mul      ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_matrix_mul(mat_a, mat_b, &mat_c);
 		}
 	});
 
-	time_execution("mat mul 2", [&] {
+	time_execution("mat mul loops", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned matNo = 0; matNo < n; matNo++)
@@ -252,7 +263,7 @@ void mat_arr_math_mat_mul_speed_test()
 		}
 	});
 
-	time_execution("vector mul", [&] {
+	time_execution("vector mul   ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			for (unsigned mat_no = 0; mat_no < n; mat_no++)
@@ -270,20 +281,152 @@ void mat_arr_math_mat_mul_speed_test()
 			}
 		}
 	});
+	std::cout << std::endl;
+}
+
+struct mat_arr_math_scalar_mul_test_kernel
+{
+	double operator()(double a, double b) const
+	{
+		return a * b;
+	}
+};
+
+template <typename Fc>
+void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, double b, mat_arr* mat_c, Fc f)
+{
+	const unsigned n3 = mat_a.size();
+	const double* a = mat_a.start();
+	double* c = mat_c->start();
+	for (unsigned i = 0; i < n3; i++)
+	{
+		c[i] = f(a[i], b);
+	}
+}
+
+void mat_arr_math_scalar_mul_speed_test()
+{
+	std::cout << std::endl;
+	const unsigned n_it = 1000;
+	const unsigned n = 100;
+	const unsigned n3 = n * n * n;
+	std::vector<double> vec_a(n3);
+	std::vector<double> vec_c(n3);
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	time_execution("scalar mul                          ", [&] {
+		for (unsigned iterations = 0; iterations < n_it; iterations++)
+		{
+			mat_element_wise_mul(mat_a, 2.5, &mat_c);
+		}
+	});
+
+	time_execution("scalar mul loop                     ", [&] {
+		for (unsigned iterations = 0; iterations < n_it; iterations++)
+		{
+			double* a = mat_a.start();
+			double* c = mat_c.start();
+
+			for (unsigned i = 0; i < n3; i++)
+			{
+				c[i] = a[i] * 2.5;
+			}
+		}
+	});
+
+	time_execution("scalar mul template func with 2 args", [&] {
+		for (unsigned iterations = 0; iterations < n_it; iterations++)
+		{
+			double* a = mat_a.start();
+			double* c = mat_c.start();
+
+			for (unsigned i = 0; i < n3; i++)
+			{
+				c[i] = a[i] * 2.5;
+			}
+		}
+	});
+	std::cout << std::endl;
+}
+
+struct addmul
+{
+	double factor;
+	addmul(double factor) : factor(factor) {}
+	double operator()(double a, double b) const { return a + factor * b; }
+};
+
+struct addmul_fixed4
+{
+	double operator()(double a, double b) const { return a + 4.0 * b; }
+};
+
+void mat_arr_math_addmul_speed_test()
+{
+	std::cout << std::endl;
+	mat_arr_math_add_speed_test2();
+	const unsigned n = 200;
+	const unsigned n3 = n * n * n;
+	std::vector<double> vec_a(n3);
+	std::vector<double> vec_b(n3);
+	std::vector<double> vec_c(n3);
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	random_matrix_arr(&mat_a);
+	random_matrix_arr(&mat_b);
+	random_matrix_arr(&mat_c);
+
+	double factor = 4;
+
+	time_execution("mat add mul with std::function", [&] {
+		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		{
+			mat_element_by_element_operation(mat_a, mat_b, &mat_c, 
+				[&](double a, double b)
+			{
+				return a + factor * b;
+			});
+		}
+	});
+
+	time_execution("mat add mul with struct       ", [&] {
+		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		{
+			mat_element_by_element_operation(mat_a, mat_b, &mat_c, addmul(factor));
+		}
+	});
+
+	time_execution("mat add mul with fixed struct ", [&] {
+		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		{
+			mat_element_by_element_operation(mat_a, mat_b, &mat_c, addmul_fixed4());
+		}
+	});
+	std::cout << std::endl;
 }
 
 int main()
 {
 	mat_arr_math_add_speed_test();
+	mat_arr_math_mat_mul_speed_test();
+	mat_arr_math_scalar_mul_speed_test();
+	mat_arr_math_addmul_speed_test();
 
 	const unsigned n_threads = std::thread::hardware_concurrency();
-	std::cout << n_threads << " concurrent threads are supported.\n";
+	std::cout << n_threads << " concurrent threads are supported.\n"
+			  << std::endl;
 
 #ifdef _OPENMP
+	std::cout << "OpenMP enabled" << std::endl;
 #pragma omp parallel num_threads(4)
 	{
 #pragma omp critical
-		std::cout << "tid = " << omp_get_thread_num() << std::endl;
+		std::cout << "Hello, I am thread number " << omp_get_thread_num() << std::endl;
 	}
 #else
 	std::cout << "OpenMP disabled" << std::endl;

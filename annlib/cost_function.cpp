@@ -73,15 +73,20 @@ double cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 	return -result;
 }
 
+struct calculate_gradient_kernel
+{
+	double operator()(double a, double y) const 
+	{
+		return y / a - (1 - y) / (1 - a);
+	}
+};
+
 void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
                                              const mat_arr& solution_rv,
                                              mat_arr* gradient_rv) const
 {
 	mat_element_by_element_operation(net_output_rv, solution_rv, gradient_rv,
-	                                 [](double a, double y)
-	                                 {
-		                                 return y / a - (1 - y) / (1 - a);
-	                                 });
+									 calculate_gradient_kernel());
 }
 
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
