@@ -3,7 +3,8 @@
         "future": "cpp",
         "xstring": "cpp",
         "string": "cpp",
-        "random": "cpp"
+        "random": "cpp",
+        "functional": "cpp"
     },
     "C_Cpp.clang_format_style": "file"
 }
