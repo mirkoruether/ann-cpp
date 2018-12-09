@@ -1,6 +1,5 @@
 #include "training_buffer.h"
 #include "mat_arr_math.h"
-#include "general_util.h"
 
 using namespace annlib;
 
@@ -31,6 +30,14 @@ training_buffer::training_buffer(std::vector<unsigned> sizes, unsigned mini_batc
 	}
 }
 
+template <typename t>
+void add_pointers(std::vector<t>* in, std::vector<t*>* target)
+{
+	for (size_t i = 0; i < in->size(); i++)
+	{
+		target->emplace_back(&in->operator[](i));
+	}
+}
 
 std::vector<mat_arr*> training_buffer::all()
 {
