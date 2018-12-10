@@ -2,6 +2,7 @@
 #include "mat_arr_math.h"
 #include "mnist.h"
 #include "sgd_trainer.h"
+#include "linalg_tests.h"
 #include <chrono>
 #include <iostream>
 #include <thread>
@@ -19,16 +20,16 @@ using namespace linalg;
 void random_matrix_arr(mat_arr* m)
 {
 	const unsigned size = m->size();
-	double* mat = m->start();
+	float* mat = m->start();
 	for (unsigned i = 0; i < size; i++)
 	{
-		*(mat + i) = static_cast<double>(rand()) / static_cast<double>(RAND_MAX);
+		*(mat + i) = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
 	}
 }
 
 unsigned get_max_index(const mat_arr& vec)
 {
-	double max = -1000.0;
+	float max = -1000.0f;
 	unsigned maxIndex = 0;
 	for (unsigned i = 0; i < vec.size(); i++)
 	{
@@ -85,7 +86,7 @@ void speedAddTranspose()
 	});
 }
 
-double test_network_accuracy(neural_network net, training_data test_data)
+double test_network_accuracy(const neural_network& net, const training_data& test_data)
 {
 	const mat_arr net_output = net.feed_forward(test_data.input);
 	unsigned correct = 0;
@@ -103,10 +104,10 @@ double test_network_accuracy(neural_network net, training_data test_data)
 
 struct add3
 {
-	double operator()(double a, double b) const { return a + b; }
+	float operator()(float a, float b) const { return a + b; }
 };
 
-double test_add(double a, double b)
+float test_add(float a, float b)
 {
 	return a + b;
 }
@@ -117,9 +118,9 @@ void test_add_3(const mat_arr& mat_a, const mat_arr& mat_b, mat_arr* mat_c, F f)
 	const unsigned n3 = mat_a.size();
 	for (unsigned iterations = 0; iterations < 10; iterations++)
 	{
-		const double* a = mat_a.start();
-		const double* b = mat_b.start();
-		double* c = mat_c->start();
+		const float* a = mat_a.start();
+		const float* b = mat_b.start();
+		float* c = mat_c->start();
 
 		for (unsigned i = 0; i < n3; i++)
 		{
@@ -147,9 +148,9 @@ void mat_arr_math_add_speed_test()
 	mat_arr_math_add_speed_test2();
 	const unsigned n = 200;
 	const unsigned n3 = n * n * n;
-	std::vector<double> vec_a(n3);
-	std::vector<double> vec_b(n3);
-	std::vector<double> vec_c(n3);
+	std::vector<float> vec_a(n3);
+	std::vector<float> vec_b(n3);
+	std::vector<float> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_b(n, n, n);
@@ -163,7 +164,7 @@ void mat_arr_math_add_speed_test()
 	});
 
 	time_execution("mat e by e operation with std::function", [&] {
-		const std::function<double(double, double)> func = [](double a, double b) { return a + b; };
+		const std::function<float(float, float)> func = [](float a, float b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c, func);
@@ -173,9 +174,9 @@ void mat_arr_math_add_speed_test()
 	time_execution("mat add loop                           ", [&] {
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
-			double* a = mat_a.start();
-			double* b = mat_b.start();
-			double* c = mat_c.start();
+			float* a = mat_a.start();
+			float* b = mat_b.start();
+			float* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -185,12 +186,12 @@ void mat_arr_math_add_speed_test()
 	});
 
 	time_execution("mat add loop with std::function call   ", [&] {
-		const std::function<double(double, double)> add = [](double a, double b) { return a + b; };
+		const std::function<float(float, float)> add = [](float a, float b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
-			double* a = mat_a.start();
-			double* b = mat_b.start();
-			double* c = mat_c.start();
+			float* a = mat_a.start();
+			float* b = mat_b.start();
+			float* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -225,9 +226,9 @@ void mat_arr_math_mat_mul_speed_test()
 	const unsigned n = 100;
 	const unsigned n2 = n * n;
 	const unsigned n3 = n * n * n;
-	std::vector<double> vec_a(n3);
-	std::vector<double> vec_b(n3);
-	std::vector<double> vec_c(n3);
+	std::vector<float> vec_a(n3);
+	std::vector<float> vec_b(n3);
+	std::vector<float> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_b(n, n, n);
@@ -245,9 +246,9 @@ void mat_arr_math_mat_mul_speed_test()
 		{
 			for (unsigned matNo = 0; matNo < n; matNo++)
 			{
-				const double* a = mat_a.start() + (matNo * n2);
-				const double* b = mat_b.start() + (matNo * n2);
-				double* c = mat_c.start() + (matNo * n2);
+				const float* a = mat_a.start() + (matNo * n2);
+				const float* b = mat_b.start() + (matNo * n2);
+				float* c = mat_c.start() + (matNo * n2);
 
 				for (unsigned i = 0; i < n; i++)
 				{
@@ -286,18 +287,18 @@ void mat_arr_math_mat_mul_speed_test()
 
 struct mat_arr_math_scalar_mul_test_kernel
 {
-	double operator()(double a, double b) const
+	float operator()(float a, float b) const
 	{
 		return a * b;
 	}
 };
 
 template <typename Fc>
-void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, double b, mat_arr* mat_c, Fc f)
+void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, float b, mat_arr* mat_c, Fc f)
 {
 	const unsigned n3 = mat_a.size();
-	const double* a = mat_a.start();
-	double* c = mat_c->start();
+	const float* a = mat_a.start();
+	float* c = mat_c->start();
 	for (unsigned i = 0; i < n3; i++)
 	{
 		c[i] = f(a[i], b);
@@ -310,8 +311,8 @@ void mat_arr_math_scalar_mul_speed_test()
 	const unsigned n_it = 1000;
 	const unsigned n = 100;
 	const unsigned n3 = n * n * n;
-	std::vector<double> vec_a(n3);
-	std::vector<double> vec_c(n3);
+	std::vector<float> vec_a(n3);
+	std::vector<float> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_c(n, n, n);
@@ -319,19 +320,19 @@ void mat_arr_math_scalar_mul_speed_test()
 	time_execution("scalar mul                          ", [&] {
 		for (unsigned iterations = 0; iterations < n_it; iterations++)
 		{
-			mat_element_wise_mul(mat_a, 2.5, &mat_c);
+			mat_element_wise_mul(mat_a, 2.5f, &mat_c);
 		}
 	});
 
 	time_execution("scalar mul loop                     ", [&] {
 		for (unsigned iterations = 0; iterations < n_it; iterations++)
 		{
-			double* a = mat_a.start();
-			double* c = mat_c.start();
+			float* a = mat_a.start();
+			float* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
-				c[i] = a[i] * 2.5;
+				c[i] = a[i] * 2.5f;
 			}
 		}
 	});
@@ -339,12 +340,12 @@ void mat_arr_math_scalar_mul_speed_test()
 	time_execution("scalar mul template func with 2 args", [&] {
 		for (unsigned iterations = 0; iterations < n_it; iterations++)
 		{
-			double* a = mat_a.start();
-			double* c = mat_c.start();
+			float* a = mat_a.start();
+			float* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
-				c[i] = a[i] * 2.5;
+				c[i] = a[i] * 2.5f;
 			}
 		}
 	});
@@ -353,14 +354,15 @@ void mat_arr_math_scalar_mul_speed_test()
 
 struct addmul
 {
-	double factor;
-	addmul(double factor) : factor(factor) {}
-	double operator()(double a, double b) const { return a + factor * b; }
+	float factor;
+
+	explicit addmul(float factor) : factor(factor) {}
+	float operator()(float a, float b) const { return a + factor * b; }
 };
 
 struct addmul_fixed4
 {
-	double operator()(double a, double b) const { return a + 4.0 * b; }
+	float operator()(float a, float b) const { return a + 4.0f * b; }
 };
 
 void mat_arr_math_addmul_speed_test()
@@ -377,13 +379,13 @@ void mat_arr_math_addmul_speed_test()
 	random_matrix_arr(&mat_b);
 	random_matrix_arr(&mat_c);
 
-	double factor = 4;
+	float factor = 4;
 
 	time_execution("mat add mul with std::function", [&] {
 		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c,
-											 [&](double a, double b) {
+											 [&](float a, float b) {
 												 return a + factor * b;
 											 });
 		}
@@ -434,7 +436,7 @@ void mat_arr_math_multipleadd_speed_test()
 		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			std::vector<mat_arr*> in = {{&mat_a, &mat_b, &mat_c}};
-			mat_multiple_e_by_e_operation(in, &mat_d, [&](const std::vector<double>& vec) {
+			mat_multiple_e_by_e_operation(in, &mat_d, [&](const std::vector<float>& vec) {
 				return vec[0] + vec[1] + vec[2];
 			});
 		}
@@ -444,11 +446,15 @@ void mat_arr_math_multipleadd_speed_test()
 
 int main()
 {
-	mat_arr_math_add_speed_test();
+	/*mat_arr_math_add_speed_test();
 	mat_arr_math_mat_mul_speed_test();
 	mat_arr_math_scalar_mul_speed_test();
 	mat_arr_math_addmul_speed_test();
-	mat_arr_math_multipleadd_speed_test();
+	mat_arr_math_multipleadd_speed_test();*/
+
+	testMatMul();
+	testMatMulTransposed();
+	testAddTranspose();
 
 	const unsigned n_threads = std::thread::hardware_concurrency();
 	std::cout << n_threads << " concurrent threads are supported.\n"
@@ -486,10 +492,10 @@ int main()
 
 	sgd_trainer trainer;
 	trainer.mini_batch_size = 8;
-	trainer.activation_f = std::make_shared<logistic_activation_function>(1.0);
+	trainer.activation_f = std::make_shared<logistic_activation_function>(1.0f);
 	trainer.cost_f = std::make_shared<cross_entropy_costs>();
-	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(3.0 / mnist_training.entry_count());
-	trainer.optimizer = std::make_shared<momentum_sgd>(5.0, 0.0);
+	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(static_cast<float>(3.0 / mnist_training.entry_count()));
+	trainer.optimizer = std::make_shared<momentum_sgd>(5.0f, 0.0f);
 	//trainer.optimizer = std::make_shared<adam>();
 	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 

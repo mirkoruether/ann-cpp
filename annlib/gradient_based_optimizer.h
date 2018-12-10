@@ -51,9 +51,9 @@ namespace annlib
 	class ordinary_sgd : public abstract_gradient_based_optimizer
 	{
 	public:
-		explicit ordinary_sgd(double learning_rate);
+		explicit ordinary_sgd(float learning_rate);
 
-		double learning_rate;
+		float learning_rate;
 
 		void adjust(const mat_arr& gradient_noarr,
 		            mat_arr* buffer,
@@ -63,10 +63,10 @@ namespace annlib
 	class momentum_sgd : public abstract_gradient_based_optimizer
 	{
 	public:
-		explicit momentum_sgd(double learning_rate, double alpha);
+		explicit momentum_sgd(float learning_rate, float alpha);
 
-		double learning_rate;
-		double alpha;
+		float learning_rate;
+		float alpha;
 
 		void adjust(const mat_arr& gradient_noarr,
 		            mat_arr* buffer,
@@ -78,15 +78,15 @@ namespace annlib
 	public:
 		adam();
 
-		explicit adam(double alpha, double beta1, double beta2);
+		explicit adam(float alpha, float beta1, float beta2);
 
-		double alpha;
-		double beta1;
-		double beta2;
+		float alpha;
+		float beta1;
+		float beta2;
 
-		double beta1_pow_t;
-		double beta2_pow_t;
-		double alpha_t;
+		float beta1_pow_t;
+		float beta2_pow_t;
+		float alpha_t;
 
 		void init(const std::vector<unsigned>& sizes) override;
 

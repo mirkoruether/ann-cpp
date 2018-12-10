@@ -11,7 +11,7 @@ class neural_network
 private:
 	const std::vector<mat_arr> weights_noarr;
 	const std::vector<mat_arr> biases_noarr_rv;
-	const std::function<double(double)> activation_function;
+	const std::function<float(float)> activation_function;
 
 	void feed_forward_internal(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const;
 	void feed_forward_result_nonnull(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const;
@@ -19,7 +19,7 @@ private:
 public:
 	neural_network(std::vector<mat_arr> weights_noarr,
 	               std::vector<mat_arr> biases_noarr_rv,
-	               std::function<double(double)> activation_function);
+	               std::function<float(float)> activation_function);
 
 	std::vector<mat_arr> build_buffer(unsigned count) const;
 

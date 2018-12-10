@@ -1,32 +1,41 @@
 #include "activation_function.h"
 #include <cmath>
+#include <stdexcept>
 
 using namespace annlib;
 
 namespace annlib
 {
-	activation_function::activation_function(std::function<double(double)> f,
-	                                         std::function<double(double)> df)
+	activation_function::activation_function(std::function<float(float)> f,
+	                                         std::function<float(float)> df)
 		: f(std::move(f)), df(std::move(df))
 	{
 	}
 
-	double activation_function::apply(double d) const
+	float activation_function::apply(float d) const
 	{
 		return f(d);
 	}
 
-	double activation_function::apply_derivative(double d) const
+	float activation_function::apply_derivative(float d) const
 	{
 		return df(d);
 	}
 
-	logistic_activation_function::logistic_activation_function(double T)
-		: activation_function([=](double d) { return 1 / (1 + exp(-d / T)); },
-		                      [=](double d)
+	logistic_activation_function::logistic_activation_function(float T)
+		: activation_function([=](float d)
 		                      {
-			                      const double v = std::exp(d / T) + 1.0;
-			                      return std::exp(d / T) / (T * v * v);
+			                      const float e = d / T;
+			                      return 1.0f / (1.0f + std::exp(-e));
+		                      },
+		                      [=](float d)
+		                      {
+			                      const float e = d / T;
+								  const float e_abs = std::abs(e);
+								  if (e_abs > 5.0f)
+									  return 1.0f / std::exp(e_abs);
+			                      const float v = std::exp(e) + 1.0f;
+			                      return std::exp(e) / (T * v * v);
 		                      })
 	{
 	}

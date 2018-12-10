@@ -6,7 +6,7 @@
 
 using namespace linalg;
 
-mat_arr::mat_arr(std::shared_ptr<std::vector<double>> vector, unsigned offset,
+mat_arr::mat_arr(std::shared_ptr<std::vector<float>> vector, unsigned offset,
                  unsigned count, unsigned rows, unsigned cols)
 	: vec(std::move(vector)),
 	  offset(offset),
@@ -17,7 +17,7 @@ mat_arr::mat_arr(std::shared_ptr<std::vector<double>> vector, unsigned offset,
 }
 
 mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
-	: vec(std::make_shared<std::vector<double>>(count * rows * cols)),
+	: vec(std::make_shared<std::vector<float>>(count * rows * cols)),
 	  offset(0),
 	  count(count),
 	  rows(rows),
@@ -78,22 +78,22 @@ unsigned mat_arr::size() const
 	return count * rows * cols;
 }
 
-double* mat_arr::start()
+float* mat_arr::start()
 {
 	return vec->data() + offset;
 }
 
-const double* mat_arr::start() const
+const float* mat_arr::start() const
 {
 	return vec->data() + offset;
 }
 
-const double& mat_arr::operator[](unsigned index) const
+const float& mat_arr::operator[](unsigned index) const
 {
 	return *(start() + index);
 }
 
-double& mat_arr::operator[](unsigned index)
+float& mat_arr::operator[](unsigned index)
 {
 	return *(start() + index);
 }
@@ -101,7 +101,7 @@ double& mat_arr::operator[](unsigned index)
 mat_arr mat_arr::duplicate() const
 {
 	mat_arr result(dim());
-	const double* a = start();
+	const float* a = start();
 	std::copy(a, a + size(), result.start());
 	return result;
 }
@@ -109,11 +109,11 @@ mat_arr mat_arr::duplicate() const
 bool mat_arr::only_real() const
 {
 	const unsigned s = size();
-	const double* a = start();
+	const float* a = start();
 	for (unsigned i = 0; i < s; i++)
 	{
-		const double val = *(a + i);
-		if (!std::isnormal(val) && val != 0.0)
+		const float val = *(a + i);
+		if (!std::isfinite(val))
 		{
 			return false;
 		}

@@ -135,8 +135,8 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
 		mat_element_by_element_operation(errors_rv->operator[](layer_no),
 										 weighted_inputs_rv[layer_no],
 										 &errors_rv->operator[](layer_no),
-										 [=](double mat_mul_result, double wi) {
-											 return mat_mul_result * activation_f->df(wi);
+										 [=](float mat_mul_result, float wi) {
+											return mat_mul_result * activation_f->df(wi);
 										 });
 	}
 }
@@ -156,7 +156,7 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
 						   transpose_A);
 	}
 
-	mat_element_wise_div(*gradient_weight_noarr, batch_entry_count, gradient_weight_noarr);
+	mat_element_wise_div(*gradient_weight_noarr, static_cast<float>(batch_entry_count), gradient_weight_noarr);
 }
 
 void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
@@ -172,7 +172,7 @@ void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
 							 gradient_bias_noarr_rv);
 	}
 
-	mat_element_wise_div(*gradient_bias_noarr_rv, batch_entry_count, gradient_bias_noarr_rv);
+	mat_element_wise_div(*gradient_bias_noarr_rv, static_cast<float>(batch_entry_count), gradient_bias_noarr_rv);
 }
 
 void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)

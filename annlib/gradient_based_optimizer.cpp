@@ -38,7 +38,7 @@ abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(unsigned bu
 {
 }
 
-ordinary_sgd::ordinary_sgd(double learning_rate)
+ordinary_sgd::ordinary_sgd(float learning_rate)
 	: abstract_gradient_based_optimizer(0),
 	  learning_rate(learning_rate)
 {
@@ -49,13 +49,13 @@ void ordinary_sgd::adjust(const mat_arr& gradient_noarr,
                           mat_arr* target_noarr)
 {
 	mat_element_by_element_operation(*target_noarr, gradient_noarr, target_noarr,
-	                                 [&](double target, double grad)
+	                                 [&](float target, float grad)
 	                                 {
 		                                 return target - learning_rate * grad;
 	                                 });
 }
 
-momentum_sgd::momentum_sgd(double learning_rate, double alpha)
+momentum_sgd::momentum_sgd(float learning_rate, float alpha)
 	: abstract_gradient_based_optimizer(1),
 	  learning_rate(learning_rate), alpha(alpha)
 {
@@ -66,7 +66,7 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
                           mat_arr* target_noarr)
 {
 	mat_element_by_element_operation(*buffer, gradient_noarr, buffer,
-	                                 [&](double v, double grad)
+	                                 [&](float v, float grad)
 	                                 {
 		                                 return alpha * v - learning_rate * grad;
 	                                 });
@@ -75,22 +75,22 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
 }
 
 adam::adam()
-	:adam(0.001, 0.9, 0.99) 
+	:adam(0.001f, 0.9f, 0.99f) 
 {
 }
 
-adam::adam(double alpha, double beta1, double beta2)
+adam::adam(float alpha, float beta1, float beta2)
 	: abstract_gradient_based_optimizer(3),
 	  alpha(alpha), beta1(beta1), beta2(beta2),
-	  beta1_pow_t(1.0), beta2_pow_t(1.0), alpha_t(0.0)
+	  beta1_pow_t(1.0f), beta2_pow_t(1.0f), alpha_t(0.0f)
 {
 }
 
 void adam::init(const std::vector<unsigned>& sizes)
 {
-	beta1_pow_t = 1.0;
-	beta2_pow_t = 1.0;
-	alpha_t = 0.0;
+	beta1_pow_t = 1.0f;
+	beta2_pow_t = 1.0f;
+	alpha_t = 0.0f;
 
 	abstract_gradient_based_optimizer::init(sizes);
 }
@@ -99,7 +99,7 @@ void adam::next_mini_batch()
 {
 	beta1_pow_t *= beta1;
 	beta2_pow_t *= beta2;
-	alpha_t = alpha * sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
+	alpha_t = alpha * std::sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
 }
 
 void adam::adjust(const mat_arr& gradient_noarr,
@@ -112,21 +112,21 @@ void adam::adjust(const mat_arr& gradient_noarr,
 	mat_arr delta = buffer->get_mat(2);
 
 	mat_element_by_element_operation(m_buf, gradient_noarr, &m_buf,
-	                                 [&](double m, double grad)
+	                                 [&](float m, float grad)
 	                                 {
-		                                 return beta1 * m + (1 - beta1) * grad;
+		                                 return beta1 * m + (1.0f - beta1) * grad;
 	                                 });
 
 	mat_element_by_element_operation(v_buf, gradient_noarr, &v_buf,
-	                                 [&](double v, double grad)
+	                                 [&](float v, float grad)
 	                                 {
-		                                 return beta2 * v + (1 - beta2) * grad * grad;
+		                                 return beta2 * v + (1.0f - beta2) * grad * grad;
 	                                 });
 
 	mat_element_by_element_operation(m_buf, v_buf, &delta, 
-									 [&](double m, double v) 
+									 [&](float m, float v) 
 									 {
-										 return alpha_t * m / (std::sqrt(v) + 1e-8);
+										 return alpha_t * m / (std::sqrt(v) + 1e-8f);
 									 });
 
 	mat_element_wise_sub(*target_noarr, delta, target_noarr);

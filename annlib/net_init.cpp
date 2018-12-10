@@ -2,14 +2,14 @@
 #include "mat_arr_math.h"
 
 annlib::gaussian_net_init::gaussian_net_init()
-	: distribution(0.0, 1.0)
+	: distribution(0.0f, 1.0f)
 {
 }
 
 void annlib::gaussian_net_init::fill_with_gaussian(mat_arr* mat)
 {
 	mat_element_wise_operation(*mat, mat,
-	                           [&](double val)
+	                           [&](float val)
 	                           {
 		                           return distribution(rng);
 	                           });
@@ -29,5 +29,6 @@ void annlib::gaussian_net_init::init_weights(mat_arr* weights_noarr)
 void annlib::normalized_gaussian_net_init::init_weights(mat_arr* weights_noarr)
 {
 	gaussian_net_init::init_weights(weights_noarr);
-	mat_element_wise_mul(*weights_noarr, 2.0 / sqrt(weights_noarr->rows), weights_noarr);
+	const auto factor = static_cast<float>(2.0 / std::sqrt(1.0 * weights_noarr->rows));
+	mat_element_wise_mul(*weights_noarr, factor, weights_noarr);
 }

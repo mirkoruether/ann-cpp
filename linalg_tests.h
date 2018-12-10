@@ -10,7 +10,7 @@ void do_assert(bool b)
 void testTranspose()
 {
 	mat_arr A(1, 2, 3);
-	double* a = A.start();
+	float* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -20,7 +20,7 @@ void testTranspose()
 
 	mat_arr C(1, 3, 2);
 	mat_transpose(A, &C);
-	double* c = C.start();
+	float* c = C.start();
 
 	do_assert(*(c + 0) == 0);
 	do_assert(*(c + 1) == 3);
@@ -30,7 +30,7 @@ void testTranspose()
 	do_assert(*(c + 5) == 5);
 }
 
-void __testAddTranspose_check(double* c)
+void __testAddTranspose_check(const float* c)
 {
 	do_assert(*(c + 0) == 12);
 	do_assert(*(c + 1) == 15);
@@ -43,7 +43,7 @@ void __testAddTranspose_check(double* c)
 void testAddTranspose()
 {
 	mat_arr A(1, 2, 3);
-	double* a = A.start();
+	float* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -52,7 +52,7 @@ void testAddTranspose()
 	*(a + 5) = 5;
 
 	mat_arr B(1, 2, 3);
-	double* b = B.start();
+	float* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -80,7 +80,7 @@ void testAddTranspose()
 	__testAddTranspose_check(C.start());
 }
 
-void testMatMul_CheckC(double * c)
+void testMatMul_CheckC(const float * c)
 {
 	do_assert(*(c + 0) == 56);
 	do_assert(*(c + 1) == 62);
@@ -91,7 +91,7 @@ void testMatMul_CheckC(double * c)
 void testMatMul()
 {
 	mat_arr A(1, 2, 3);
-	double* a = A.start();
+	float* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -100,7 +100,7 @@ void testMatMul()
 	*(a + 5) = 5;
 
 	mat_arr B(1, 3, 2);
-	double* b = B.start();
+	float* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -110,14 +110,14 @@ void testMatMul()
 
 	mat_arr C(1, 2, 2);
 	mat_matrix_mul(A, B, &C);
-	double* c = C.start();
+	float* c = C.start();
 	testMatMul_CheckC(c);
 }
 
 void testMatMulTransposed()
 {
 	mat_arr A(1, 2, 3);
-	double* a = A.start();
+	float* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -129,7 +129,7 @@ void testMatMulTransposed()
 	mat_transpose(A, &A_t);
 
 	mat_arr B(1, 3, 2);
-	double* b = B.start();
+	float* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -141,7 +141,7 @@ void testMatMulTransposed()
 	mat_transpose(B, &B_t);
 
 	mat_arr C(1, 2, 2);
-	double* c = C.start();
+	float* c = C.start();
 
 
 	mat_matrix_mul(A, B, &C, transpose_no);

@@ -11,7 +11,7 @@ void neural_network::feed_forward_internal(const mat_arr& input, mat_arr* result
 		mat_arr* out = i == layer_count - 1 ? result : &buffer->operator[](i);
 		mat_matrix_mul(*in, weights_noarr[i], out);
 		mat_element_by_element_operation(*out, biases_noarr_rv[i], out,
-		                                 [&](const double mat_mul_result, const double bias)
+		                                 [&](const float mat_mul_result, const float bias)
 		                                 {
 			                                 return activation_function(mat_mul_result + bias);
 		                                 });
@@ -35,7 +35,7 @@ void neural_network::feed_forward_result_nonnull(const mat_arr& input, mat_arr* 
 
 neural_network::neural_network(std::vector<mat_arr> weights_noarr,
                                std::vector<mat_arr> biases_noarr_rv,
-                               std::function<double(double)> activation_function)
+                               std::function<float(float)> activation_function)
 	: weights_noarr(move(weights_noarr)),
 	  biases_noarr_rv(move(biases_noarr_rv)),
 	  activation_function(move(activation_function))

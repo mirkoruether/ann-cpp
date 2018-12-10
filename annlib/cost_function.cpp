@@ -8,19 +8,19 @@ using namespace annlib;
 void cost_function::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                  const mat_arr& solution_rv,
                                                  const mat_arr& output_layer_weighted_input_rv,
-                                                 const std::function<double(double)>& derivative_activation_function,
+                                                 const std::function<float(float)>& derivative_activation_function,
                                                  mat_arr* output_layer_error_rv) const
 {
 	calculate_gradient(net_output_rv, solution_rv, output_layer_error_rv);
 
 	mat_element_by_element_operation(*output_layer_error_rv, output_layer_weighted_input_rv, output_layer_error_rv,
-	                                 [derivative_activation_function](double grad, double wi)
+	                                 [derivative_activation_function](float grad, float wi)
 	                                 {
 		                                 return grad * derivative_activation_function(wi);
 	                                 });
 }
 
-double quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_arr& solution_rv) const
+float quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_arr& solution_rv) const
 {
 	const size_t size = net_output_rv.size();
 	if (solution_rv.size() != size)
@@ -28,13 +28,13 @@ double quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_
 		throw std::runtime_error("sizes differ");
 	}
 
-	const double* no_element = net_output_rv.start();
-	const double* s_element = solution_rv.start();
+	const float* no_element = net_output_rv.start();
+	const float* s_element = solution_rv.start();
 
-	double result = 0.0;
+	float result = 0.0;
 	for (unsigned i = 0; i < size; i++)
 	{
-		result += pow(*no_element - *s_element, 2);
+		result += (*no_element - *s_element) * (*no_element - *s_element);
 		no_element++;
 		s_element++;
 	}
@@ -48,7 +48,7 @@ void quadratic_costs::calculate_gradient(const mat_arr& net_output_rv,
 	mat_element_wise_sub(net_output_rv, solution_rv, gradient_rv);
 }
 
-double cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
+float cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
                                             const mat_arr& solution_rv) const
 {
 	const size_t size = net_output_rv.size();
@@ -57,15 +57,15 @@ double cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 		throw std::runtime_error("sizes differ");
 	}
 
-	const double* no_element = net_output_rv.start();
-	const double* s_element = solution_rv.start();
+	const float* no_element = net_output_rv.start();
+	const float* s_element = solution_rv.start();
 
-	double result = 0;
+	float result = 0;
 	for (unsigned i = 0; i < size; i++)
 	{
-		const double a = *no_element;
-		const double y = *s_element;
-		result += y * log(a) + (1 - y) * log(1 - a);
+		const float a = *no_element;
+		const float y = *s_element;
+		result += y * std::log(a) + (1 - y) * std::log(1 - a);
 
 		no_element++;
 		s_element++;
@@ -75,9 +75,9 @@ double cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 
 struct calculate_gradient_kernel
 {
-	double operator()(double a, double y) const 
+	float operator()(float a, float y) const 
 	{
-		return y / a - (1 - y) / (1 - a);
+		return y / a - (1.0f - y) / (1.0f - a);
 	}
 };
 
@@ -92,7 +92,7 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                        const mat_arr& solution_rv,
                                                        const mat_arr& output_layer_weighted_input_rv,
-                                                       const std::function<double(double)>& derivative_activation_function,
+                                                       const std::function<float(float)>& derivative_activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
 	//TODO Check for logistic activation function

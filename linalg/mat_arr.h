@@ -10,7 +10,7 @@ namespace linalg
 	class mat_arr
 	{
 	private:
-		const std::shared_ptr<std::vector<double>> vec;
+		const std::shared_ptr<std::vector<float>> vec;
 		const unsigned offset;
 
 	public:
@@ -19,7 +19,7 @@ namespace linalg
 		const unsigned cols;
 
 	protected:
-		mat_arr(std::shared_ptr<std::vector<double>> vector, unsigned offset,
+		mat_arr(std::shared_ptr<std::vector<float>> vector, unsigned offset,
 		        unsigned count, unsigned rows, unsigned cols);
 
 	public:
@@ -41,13 +41,13 @@ namespace linalg
 
 		unsigned size() const;
 
-		double* start();
+		float* start();
 
-		const double* start() const;
+		const float* start() const;
 
-		const double& operator[](unsigned index) const;
+		const float& operator[](unsigned index) const;
 
-		double& operator[](unsigned index);
+		float& operator[](unsigned index);
 
 		mat_arr duplicate() const;
 

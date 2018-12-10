@@ -18,40 +18,40 @@ namespace annlib
 	class abstract_weight_norm_penalty : public weight_norm_penalty
 	{
 	protected:
-		explicit abstract_weight_norm_penalty(double regularization_parameter);
+		explicit abstract_weight_norm_penalty(float regularization_parameter);
 
 	public:
-		double regularization_parameter;
+		float regularization_parameter;
 
 		void add_penalty_to_gradient(const mat_arr& weights_noarr,
 		                             mat_arr* gradient_noarr) const override;
 
 		virtual void add_penalty_to_gradient(const mat_arr& weights_noarr,
-		                                     double regularization_parameter,
+		                                     float regularization_parameter,
 		                                     mat_arr* gradient_noarr) const = 0;
 	};
 
 	class L1_regularization : public abstract_weight_norm_penalty
 	{
 	public:
-		explicit L1_regularization(double regularization_parameter);
+		explicit L1_regularization(float regularization_parameter);
 
-		L1_regularization(double normalized_regularization_parameter, unsigned training_set_size);
+		L1_regularization(float normalized_regularization_parameter, unsigned training_set_size);
 
 		void add_penalty_to_gradient(const mat_arr& weights_noarr,
-		                             double regularization_parameter,
+		                             float regularization_parameter,
 		                             mat_arr* gradient_noarr) const override;
 	};
 
 	class L2_regularization : public abstract_weight_norm_penalty
 	{
 	public:
-		explicit L2_regularization(double regularization_parameter);
+		explicit L2_regularization(float regularization_parameter);
 
-		L2_regularization(double normalized_regularization_parameter, unsigned training_set_size);
+		L2_regularization(float normalized_regularization_parameter, unsigned training_set_size);
 
 		void add_penalty_to_gradient(const mat_arr& weights_noarr,
-		                             double regularization_parameter,
+		                             float regularization_parameter,
 		                             mat_arr* gradient_noarr) const override;
 	};
 }

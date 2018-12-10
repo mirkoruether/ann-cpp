@@ -1,7 +1,11 @@
 #include "mnist.h"
 #include <fstream>
+#include <vector>
+#include "mat_arr.h"
+#include "training_data.h"
 
 using namespace linalg;
+using namespace annlib;
 
 int read_next_int(std::ifstream* ifs)
 {
@@ -33,10 +37,10 @@ training_data mnist_load_combined(const std::string& image_file, const std::stri
 	}
 
 	mat_arr solution(static_cast<unsigned>(labels.size()), 1, 10);
-	double* sol = solution.start();
+	float* sol = solution.start();
 	for (unsigned i = 0; i < solution.count; i++)
 	{
-		*(sol + labels[i]) = 1.0;
+		*(sol + labels[i]) = 1.0f;
 		sol += 10;
 	}
 	return training_data(images, solution);
@@ -60,11 +64,11 @@ mat_arr mnist_load_images(const std::string& file)
 	const int size = count * rows * cols;
 
 	mat_arr images(count, 1, rows * cols);
-	double* im = images.start();
+	float* im = images.start();
 
 	for (int i = 0; i < size; i++)
 	{
-		*(im + i) = read_next_byte(&ifs) / 255.0;
+		im[i] = read_next_byte(&ifs) / 255.0f;
 	}
 
 	ifs.close();
