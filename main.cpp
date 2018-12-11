@@ -446,6 +446,7 @@ void mat_arr_math_multipleadd_speed_test()
 
 void feedfoward_speed_test()
 {
+	std::cout << std::endl;
 	const unsigned n_in = 784;
 	const unsigned n_out = 100;
 	const unsigned n_count = 64;
@@ -455,35 +456,35 @@ void feedfoward_speed_test()
 	mat_arr biases(1, 1, n_out);
 	mat_arr out(n_count, 1, n_out);
 
-	time_execution("", [&] {
+	time_execution("matarr lib", [&] {
 		for (unsigned iterations = 0; iterations < 1000; iterations++)
 		{
 			mat_matrix_mul(in, weights, &out);
 			mat_element_wise_add(out, biases, &out);
 		}
 	});
+	std::cout << std::endl;
 }
 
 int main()
 {
-	/*mat_arr_math_add_speed_test();
-	mat_arr_math_mat_mul_speed_test();
-	mat_arr_math_scalar_mul_speed_test();
-	mat_arr_math_addmul_speed_test();
-	mat_arr_math_multipleadd_speed_test();*/
+	//mat_arr_math_add_speed_test();
+	//mat_arr_math_mat_mul_speed_test();
+	//mat_arr_math_scalar_mul_speed_test();
+	//mat_arr_math_addmul_speed_test();
+	//mat_arr_math_multipleadd_speed_test();
+	//feedfoward_speed_test();
 
-	feedfoward_speed_test();
-
-	testMatMul();
-	testMatMulTransposed();
-	testAddTranspose();
+	//testMatMul();
+	//testMatMulTransposed();
+	//testAddTranspose();
 
 	const unsigned n_threads = std::thread::hardware_concurrency();
 	std::cout << n_threads << " concurrent threads are supported.\n"
 			  << std::endl;
 
 #ifdef _OPENMP
-	std::cout << "OpenMP enabled" << std::endl;
+	std::cout << "OpenMP enabled, launching four test threads" << std::endl;
 #pragma omp parallel num_threads(4)
 	{
 #pragma omp critical
@@ -492,6 +493,16 @@ int main()
 #else
 	std::cout << "OpenMP disabled" << std::endl;
 #endif
+
+	std::cout << std::endl;
+
+#ifdef LINALG_CUDA_SUPPORT
+	std::cout << "CUDA enabled" << std::endl;
+#else
+	std::cout << "CUDA disabled" << std::endl;
+#endif
+
+	std::cout << std::endl;
 
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
