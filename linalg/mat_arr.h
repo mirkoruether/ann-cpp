@@ -4,13 +4,14 @@
 #include <memory>
 #include <vector>
 #include <array>
+#include "synced_vectors.h"
 
 namespace linalg
 {
 	class mat_arr
 	{
 	private:
-		const std::shared_ptr<std::vector<float>> vec;
+		const std::shared_ptr<synced_vectors<float>> vec;
 		const unsigned offset;
 
 	public:
@@ -19,7 +20,7 @@ namespace linalg
 		const unsigned cols;
 
 	protected:
-		mat_arr(std::shared_ptr<std::vector<float>> vector, unsigned offset,
+		mat_arr(std::shared_ptr<synced_vectors<float>> vector, unsigned offset,
 		        unsigned count, unsigned rows, unsigned cols);
 
 	public:
@@ -49,7 +50,11 @@ namespace linalg
 
 		float& operator[](unsigned index);
 
-		mat_arr duplicate() const;
+		float* dev_start();
+
+		const float* dev_start() const;
+
+		mat_arr duplicate(bool try_device_copy = true) const;
 
 		bool only_real() const;
 	};

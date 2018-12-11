@@ -6,7 +6,7 @@
 
 using namespace linalg;
 
-mat_arr::mat_arr(std::shared_ptr<std::vector<float>> vector, unsigned offset,
+mat_arr::mat_arr(std::shared_ptr<synced_vectors<float>> vector, unsigned offset,
                  unsigned count, unsigned rows, unsigned cols)
 	: vec(std::move(vector)),
 	  offset(offset),
@@ -17,7 +17,7 @@ mat_arr::mat_arr(std::shared_ptr<std::vector<float>> vector, unsigned offset,
 }
 
 mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
-	: vec(std::make_shared<std::vector<float>>(count * rows * cols)),
+	: vec(std::make_shared<synced_vectors<float>>(count * rows * cols)),
 	  offset(0),
 	  count(count),
 	  rows(rows),
@@ -80,12 +80,22 @@ unsigned mat_arr::size() const
 
 float* mat_arr::start()
 {
-	return vec->data() + offset;
+	return vec->host_data() + offset;
 }
 
 const float* mat_arr::start() const
 {
-	return vec->data() + offset;
+	return vec->host_data() + offset;
+}
+
+float* mat_arr::dev_start()
+{
+	return vec->dev_data() + offset;
+}
+
+const float* mat_arr::dev_start() const
+{
+	return vec->dev_data() + offset;
 }
 
 const float& mat_arr::operator[](unsigned index) const
@@ -98,12 +108,10 @@ float& mat_arr::operator[](unsigned index)
 	return *(start() + index);
 }
 
-mat_arr mat_arr::duplicate() const
+mat_arr mat_arr::duplicate(bool try_device_copy) const
 {
-	mat_arr result(dim());
-	const float* a = start();
-	std::copy(a, a + size(), result.start());
-	return result;
+	const auto new_vec = std::make_shared<synced_vectors<float>>(*vec, offset, size(), try_device_copy);
+	return mat_arr(new_vec, 0, count, rows, cols);
 }
 
 bool mat_arr::only_real() const

@@ -444,6 +444,26 @@ void mat_arr_math_multipleadd_speed_test()
 	std::cout << std::endl;
 }
 
+void feedfoward_speed_test()
+{
+	const unsigned n_in = 784;
+	const unsigned n_out = 100;
+	const unsigned n_count = 64;
+
+	mat_arr in(n_count, 1, n_in);
+	mat_arr weights(1, n_in, n_out);
+	mat_arr biases(1, 1, n_out);
+	mat_arr out(n_count, 1, n_out);
+
+	time_execution("", [&] {
+		for (unsigned iterations = 0; iterations < 1000; iterations++)
+		{
+			mat_matrix_mul(in, weights, &out);
+			mat_element_wise_add(out, biases, &out);
+		}
+	});
+}
+
 int main()
 {
 	/*mat_arr_math_add_speed_test();
@@ -451,6 +471,8 @@ int main()
 	mat_arr_math_scalar_mul_speed_test();
 	mat_arr_math_addmul_speed_test();
 	mat_arr_math_multipleadd_speed_test();*/
+
+	feedfoward_speed_test();
 
 	testMatMul();
 	testMatMulTransposed();
