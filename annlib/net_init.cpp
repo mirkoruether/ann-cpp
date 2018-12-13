@@ -1,9 +1,11 @@
 #include "net_init.h"
 #include "mat_arr_math.h"
+#include <chrono>
 
 annlib::gaussian_net_init::gaussian_net_init()
 	: distribution(0.0f, 1.0f)
 {
+	rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
 void annlib::gaussian_net_init::fill_with_gaussian(mat_arr* mat)

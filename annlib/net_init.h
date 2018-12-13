@@ -19,7 +19,7 @@ namespace annlib
 	{
 	private:
 		std::normal_distribution<float> distribution;
-		std::default_random_engine rng;
+		std::mt19937 rng;
 	public:
 		gaussian_net_init();
 		void fill_with_gaussian(mat_arr* mat);

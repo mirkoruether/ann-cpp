@@ -525,7 +525,7 @@ int main()
 
 	sgd_trainer trainer;
 	trainer.mini_batch_size = 8;
-	trainer.activation_f = std::make_shared<logistic_activation_function>(1.0f);
+	trainer.activation_f = std::make_shared<logistic_activation_function>();
 	trainer.cost_f = std::make_shared<cross_entropy_costs>();
 	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(static_cast<float>(3.0 / mnist_training.entry_count()));
 	trainer.optimizer = std::make_shared<momentum_sgd>(5.0f, 0.0f);

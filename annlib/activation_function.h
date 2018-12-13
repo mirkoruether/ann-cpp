@@ -28,10 +28,14 @@ namespace annlib
 		float apply_derivative(float d) const override;
 	};
 
-	class logistic_activation_function : public abstract_activation_function
+	class logistic_activation_function : public activation_function
 	{
 	public:
-		explicit logistic_activation_function(float T);
+		logistic_activation_function() = default;
+
+		float apply(float d) const override;
+
+		float apply_derivative(float d) const override;
 	};
 }
 

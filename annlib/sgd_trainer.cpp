@@ -9,7 +9,7 @@ using namespace annlib;
 
 sgd_trainer::sgd_trainer()
 	: mini_batch_size(8),
-	  activation_f(std::make_shared<logistic_activation_function>(1.0)),
+	  activation_f(std::make_shared<logistic_activation_function>()),
 	  cost_f(std::make_shared<cross_entropy_costs>()),
 	  weight_norm_penalty(nullptr),
 	  optimizer(std::make_shared<ordinary_sgd>(1.0)),
@@ -257,6 +257,7 @@ mini_batch_builder::mini_batch_builder(training_data data)
 	: data(std::move(data)),
 	  distribution(0, data.input.count - 1)
 {
+	rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
 void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv)

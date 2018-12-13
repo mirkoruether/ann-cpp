@@ -77,7 +77,7 @@ namespace annlib
 		void build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv);
 	private:
 		std::uniform_int_distribution<unsigned> distribution;
-		std::default_random_engine rng;
+		std::mt19937 rng;
 	};
 }
 #endif
