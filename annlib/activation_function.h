@@ -8,17 +8,27 @@ namespace annlib
 	class activation_function
 	{
 	public:
+		virtual ~activation_function() = default;
+
+		virtual float apply(float d) const = 0;
+
+		virtual float apply_derivative(float d) const = 0;
+	};
+
+	class abstract_activation_function : public activation_function
+	{
+	public:
 		const std::function<float(float)> f;
 		const std::function<float(float)> df;
 
-		activation_function(std::function<float(float)> f, std::function<float(float)> df);
+		abstract_activation_function(std::function<float(float)> f, std::function<float(float)> df);
 
-		float apply(float d) const;
+		float apply(float d) const override;
 
-		float apply_derivative(float d) const;
+		float apply_derivative(float d) const override;
 	};
 
-	class logistic_activation_function : public activation_function
+	class logistic_activation_function : public abstract_activation_function
 	{
 	public:
 		explicit logistic_activation_function(float T);

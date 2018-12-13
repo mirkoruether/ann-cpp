@@ -73,7 +73,11 @@ neural_network sgd_trainer::to_neural_network(bool copy_parameters)
 {
 	if (!copy_parameters)
 	{
-		return neural_network(weights_noarr, biases_noarr_rv, activation_f->f);
+		return neural_network(weights_noarr, biases_noarr_rv,
+		                      [=](float f)
+		                      {
+			                      return activation_f->apply(f);
+		                      });
 	}
 
 	std::vector<mat_arr> weights_copy_noarr;
@@ -84,12 +88,16 @@ neural_network sgd_trainer::to_neural_network(bool copy_parameters)
 		weights_copy_noarr.emplace_back(weights_noarr[i].duplicate());
 		biases_copy_noarr_rv.emplace_back(biases_noarr_rv[i].duplicate());
 	}
-	return neural_network(move(weights_copy_noarr), std::move(biases_copy_noarr_rv), activation_f->f);
+	return neural_network(move(weights_copy_noarr), std::move(biases_copy_noarr_rv),
+	                      [=](float f)
+	                      {
+		                      return activation_f->apply(f);
+	                      });
 }
 
 void sgd_trainer::feed_forward_detailed(const mat_arr& input,
-										std::vector<mat_arr>* weighted_inputs_rv,
-										std::vector<mat_arr>* activations_rv) const
+                                        std::vector<mat_arr>* weighted_inputs_rv,
+                                        std::vector<mat_arr>* activations_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
@@ -97,53 +105,57 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 	for (unsigned layerNo = 0; layerNo < layer_count; layerNo++)
 	{
 		mat_matrix_mul(*layerInput,
-					   weights_noarr[layerNo],
-					   &weighted_inputs_rv->operator[](layerNo));
+		               weights_noarr[layerNo],
+		               &weighted_inputs_rv->operator[](layerNo));
 
 		mat_element_wise_add(weighted_inputs_rv->operator[](layerNo),
-							 biases_noarr_rv[layerNo],
-							 &weighted_inputs_rv->operator[](layerNo));
+		                     biases_noarr_rv[layerNo],
+		                     &weighted_inputs_rv->operator[](layerNo));
 
 		mat_element_wise_operation(weighted_inputs_rv->operator[](layerNo),
-								   &activations_rv->operator[](layerNo),
-								   activation_f->f);
+		                           &activations_rv->operator[](layerNo),
+		                           [=](float f)
+		                           {
+			                           return activation_f->apply(f);
+		                           });
 
 		layerInput = &activations_rv->operator[](layerNo);
 	}
 }
 
 void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
-								  const mat_arr& solution_rv,
-								  const std::vector<mat_arr>& weighted_inputs_rv,
-								  std::vector<mat_arr>* errors_rv) const
+                                  const mat_arr& solution_rv,
+                                  const std::vector<mat_arr>& weighted_inputs_rv,
+                                  std::vector<mat_arr>* errors_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
 	cost_f->calculate_output_layer_error(net_output_rv,
-										 solution_rv,
-										 weighted_inputs_rv[layer_count - 1],
-										 activation_f->df,
-										 &errors_rv->operator[](layer_count - 1));
+	                                     solution_rv,
+	                                     weighted_inputs_rv[layer_count - 1],
+	                                     *activation_f,
+	                                     &errors_rv->operator[](layer_count - 1));
 
 	for (int layer_no = layer_count - 2; layer_no >= 0; --layer_no)
 	{
 		mat_matrix_mul(errors_rv->operator[](layer_no + 1),
-					   weights_noarr[layer_no + 1],
-					   &errors_rv->operator[](layer_no),
-					   transpose_B);
+		               weights_noarr[layer_no + 1],
+		               &errors_rv->operator[](layer_no),
+		               transpose_B);
 
 		mat_element_by_element_operation(errors_rv->operator[](layer_no),
-										 weighted_inputs_rv[layer_no],
-										 &errors_rv->operator[](layer_no),
-										 [=](float mat_mul_result, float wi) {
-											return mat_mul_result * activation_f->df(wi);
-										 });
+		                                 weighted_inputs_rv[layer_no],
+		                                 &errors_rv->operator[](layer_no),
+		                                 [=](float mat_mul_result, float wi)
+		                                 {
+			                                 return mat_mul_result * activation_f->apply_derivative(wi);
+		                                 });
 	}
 }
 
 void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_rv,
-											const mat_arr& error_rv,
-											mat_arr* gradient_weight_noarr) const
+                                            const mat_arr& error_rv,
+                                            mat_arr* gradient_weight_noarr) const
 {
 	const unsigned batch_entry_count = previous_activation_rv.count;
 	mat_set_all(0, gradient_weight_noarr);
@@ -151,16 +163,16 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
 		mat_matrix_mul_add(previous_activation_rv.get_mat(batch_entry_no),
-						   error_rv.get_mat(batch_entry_no),
-						   gradient_weight_noarr,
-						   transpose_A);
+		                   error_rv.get_mat(batch_entry_no),
+		                   gradient_weight_noarr,
+		                   transpose_A);
 	}
 
 	mat_element_wise_div(*gradient_weight_noarr, static_cast<float>(batch_entry_count), gradient_weight_noarr);
 }
 
 void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
-										  mat_arr* gradient_bias_noarr_rv) const
+                                          mat_arr* gradient_bias_noarr_rv) const
 {
 	const unsigned batch_entry_count = error_rv.count;
 	mat_set_all(0, gradient_bias_noarr_rv);
@@ -168,8 +180,8 @@ void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
 		mat_element_wise_add(*gradient_bias_noarr_rv,
-							 error_rv.get_mat(batch_entry_no),
-							 gradient_bias_noarr_rv);
+		                     error_rv.get_mat(batch_entry_no),
+		                     gradient_bias_noarr_rv);
 	}
 
 	mat_element_wise_div(*gradient_bias_noarr_rv, static_cast<float>(batch_entry_count), gradient_bias_noarr_rv);
@@ -178,30 +190,30 @@ void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
 void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)
 {
 	const mat_arr& previous_activation_rv = layer_no == 0
-												? buffer->input_rv
-												: buffer->activations_rv[layer_no - 1];
+		                                        ? buffer->input_rv
+		                                        : buffer->activations_rv[layer_no - 1];
 
 	calculate_gradient_weight(previous_activation_rv, buffer->errors_rv[layer_no],
-							  &buffer->gradient_weights_noarr[layer_no]);
+	                          &buffer->gradient_weights_noarr[layer_no]);
 
 	if (weight_norm_penalty != nullptr)
 	{
 		weight_norm_penalty->add_penalty_to_gradient(weights_noarr[layer_no],
-													 &buffer->gradient_weights_noarr[layer_no]);
+		                                             &buffer->gradient_weights_noarr[layer_no]);
 	}
 
 	optimizer->adjust(buffer->gradient_weights_noarr[layer_no],
-					  &weights_noarr[layer_no],
-					  weights, layer_no);
+	                  &weights_noarr[layer_no],
+	                  weights, layer_no);
 }
 
 void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
 {
 	calculate_gradient_bias(buffer->errors_rv[layer_no],
-							&buffer->gradient_biases_rv_noarr[layer_no]);
+	                        &buffer->gradient_biases_rv_noarr[layer_no]);
 
 	optimizer->adjust(buffer->gradient_biases_rv_noarr[layer_no],
-					  &biases_noarr_rv[layer_no], biases, layer_no);
+	                  &biases_noarr_rv[layer_no], biases, layer_no);
 }
 
 void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
@@ -213,10 +225,10 @@ void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 	{
 		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
 		feed_forward_detailed(part_buf->input_rv,
-							  &part_buf->weighted_inputs_rv, &part_buf->activations_rv);
+		                      &part_buf->weighted_inputs_rv, &part_buf->activations_rv);
 
 		calculate_error(part_buf->activations_rv.back(), part_buf->solution_rv, part_buf->weighted_inputs_rv,
-						&part_buf->errors_rv);
+		                &part_buf->errors_rv);
 	}
 }
 

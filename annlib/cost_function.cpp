@@ -1,6 +1,7 @@
 #include "cost_function.h"
 #include "mat_arr_math.h"
 #include <cmath>
+#include "activation_function.h"
 
 using namespace linalg;
 using namespace annlib;
@@ -8,15 +9,15 @@ using namespace annlib;
 void cost_function::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                  const mat_arr& solution_rv,
                                                  const mat_arr& output_layer_weighted_input_rv,
-                                                 const std::function<float(float)>& derivative_activation_function,
+                                                 const activation_function& activation_function,
                                                  mat_arr* output_layer_error_rv) const
 {
 	calculate_gradient(net_output_rv, solution_rv, output_layer_error_rv);
 
 	mat_element_by_element_operation(*output_layer_error_rv, output_layer_weighted_input_rv, output_layer_error_rv,
-	                                 [derivative_activation_function](float grad, float wi)
+	                                 [&](float grad, float wi)
 	                                 {
-		                                 return grad * derivative_activation_function(wi);
+		                                 return grad * activation_function.apply_derivative(wi);
 	                                 });
 }
 
@@ -92,7 +93,7 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                        const mat_arr& solution_rv,
                                                        const mat_arr& output_layer_weighted_input_rv,
-                                                       const std::function<float(float)>& derivative_activation_function,
+                                                       const activation_function& activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
 	//TODO Check for logistic activation function

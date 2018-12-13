@@ -1,8 +1,8 @@
 #ifndef COST_FUNCTION_H
 #define COST_FUNCTION_H
 
-#include <functional>
 #include "mat_arr.h"
+#include "activation_function.h"
 
 using namespace linalg;
 
@@ -22,7 +22,7 @@ namespace annlib
 
 		virtual void calculate_output_layer_error(const mat_arr& net_output_rv, const mat_arr& solution_rv,
 		                                          const mat_arr& output_layer_weighted_input_rv,
-		                                          const std::function<float(float)>& derivative_activation_function,
+		                                          const activation_function& activation_function,
 		                                          mat_arr* output_layer_error_rv) const;
 	};
 
@@ -48,7 +48,7 @@ namespace annlib
 		void calculate_output_layer_error(const mat_arr& net_output_rv,
 		                                  const mat_arr& solution_rv,
 		                                  const mat_arr& output_layer_weighted_input_rv,
-		                                  const std::function<float(float)>& derivative_activation_function,
+		                                  const activation_function& activation_function,
 		                                  mat_arr* output_layer_error_rv) const override;
 	};
 }
