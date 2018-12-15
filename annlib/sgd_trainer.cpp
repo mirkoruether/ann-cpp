@@ -112,12 +112,8 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 		                     biases_noarr_rv[layerNo],
 		                     &weighted_inputs_rv->operator[](layerNo));
 
-		mat_element_wise_operation(weighted_inputs_rv->operator[](layerNo),
-		                           &activations_rv->operator[](layerNo),
-		                           [=](float f)
-		                           {
-			                           return activation_f->apply(f);
-		                           });
+		activation_f->apply(weighted_inputs_rv->operator[](layerNo),
+		                    &activations_rv->operator[](layerNo));
 
 		layerInput = &activations_rv->operator[](layerNo);
 	}

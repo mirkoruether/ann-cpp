@@ -50,7 +50,7 @@ void quadratic_costs::calculate_gradient(const mat_arr& net_output_rv,
 }
 
 float cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
-                                            const mat_arr& solution_rv) const
+                                           const mat_arr& solution_rv) const
 {
 	const size_t size = net_output_rv.size();
 	if (solution_rv.size() != size)
@@ -76,7 +76,7 @@ float cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 
 struct calculate_gradient_kernel
 {
-	float operator()(float a, float y) const 
+	float operator()(float a, float y) const
 	{
 		return y / a - (1.0f - y) / (1.0f - a);
 	}
@@ -87,7 +87,7 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
                                              mat_arr* gradient_rv) const
 {
 	mat_element_by_element_operation(net_output_rv, solution_rv, gradient_rv,
-									 calculate_gradient_kernel());
+	                                 calculate_gradient_kernel());
 }
 
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
@@ -96,6 +96,16 @@ void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output
                                                        const activation_function& activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
-	//TODO Check for logistic activation function
-	mat_element_wise_sub(net_output_rv, solution_rv, output_layer_error_rv);
+	if (dynamic_cast<const logistic_activation_function*>(&activation_function) != nullptr)
+	{
+		mat_element_wise_sub(net_output_rv, solution_rv, output_layer_error_rv);
+	}
+	else
+	{
+		cost_function::calculate_output_layer_error(net_output_rv,
+		                                            solution_rv,
+		                                            output_layer_weighted_input_rv,
+		                                            activation_function,
+		                                            output_layer_error_rv);
+	}
 }

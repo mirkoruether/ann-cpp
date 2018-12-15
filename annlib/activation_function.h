@@ -2,6 +2,9 @@
 #define ACTIVATION_FUNCTION_H
 
 #include <functional>
+#include "mat_arr.h"
+
+using namespace linalg;
 
 namespace annlib
 {
@@ -12,7 +15,11 @@ namespace annlib
 
 		virtual float apply(float d) const = 0;
 
+		mat_arr apply(const mat_arr& in, mat_arr* target);
+
 		virtual float apply_derivative(float d) const = 0;
+
+		mat_arr apply_derivative(const mat_arr& in, mat_arr* target);
 	};
 
 	class abstract_activation_function : public activation_function

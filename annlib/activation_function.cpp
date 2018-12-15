@@ -1,11 +1,30 @@
 #include "activation_function.h"
+
+#include "mat_arr_math.h"
 #include <cmath>
-#include <stdexcept>
 
 using namespace annlib;
 
 namespace annlib
 {
+	mat_arr activation_function::apply(const mat_arr& in, mat_arr* target)
+	{
+		return mat_element_wise_operation(in, target,
+		                                  [&](float f)
+		                                  {
+			                                  return apply(f);
+		                                  });
+	}
+
+	mat_arr activation_function::apply_derivative(const mat_arr& in, mat_arr* target)
+	{
+		return mat_element_wise_operation(in, target,
+		                                  [&](float f)
+		                                  {
+			                                  return apply_derivative(f);
+		                                  });
+	}
+
 	abstract_activation_function::abstract_activation_function(std::function<float(float)> f,
 	                                                           std::function<float(float)> df)
 		: f(std::move(f)), df(std::move(df))
