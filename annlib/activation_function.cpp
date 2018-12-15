@@ -3,11 +3,15 @@
 #include "mat_arr_math.h"
 #include <cmath>
 
+#ifdef ANNLIB_USE_CUDA
+#include "activation_function_cudaops.cuh"
+#endif
+
 using namespace annlib;
 
 namespace annlib
 {
-	mat_arr activation_function::apply(const mat_arr& in, mat_arr* target)
+	mat_arr activation_function::apply(const mat_arr& in, mat_arr* target) const
 	{
 		return mat_element_wise_operation(in, target,
 		                                  [&](float f)
@@ -16,7 +20,7 @@ namespace annlib
 		                                  });
 	}
 
-	mat_arr activation_function::apply_derivative(const mat_arr& in, mat_arr* target)
+	mat_arr activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
 	{
 		return mat_element_wise_operation(in, target,
 		                                  [&](float f)
@@ -46,6 +50,16 @@ namespace annlib
 		return 1.0f / (1.0f + std::exp(-d));
 	}
 
+	mat_arr logistic_activation_function::apply(const mat_arr& in, mat_arr* target) const
+	{
+#ifdef ANNLIB_USE_CUDA
+		cuda::cuda_sigmoid_apply(in, target);
+		return *target;
+#else
+		return activation_function::apply(in, target);
+#endif
+	}
+
 	float logistic_activation_function::apply_derivative(float d) const
 	{
 		const float e_abs = std::abs(d);
@@ -53,5 +67,15 @@ namespace annlib
 			return 1.0f / std::exp(e_abs);
 		const float v = std::exp(d) + 1.0f;
 		return std::exp(d) / (v * v);
+	}
+
+	mat_arr logistic_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	{
+#ifdef ANNLIB_USE_CUDA
+		cuda::cuda_sigmoid_apply_derivative(in, target);
+		return *target;
+#else
+		return activation_function::apply_derivative(in, target);
+#endif
 	}
 }

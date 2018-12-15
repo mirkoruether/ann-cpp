@@ -4,6 +4,10 @@
 #include <future>
 #include <random>
 
+#ifdef ANNLIB_USE_CUDA
+#include "sgd_trainer_cudaops.cuh"
+#endif
+
 using namespace linalg;
 using namespace annlib;
 
@@ -104,6 +108,12 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 	const mat_arr* layerInput = &input;
 	for (unsigned layerNo = 0; layerNo < layer_count; layerNo++)
 	{
+#ifdef ANNLIB_USE_CUDA
+		annlib::cuda::cuda_weight_input(*layerInput,
+		                                weights_noarr[layerNo],
+		                                biases_noarr_rv[layerNo],
+		                                &weighted_inputs_rv->operator[](layerNo));
+#else
 		mat_matrix_mul(*layerInput,
 		               weights_noarr[layerNo],
 		               &weighted_inputs_rv->operator[](layerNo));
@@ -111,6 +121,7 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 		mat_element_wise_add(weighted_inputs_rv->operator[](layerNo),
 		                     biases_noarr_rv[layerNo],
 		                     &weighted_inputs_rv->operator[](layerNo));
+#endif
 
 		activation_f->apply(weighted_inputs_rv->operator[](layerNo),
 		                    &activations_rv->operator[](layerNo));

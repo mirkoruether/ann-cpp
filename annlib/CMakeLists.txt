@@ -1,3 +1,8 @@
+if(ANN_CUDA_ACTIVE)
+	include_directories(cuda)
+    add_subdirectory(cuda)
+endif(ANN_CUDA_ACTIVE)
+
 add_library(annlib 
 activation_function.h       activation_function.cpp
 cost_function.h             cost_function.cpp
@@ -11,6 +16,9 @@ weight_norm_penalty.h       weight_norm_penalty.cpp
 )
 
 add_dependencies(annlib linalg)
+if(ANN_CUDA_ACTIVE)
+	add_dependencies(annlib annlib_cudaops)
+endif(ANN_CUDA_ACTIVE)
 
 install(TARGETS annlib DESTINATION lib)
 install(FILES 

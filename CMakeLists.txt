@@ -23,6 +23,7 @@ if (TRY_ENABLE_CUDA)
 		include_directories("${CMAKE_CUDA_COMPILER}/../../include")
 
 		add_definitions(-DLINALG_CUDA_SUPPORT)
+		add_definitions(-DANNLIB_USE_CUDA)
 
         message("-- >> CUDA enabled <<")
 		message("-- >> CUDA libs:  ${CUDA_LIBRARIES}<<")
@@ -44,5 +45,5 @@ add_dependencies(ann_cpp annlib linalg)
 
 target_link_libraries(ann_cpp annlib linalg)
 if(ANN_CUDA_ACTIVE)
-	target_link_libraries(ann_cpp ${CUDA_LIBRARIES})
+	target_link_libraries(ann_cpp annlib_cudaops linalg_cudaops ${CUDA_LIBRARIES})
 endif(ANN_CUDA_ACTIVE)
