@@ -101,7 +101,8 @@ neural_network sgd_trainer::to_neural_network(bool copy_parameters)
 
 void sgd_trainer::feed_forward_detailed(const mat_arr& input,
                                         std::vector<mat_arr>* weighted_inputs_rv,
-                                        std::vector<mat_arr>* activations_rv) const
+                                        std::vector<mat_arr>* activations_rv,
+                                        std::vector<mat_arr>* activations_dfs_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
@@ -113,6 +114,7 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 		                                weights_noarr[layerNo],
 		                                biases_noarr_rv[layerNo],
 		                                &weighted_inputs_rv->operator[](layerNo));
+		cudaDeviceSynchronize();
 #else
 		mat_matrix_mul(*layerInput,
 		               weights_noarr[layerNo],
@@ -122,9 +124,11 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 		                     biases_noarr_rv[layerNo],
 		                     &weighted_inputs_rv->operator[](layerNo));
 #endif
-
 		activation_f->apply(weighted_inputs_rv->operator[](layerNo),
 		                    &activations_rv->operator[](layerNo));
+
+		activation_f->apply_derivative(weighted_inputs_rv->operator[](layerNo),
+		                               &activations_dfs_rv->operator[](layerNo));
 
 		layerInput = &activations_rv->operator[](layerNo);
 	}
@@ -132,31 +136,35 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 
 void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
                                   const mat_arr& solution_rv,
-                                  const std::vector<mat_arr>& weighted_inputs_rv,
+                                  const std::vector<mat_arr>& activation_dfs_rv,
                                   std::vector<mat_arr>* errors_rv) const
 {
 	const unsigned layer_count = get_layer_count();
 
 	cost_f->calculate_output_layer_error(net_output_rv,
 	                                     solution_rv,
-	                                     weighted_inputs_rv[layer_count - 1],
+	                                     activation_dfs_rv[layer_count - 1],
 	                                     *activation_f,
 	                                     &errors_rv->operator[](layer_count - 1));
 
 	for (int layer_no = layer_count - 2; layer_no >= 0; --layer_no)
 	{
+#ifdef ANNLIB_USE_CUDA
+		cuda::cuda_backprop_error(errors_rv->operator[](layer_no + 1),
+		                          weights_noarr[layer_no + 1],
+		                          activation_dfs_rv[layer_no],
+		                          &errors_rv->operator[](layer_no));
+		cudaDeviceSynchronize();
+#else
 		mat_matrix_mul(errors_rv->operator[](layer_no + 1),
 		               weights_noarr[layer_no + 1],
 		               &errors_rv->operator[](layer_no),
 		               transpose_B);
 
-		mat_element_by_element_operation(errors_rv->operator[](layer_no),
-		                                 weighted_inputs_rv[layer_no],
-		                                 &errors_rv->operator[](layer_no),
-		                                 [=](float mat_mul_result, float wi)
-		                                 {
-			                                 return mat_mul_result * activation_f->apply_derivative(wi);
-		                                 });
+		mat_element_wise_mul(errors_rv->operator[](layer_no),
+		                     activation_dfs_rv[layer_no],
+		                     &errors_rv->operator[](layer_no));
+#endif
 	}
 }
 
@@ -232,9 +240,13 @@ void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 	{
 		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
 		feed_forward_detailed(part_buf->input_rv,
-		                      &part_buf->weighted_inputs_rv, &part_buf->activations_rv);
+		                      &part_buf->weighted_inputs_rv,
+		                      &part_buf->activations_rv,
+		                      &part_buf->activation_dfs_rv);
 
-		calculate_error(part_buf->activations_rv.back(), part_buf->solution_rv, part_buf->weighted_inputs_rv,
+		calculate_error(part_buf->activations_rv.back(),
+		                part_buf->solution_rv,
+		                part_buf->activation_dfs_rv,
 		                &part_buf->errors_rv);
 	}
 }

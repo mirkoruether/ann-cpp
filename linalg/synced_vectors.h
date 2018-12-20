@@ -184,7 +184,7 @@ namespace linalg
 		void host_to_device(size_t offset, size_t length) const
 		{
 #ifdef LINALG_CUDA_SUPPORT
-			std::cout << "host_to_device" << std::endl;
+			//std::cout << "host_to_device" << std::endl;
 			my_cuda_memcp<T>(dev_vec.data() + offset, host_vec.data() + offset, length, cudaMemcpyHostToDevice);
 #else
 			//Do nothing
@@ -199,7 +199,7 @@ namespace linalg
 		void device_to_host(size_t offset, size_t length) const
 		{
 #ifdef LINALG_CUDA_SUPPORT
-			std::cout << "device_to_host" << std::endl;
+			//std::cout << "device_to_host" << std::endl;
 			my_cuda_memcp<T>(host_vec.data() + offset, dev_vec.data() + offset, length, cudaMemcpyDeviceToHost);
 #else
 			//Do nothing

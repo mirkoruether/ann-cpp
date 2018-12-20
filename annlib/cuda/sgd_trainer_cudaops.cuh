@@ -10,5 +10,10 @@ namespace annlib { namespace cuda
 	                       const mat_arr& weights_noarr,
 	                       const mat_arr& biases_rv_noarr,
 	                       mat_arr* weighted_inputs_rv);
+
+	void cuda_backprop_error(const mat_arr& error_next_layer_rv,
+	                         const mat_arr& weights_next_layer_noarr,
+	                         const mat_arr& act_df_rv,
+	                         mat_arr* error_rv);
 }}
 #endif

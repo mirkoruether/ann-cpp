@@ -47,7 +47,8 @@ namespace annlib
 
 		void feed_forward_detailed(const mat_arr& input,
 		                           std::vector<mat_arr>* weighted_inputs_rv,
-		                           std::vector<mat_arr>* activations_rv) const;
+		                           std::vector<mat_arr>* activations_rv,
+		                           std::vector<mat_arr>* activations_dfs_rv) const;
 
 		void calculate_error(const mat_arr& net_output_rv,
 		                     const mat_arr& solution_rv,

@@ -34,3 +34,35 @@ void annlib::cuda::cuda_weight_input(const mat_arr& input_rv,
 		                                            input_rv.cols, size);
 	});
 }
+
+__global__ void backprop_error_kernel(const float* error_next_layer,
+                                      const float* weights_next_layer,
+                                      const float* act_df,
+                                      float* error,
+                                      unsigned next_layer_size, dim3 size)
+{
+	const dim3 pos = current_pos_cubic();
+	if (check_pos_cubic(pos, size))
+	{
+		const float* error_next_layer_mat = error_next_layer + (pos.x * next_layer_size);
+		const unsigned out_index = index_cubic(pos, size);
+		error[out_index] = mat_mul_case2_helper(error_next_layer_mat, weights_next_layer,
+		                                        pos.y, pos.z, 1, next_layer_size, size.z)
+			* act_df[out_index];
+	}
+}
+
+void annlib::cuda::cuda_backprop_error(const mat_arr& error_next_layer_rv,
+                                       const mat_arr& weights_next_layer_noarr,
+                                       const mat_arr& act_df_rv,
+                                       mat_arr* error_rv)
+{
+	prepare_launch_cubic(*error_rv, [&](dim3 size, dim3 threads, dim3 blocks)
+	{
+		backprop_error_kernel << < blocks, threads >> >(error_next_layer_rv.dev_start(),
+		                                                weights_next_layer_noarr.dev_start(),
+		                                                act_df_rv.dev_start(),
+		                                                error_rv->dev_start(),
+		                                                error_next_layer_rv.cols, size);
+	});
+}

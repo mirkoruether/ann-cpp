@@ -8,17 +8,13 @@ using namespace annlib;
 
 void cost_function::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                  const mat_arr& solution_rv,
-                                                 const mat_arr& output_layer_weighted_input_rv,
+                                                 const mat_arr& activation_dfs_rv,
                                                  const activation_function& activation_function,
                                                  mat_arr* output_layer_error_rv) const
 {
 	calculate_gradient(net_output_rv, solution_rv, output_layer_error_rv);
 
-	mat_element_by_element_operation(*output_layer_error_rv, output_layer_weighted_input_rv, output_layer_error_rv,
-	                                 [&](float grad, float wi)
-	                                 {
-		                                 return grad * activation_function.apply_derivative(wi);
-	                                 });
+	mat_element_wise_mul(*output_layer_error_rv, activation_dfs_rv, output_layer_error_rv);
 }
 
 float quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_arr& solution_rv) const
@@ -92,7 +88,7 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 
 void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
                                                        const mat_arr& solution_rv,
-                                                       const mat_arr& output_layer_weighted_input_rv,
+                                                       const mat_arr& activation_dfs_rv,
                                                        const activation_function& activation_function,
                                                        mat_arr* output_layer_error_rv) const
 {
@@ -104,7 +100,7 @@ void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output
 	{
 		cost_function::calculate_output_layer_error(net_output_rv,
 		                                            solution_rv,
-		                                            output_layer_weighted_input_rv,
+		                                            activation_dfs_rv,
 		                                            activation_function,
 		                                            output_layer_error_rv);
 	}

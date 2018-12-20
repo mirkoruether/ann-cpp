@@ -13,6 +13,7 @@ training_buffer::training_buffer(std::vector<unsigned> sizes, unsigned mini_batc
 		const unsigned layer_size = sizes[i + 1];
 		weighted_inputs_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
 		activations_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
+		activation_dfs_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
 		errors_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
 
 		gradient_biases_rv_noarr.emplace_back(mat_arr(1, 1, layer_size));
@@ -44,6 +45,7 @@ std::vector<mat_arr*> training_buffer::all()
 	std::vector<mat_arr*> result;
 	add_pointers(&weighted_inputs_rv, &result);
 	add_pointers(&activations_rv, &result);
+	add_pointers(&activation_dfs_rv, &result);
 	add_pointers(&errors_rv, &result);
 	add_pointers(&gradient_biases_rv_noarr, &result);
 	add_pointers(&gradient_weights_noarr, &result);
@@ -80,6 +82,7 @@ partial_training_buffer::partial_training_buffer(training_buffer* buf,
 	{
 		weighted_inputs_rv.emplace_back(buf->weighted_inputs_rv[i].get_mats(start, count));
 		activations_rv.emplace_back(buf->activations_rv[i].get_mats(start, count));
+		activation_dfs_rv.emplace_back(buf->activation_dfs_rv[i].get_mats(start, count));
 		errors_rv.emplace_back(buf->errors_rv[i].get_mats(start, count));
 	}
 }

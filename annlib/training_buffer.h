@@ -19,6 +19,7 @@ namespace annlib
 
 		std::vector<mat_arr> weighted_inputs_rv;
 		std::vector<mat_arr> activations_rv;
+		std::vector<mat_arr> activation_dfs_rv;
 		std::vector<mat_arr> errors_rv;
 
 		std::vector<mat_arr> gradient_biases_rv_noarr;
@@ -44,6 +45,7 @@ namespace annlib
 
 		std::vector<mat_arr> weighted_inputs_rv;
 		std::vector<mat_arr> activations_rv;
+		std::vector<mat_arr> activation_dfs_rv;
 		std::vector<mat_arr> errors_rv;
 	};
 }
