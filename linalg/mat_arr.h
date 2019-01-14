@@ -8,6 +8,14 @@
 
 namespace linalg
 {
+	enum mat_tr
+	{
+		transpose_no,
+		transpose_A,
+		transpose_B,
+		transpose_both
+	};
+
 	class mat_arr
 	{
 	private:

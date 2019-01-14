@@ -11,6 +11,10 @@
 #include <omp.h>
 #endif
 
+#ifdef LINALG_CUDA_SUPPORT
+#include "cuda/linalg_cudaops.cuh"
+#endif
+
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace annlib;
@@ -466,6 +470,57 @@ void feedfoward_speed_test()
 	std::cout << std::endl;
 }
 
+#ifdef  LINALG_CUDA_SUPPORT
+void cuda_matrix_mul_test()
+{
+	std::cout << std::endl;
+	std::cout << "CUDA matrix multiplication" << std::endl;
+	const unsigned n = 200;
+	const unsigned iterations = 1;
+
+	mat_arr mat_a(n, n, n);
+	mat_arr mat_b(n, n, n);
+	mat_arr mat_c(n, n, n);
+
+	random_matrix_arr(&mat_a);
+	random_matrix_arr(&mat_b);
+
+	mat_a.dev_start();
+	mat_b.dev_start();
+	mat_c.dev_start();
+
+	time_execution("CUDA matrix mul", [&] {
+		for (unsigned it = 0; it < iterations; it++)
+		{
+			linalg::cuda::cuda_matrix_mul(mat_a, mat_b, &mat_c, transpose_no);
+		}
+	});
+
+	cudaDeviceSynchronize();
+
+	mat_a.start();
+	mat_b.start();
+	mat_c.start();
+
+	cudaDeviceSynchronize();
+	cudaError_t err = cudaGetLastError();
+	if(err != cudaSuccess)
+	{
+		throw std::runtime_error("");
+	}
+
+	time_execution("CPU  matrix mul", [&] {
+		for (unsigned it = 0; it < iterations; it++)
+		{
+			mat_matrix_mul(mat_a, mat_b, &mat_c, transpose_no);
+		}
+	});
+
+	std::cout << std::endl;
+}
+#endif
+
+
 int main()
 {
 	//mat_arr_math_add_speed_test();
@@ -498,6 +553,7 @@ int main()
 
 #ifdef LINALG_CUDA_SUPPORT
 	std::cout << "CUDA enabled" << std::endl;
+	cuda_matrix_mul_test();
 #else
 	std::cout << "CUDA disabled" << std::endl;
 #endif

@@ -10,14 +10,6 @@ using namespace linalg;
 
 namespace linalg
 {
-	enum mat_tr
-	{
-		transpose_no,
-		transpose_A,
-		transpose_B,
-		transpose_both
-	};
-
 	template <typename Fc>
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C,
 	                                         const Fc& f, mat_tr tr = transpose_no);
