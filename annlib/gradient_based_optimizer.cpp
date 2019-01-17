@@ -1,5 +1,6 @@
 #include "gradient_based_optimizer.h"
 #include "mat_arr_math.h"
+#include "mat_arr_math_t.h"
 #include <cmath>
 
 using namespace annlib;

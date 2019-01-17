@@ -71,6 +71,13 @@ namespace linalg { namespace cuda
 		            blockIdx.z * blockDim.z + threadIdx.z);
 	}
 
+	__device__ inline dim3 current_pos_quadratic()
+	{
+		return dim3(blockIdx.x * blockDim.x + threadIdx.x,
+		            blockIdx.y * blockDim.y + threadIdx.y,
+		            0);
+	}
+
 	__device__ inline unsigned current_pos_linear()
 	{
 		return blockIdx.x * blockDim.x + threadIdx.x;
@@ -81,9 +88,24 @@ namespace linalg { namespace cuda
 		return pos.x * size.y * size.z + pos.y * size.z + pos.z;
 	}
 
+	__device__ inline unsigned index_cubic_transposed(dim3 pos, dim3 size)
+	{
+		return pos.x * size.y * size.z + pos.z * size.z + pos.y;
+	}
+
+	__device__ inline unsigned index_quadratic(dim3 pos, dim3 size)
+	{
+		return pos.x * size.y + pos.y;
+	}
+
 	__device__ inline bool check_pos_cubic(dim3 pos, dim3 size)
 	{
 		return pos.x < size.x && pos.y < size.y && pos.z < size.z;
+	}
+
+	__device__ inline bool check_pos_quadratic(dim3 pos, dim3 size)
+	{
+		return pos.x < size.x && pos.y < size.y;
 	}
 
 	inline void prepare_launch_cubic(const linalg::mat_arr& target,
@@ -94,6 +116,18 @@ namespace linalg { namespace cuda
 		const dim3 blocks_per_grid(unsigned(ceil(double(size.x) / double(threads_per_block.x))),
 		                           unsigned(ceil(double(size.y) / double(threads_per_block.y))),
 		                           unsigned(ceil(double(size.z) / double(threads_per_block.z))));
+
+		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
+	}
+
+	inline void prepare_launch_quadratic(const linalg::mat_arr& target,
+	                                     std::function<void(dim3, dim3, dim3)> kernel_launch)
+	{
+		const dim3 size(target.count, target.rows * target.cols, 1);
+		const dim3 threads_per_block(std::min(16u, size.x), std::min(64u, size.y), 1);
+		const dim3 blocks_per_grid(unsigned(ceil(double(size.x) / double(threads_per_block.x))),
+		                           unsigned(ceil(double(size.y) / double(threads_per_block.y))),
+		                           1);
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
 	}

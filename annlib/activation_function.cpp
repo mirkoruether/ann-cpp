@@ -1,6 +1,7 @@
 #include "activation_function.h"
 
 #include "mat_arr_math.h"
+#include "mat_arr_math_t.h"
 #include <cmath>
 
 #ifdef ANNLIB_USE_CUDA

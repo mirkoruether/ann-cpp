@@ -1,5 +1,6 @@
 #include "net_init.h"
 #include "mat_arr_math.h"
+#include "mat_arr_math_t.h"
 #include <chrono>
 
 annlib::gaussian_net_init::gaussian_net_init()

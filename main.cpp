@@ -1,5 +1,6 @@
 #include "mat_arr.h"
 #include "mat_arr_math.h"
+#include "mat_arr_math_t.h"
 #include "mnist.h"
 #include "sgd_trainer.h"
 #include "linalg_tests.h"
@@ -478,9 +479,9 @@ void cuda_matrix_mul_test()
 	const unsigned n = 200;
 	const unsigned iterations = 1;
 
-	mat_arr mat_a(n, n, n);
-	mat_arr mat_b(n, n, n);
-	mat_arr mat_c(n, n, n);
+	mat_arr mat_a(100, n, n);
+	mat_arr mat_b(100, n, n);
+	mat_arr mat_c(100, n, n);
 
 	random_matrix_arr(&mat_a);
 	random_matrix_arr(&mat_b);
@@ -494,6 +495,7 @@ void cuda_matrix_mul_test()
 		{
 			linalg::cuda::cuda_matrix_mul(mat_a, mat_b, &mat_c, transpose_no);
 		}
+		cudaDeviceSynchronize();
 	});
 
 	cudaDeviceSynchronize();

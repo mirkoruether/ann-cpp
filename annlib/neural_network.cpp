@@ -1,5 +1,6 @@
 #include "neural_network.h"
 #include "mat_arr_math.h"
+#include "mat_arr_math_t.h"
 
 void neural_network::feed_forward_internal(const mat_arr& input, mat_arr* result, std::vector<mat_arr>* buffer) const
 {
