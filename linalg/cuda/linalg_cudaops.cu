@@ -192,4 +192,110 @@ namespace linalg { namespace cuda
 	{
 		return cuda_element_by_element_operation(A, B, C, _cuda_e_by_e_div_kernel(), tr);
 	}
+
+	struct _cuda_e_wise_add_kernel
+	{
+		float b;
+		explicit _cuda_e_wise_add_kernel(float b) : b(b) {}
+
+		float operator()(float a) const
+		{
+			return a + b;
+		}
+	};
+
+	mat_arr cuda_element_wise_add(const mat_arr& A, float b, mat_arr* C)
+	{
+		return cuda_element_wise_operation(A, C, _cuda_e_wise_add_kernel(b));
+	}
+
+	mat_arr cuda_element_wise_add(float a, const mat_arr& B, mat_arr* C)
+	{
+		return cuda_element_wise_operation(B, C, _cuda_e_wise_add_kernel(a));
+	}
+
+	struct _cuda_e_wise_sub_kernel
+	{
+		float b;
+		explicit _cuda_e_wise_sub_kernel(float b) : b(b) {}
+
+		float operator()(float a) const
+		{
+			return a - b;
+		}
+	};
+
+	mat_arr cuda_element_wise_sub(const mat_arr& A, float b, mat_arr* C)
+	{
+		return cuda_element_wise_operation(A, C, _cuda_e_wise_sub_kernel(b));
+	}
+
+	struct _cuda_e_wise_sub_kernel2
+	{
+		float a;
+		explicit _cuda_e_wise_sub_kernel2(float a) : a(a) {}
+
+		float operator()(float b) const
+		{
+			return a - b;
+		}
+	};
+
+	mat_arr cuda_element_wise_sub(float a, const mat_arr& B, mat_arr* C)
+	{
+		return cuda_element_wise_operation(B, C, _cuda_e_wise_sub_kernel2(a));
+	}
+
+	struct _cuda_e_wise_mul_kernel
+	{
+		float b;
+		explicit _cuda_e_wise_mul_kernel(float b) : b(b) {}
+
+		float operator()(float a) const
+		{
+			return a * b;
+		}
+	};
+
+	mat_arr cuda_element_wise_mul(const mat_arr& A, float b, mat_arr* C)
+	{
+		return cuda_element_wise_operation(A, C, _cuda_e_wise_mul_kernel(b));
+	}
+
+	mat_arr cuda_element_wise_mul(float a, const mat_arr& B, mat_arr* C)
+	{
+		return cuda_element_wise_operation(B, C, _cuda_e_wise_mul_kernel(a));
+	}
+
+	struct _cuda_e_wise_div_kernel
+	{
+		float b;
+		explicit _cuda_e_wise_div_kernel(float b) : b(b) {}
+
+		float operator()(float a) const
+		{
+			return a / b;
+		}
+	};
+
+	mat_arr cuda_element_wise_div(const mat_arr& A, float b, mat_arr* C)
+	{
+		return cuda_element_wise_operation(A, C, _cuda_e_wise_div_kernel(b));
+	}
+
+	struct _cuda_e_wise_div_kernel2
+	{
+		float a;
+		explicit _cuda_e_wise_div_kernel2(float a) : a(a) {}
+
+		float operator()(float b) const
+		{
+			return a / b;
+		}
+	};
+
+	mat_arr cuda_element_wise_div(float a, const mat_arr& B, mat_arr* C)
+	{
+		return cuda_element_wise_operation(B, C, _cuda_e_wise_div_kernel2(a));
+	}
 }}

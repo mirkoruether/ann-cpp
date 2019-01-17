@@ -1,6 +1,6 @@
 #include "activation_function_cudaops.cuh"
 
-#include "cuda/cuda_util.cuh"
+#include "cuda/linalg_cudaops_t.cuh"
 
 using namespace linalg::cuda;
 
@@ -11,6 +11,11 @@ struct sigmoid
 		return 1.0f / (1.0f + std::exp(-f));
 	}
 };
+
+void annlib::cuda::cuda_sigmoid_apply(const mat_arr& in, mat_arr* target)
+{
+	cuda_element_wise_operation(in, target, sigmoid());
+}
 
 struct sigmoid_derivative
 {
@@ -24,34 +29,7 @@ struct sigmoid_derivative
 	}
 };
 
-template <typename Fc>
-__global__ void apply_function_kernel(const float* in, float* target, unsigned size, const Fc& f)
-{
-	const unsigned pos = current_pos_linear();
-	if (pos < size)
-	{
-		target[pos] = f(in[pos]);
-	}
-}
-
-void annlib::cuda::cuda_sigmoid_apply(const mat_arr& in, mat_arr* target)
-{
-	prepare_launch_linear(*target, [&](unsigned size, unsigned threads, unsigned blocks)
-	{
-		apply_function_kernel << <blocks, threads >> >(in.dev_start(),
-		                                               target->dev_start(),
-		                                               size,
-		                                               sigmoid());
-	});
-}
-
 void annlib::cuda::cuda_sigmoid_apply_derivative(const mat_arr& in, mat_arr* target)
 {
-	prepare_launch_linear(*target, [&](unsigned size, unsigned threads, unsigned blocks)
-	{
-		apply_function_kernel << <blocks, threads >> >(in.dev_start(),
-		                                               target->dev_start(),
-		                                               size,
-		                                               sigmoid_derivative());
-	});
+	cuda_element_wise_operation(in, target, sigmoid_derivative());
 }

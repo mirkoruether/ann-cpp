@@ -172,9 +172,29 @@ namespace linalg { namespace cuda
 	}
 
 	template <typename Fc>
+	__global__ void _element_wise_operation_kernel(const float* a, float* c, unsigned size, const Fc& f)
+	{
+		const unsigned pos = current_pos_linear();
+		if (pos < size)
+		{
+			c[pos] = f(a[pos]);
+		}
+	}
+
+	template <typename Fc>
 	mat_arr cuda_element_wise_operation(const mat_arr& A, mat_arr* C, const Fc& f)
 	{
-		throw std::runtime_error("Not implemented");
+		return create_c(C, A.count, A.rows, A.cols,
+		                [=](mat_arr* C_nonnull)
+		                {
+			                prepare_launch_linear(*C_nonnull, [&](unsigned size, unsigned threads, unsigned blocks)
+			                {
+				                _element_wise_operation_kernel
+					                << <blocks, threads >> >(A.dev_start(),
+					                                         C_nonnull->dev_start(),
+					                                         size, f);
+			                });
+		                });
 	}
 }}
 #endif

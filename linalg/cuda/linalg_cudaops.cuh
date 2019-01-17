@@ -16,12 +16,28 @@ namespace linalg { namespace cuda
 	                              mat_tr tr = transpose_no);
 
 	mat_arr cuda_element_wise_sub(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
-		mat_tr tr = transpose_no);
+	                              mat_tr tr = transpose_no);
 
 	mat_arr cuda_element_wise_mul(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
-		mat_tr tr = transpose_no);
+	                              mat_tr tr = transpose_no);
 
 	mat_arr cuda_element_wise_div(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
-		mat_tr tr = transpose_no);
+	                              mat_tr tr = transpose_no);
+
+	mat_arr cuda_element_wise_add(const mat_arr& A, float b, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_add(float a, const mat_arr& B, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_sub(const mat_arr& A, float b, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_sub(float a, const mat_arr& B, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_mul(const mat_arr& A, float b, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_mul(float a, const mat_arr& B, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_div(const mat_arr& A, float b, mat_arr* C = nullptr);
+
+	mat_arr cuda_element_wise_div(float a, const mat_arr& B, mat_arr* C = nullptr);
 }}
 #endif
