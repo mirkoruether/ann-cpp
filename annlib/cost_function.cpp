@@ -85,10 +85,5 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 {
 	mat_element_by_element_operation(net_output_rv, solution_rv, gradient_rv,
 	                                 calculate_gradient_kernel());
-
-	if (!gradient_rv->only_real())
-	{
-		throw std::runtime_error("nan");
-	}
 }
 
