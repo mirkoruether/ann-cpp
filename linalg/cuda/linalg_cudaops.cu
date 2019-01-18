@@ -53,9 +53,7 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case0_helper_struct
 	{
-		__device__
-
-		float operator()(const float* a_mat, const float* b_mat,
+		__device__		float operator()(const float* a_mat, const float* b_mat,
 		                 const unsigned i, const unsigned k,
 		                 const unsigned l, const unsigned m, const unsigned n) const
 		{
@@ -65,9 +63,7 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case1_helper_struct
 	{
-		__device__
-
-		float operator()(const float* a_mat, const float* b_mat,
+		__device__		float operator()(const float* a_mat, const float* b_mat,
 		                 const unsigned i, const unsigned k,
 		                 const unsigned l, const unsigned m, const unsigned n) const
 		{
@@ -77,9 +73,7 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case2_helper_struct
 	{
-		__device__
-
-		float operator()(const float* a_mat, const float* b_mat,
+		__device__		float operator()(const float* a_mat, const float* b_mat,
 		                 const unsigned i, const unsigned k,
 		                 const unsigned l, const unsigned m, const unsigned n) const
 		{
@@ -89,9 +83,7 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case3_helper_struct
 	{
-		__device__
-
-		float operator()(const float* a_mat, const float* b_mat,
+		__device__		float operator()(const float* a_mat, const float* b_mat,
 		                 const unsigned i, const unsigned k,
 		                 const unsigned l, const unsigned m, const unsigned n) const
 		{
@@ -198,7 +190,7 @@ namespace linalg { namespace cuda
 		float b;
 		explicit _cuda_e_wise_add_kernel(float b) : b(b) {}
 
-		float operator()(float a) const
+		__device__ float operator()(float a) const
 		{
 			return a + b;
 		}
@@ -219,7 +211,7 @@ namespace linalg { namespace cuda
 		float b;
 		explicit _cuda_e_wise_sub_kernel(float b) : b(b) {}
 
-		float operator()(float a) const
+		__device__ float operator()(float a) const
 		{
 			return a - b;
 		}
@@ -235,7 +227,7 @@ namespace linalg { namespace cuda
 		float a;
 		explicit _cuda_e_wise_sub_kernel2(float a) : a(a) {}
 
-		float operator()(float b) const
+		__device__ float operator()(float b) const
 		{
 			return a - b;
 		}
@@ -251,7 +243,7 @@ namespace linalg { namespace cuda
 		float b;
 		explicit _cuda_e_wise_mul_kernel(float b) : b(b) {}
 
-		float operator()(float a) const
+		__device__ float operator()(float a) const
 		{
 			return a * b;
 		}
@@ -272,7 +264,7 @@ namespace linalg { namespace cuda
 		float b;
 		explicit _cuda_e_wise_div_kernel(float b) : b(b) {}
 
-		float operator()(float a) const
+		__device__ float operator()(float a) const
 		{
 			return a / b;
 		}
@@ -288,7 +280,7 @@ namespace linalg { namespace cuda
 		float a;
 		explicit _cuda_e_wise_div_kernel2(float a) : a(a) {}
 
-		float operator()(float b) const
+		__device__ float operator()(float b) const
 		{
 			return a / b;
 		}

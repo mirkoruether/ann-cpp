@@ -586,7 +586,8 @@ int main()
 	trainer.activation_f = std::make_shared<logistic_activation_function>();
 	trainer.cost_f = std::make_shared<cross_entropy_costs>();
 	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(static_cast<float>(3.0 / mnist_training.entry_count()));
-	trainer.optimizer = std::make_shared<momentum_sgd>(5.0f, 0.0f);
+	//trainer.weight_norm_penalty = nullptr;
+	trainer.optimizer = std::make_shared<momentum_sgd>(.5f, 0.0f);
 	//trainer.optimizer = std::make_shared<adam>();
 	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 

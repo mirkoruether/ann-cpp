@@ -21,7 +21,7 @@ namespace annlib
 		                                mat_arr* gradient_rv) const = 0;
 
 		virtual void calculate_output_layer_error(const mat_arr& net_output_rv, const mat_arr& solution_rv,
-		                                          const mat_arr& output_layer_weighted_input_rv,
+		                                          const mat_arr& activation_dfs_rv,
 		                                          const activation_function& activation_function,
 		                                          mat_arr* output_layer_error_rv) const;
 	};
@@ -44,12 +44,6 @@ namespace annlib
 		void calculate_gradient(const mat_arr& net_output_rv,
 		                        const mat_arr& solution_rv,
 		                        mat_arr* gradient_rv) const override;
-
-		void calculate_output_layer_error(const mat_arr& net_output_rv,
-		                                  const mat_arr& solution_rv,
-		                                  const mat_arr& output_layer_weighted_input_rv,
-		                                  const activation_function& activation_function,
-		                                  mat_arr* output_layer_error_rv) const override;
 	};
 }
 #endif

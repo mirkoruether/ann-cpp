@@ -60,7 +60,14 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
-	training_buffer buffer(sizes(), mini_batch_size, std::thread::hardware_concurrency());
+#if _OPENMP
+	const unsigned part_count = std::thread::hardware_concurrency();
+#else
+	const unsigned part_count = 1;
+#endif
+
+
+	training_buffer buffer(sizes(), mini_batch_size, part_count);
 	mini_batch_builder mb_builder(training_data);
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)

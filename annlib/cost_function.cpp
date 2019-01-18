@@ -75,7 +75,7 @@ struct calculate_gradient_kernel
 {
 	float operator()(float a, float y) const
 	{
-		return y / a - (1.0f - y) / (1.0f - a);
+		return (1.0f - y) / (1.0f - a) - y / a;
 	}
 };
 
@@ -85,24 +85,10 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
 {
 	mat_element_by_element_operation(net_output_rv, solution_rv, gradient_rv,
 	                                 calculate_gradient_kernel());
+
+	if (!gradient_rv->only_real())
+	{
+		throw std::runtime_error("nan");
+	}
 }
 
-void cross_entropy_costs::calculate_output_layer_error(const mat_arr& net_output_rv,
-                                                       const mat_arr& solution_rv,
-                                                       const mat_arr& activation_dfs_rv,
-                                                       const activation_function& activation_function,
-                                                       mat_arr* output_layer_error_rv) const
-{
-	if (dynamic_cast<const logistic_activation_function*>(&activation_function) != nullptr)
-	{
-		mat_element_wise_sub(net_output_rv, solution_rv, output_layer_error_rv);
-	}
-	else
-	{
-		cost_function::calculate_output_layer_error(net_output_rv,
-		                                            solution_rv,
-		                                            activation_dfs_rv,
-		                                            activation_function,
-		                                            output_layer_error_rv);
-	}
-}
