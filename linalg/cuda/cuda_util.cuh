@@ -130,6 +130,7 @@ namespace linalg { namespace cuda
 
 #ifdef _DEBUG
 		cuda_sync();
+		target.assert_only_real();
 #endif
 	}
 
@@ -146,6 +147,7 @@ namespace linalg { namespace cuda
 
 #ifdef _DEBUG
 		cuda_sync();
+		target.assert_only_real();
 #endif
 	}
 
@@ -160,6 +162,7 @@ namespace linalg { namespace cuda
 
 #ifdef _DEBUG
 		cuda_sync();
+		target.assert_only_real();
 #endif
 	}
 }}

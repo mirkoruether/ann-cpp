@@ -172,7 +172,8 @@ namespace linalg { namespace cuda
 	}
 
 	template <typename Fc>
-	__global__ void _element_wise_operation_kernel(const float* a, float* c, unsigned size, const Fc& f)
+	__global__
+	void _element_wise_operation_kernel(const float* a, float* c, unsigned size, Fc f)
 	{
 		const unsigned pos = current_pos_linear();
 		if (pos < size)

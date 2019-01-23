@@ -128,3 +128,11 @@ bool mat_arr::only_real() const
 	}
 	return true;
 }
+
+void mat_arr::assert_only_real() const
+{
+	if(!only_real())
+	{
+		throw std::runtime_error("nan");
+	}
+}

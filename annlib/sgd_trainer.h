@@ -37,7 +37,7 @@ namespace annlib
 
 		void init(std::vector<unsigned>& sizes);
 
-		void train_epochs(const training_data& training_data, double epoch_count);
+		void train_epochs(const training_data& training_data, double epoch_count, bool print = false);
 
 		neural_network to_neural_network(bool copy_parameters = false);
 

@@ -65,6 +65,8 @@ namespace linalg
 		mat_arr duplicate(bool try_device_copy = true) const;
 
 		bool only_real() const;
+
+		void assert_only_real() const;
 	};
 }
 

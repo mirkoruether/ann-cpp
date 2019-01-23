@@ -59,7 +59,7 @@ void sgd_trainer::init(std::vector<unsigned>& sizes)
 	optimizer->init(sizes);
 }
 
-void sgd_trainer::train_epochs(const training_data& training_data, const double epoch_count)
+void sgd_trainer::train_epochs(const training_data& training_data, const double epoch_count, bool print)
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
@@ -75,11 +75,22 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
 	{
+		if (print && batch_no % 100 == 0)
+		{
+			std::cout << "\r" << batch_no << "/" << batch_count
+				<< " [" << unsigned(100.0 * (batch_no + 1) / batch_count) << "%]";
+		}
+
 		mb_builder.build_mini_batch(&buffer.input_rv, &buffer.solution_rv);
 
 		do_feed_forward_and_backprop(&buffer);
 
 		do_adjustments(&buffer);
+	}
+
+	if (print)
+	{
+		std::cout << "\r" << batch_count << "/" << batch_count << " [100%]" << std::endl;
 	}
 }
 
