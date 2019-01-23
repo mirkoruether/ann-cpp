@@ -39,5 +39,7 @@ namespace linalg { namespace cuda
 	mat_arr cuda_element_wise_div(const mat_arr& A, float b, mat_arr* C = nullptr);
 
 	mat_arr cuda_element_wise_div(float a, const mat_arr& B, mat_arr* C = nullptr);
+
+	void cuda_set_all(float a, mat_arr* C = nullptr);
 }}
 #endif

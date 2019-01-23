@@ -13,6 +13,7 @@
 #endif
 
 #ifdef LINALG_CUDA_SUPPORT
+#include "cuda/cuda_util.cuh"
 #include "cuda/linalg_cudaops.cuh"
 #endif
 
@@ -495,16 +496,16 @@ void cuda_matrix_mul_test()
 		{
 			linalg::cuda::cuda_matrix_mul(mat_a, mat_b, &mat_c, transpose_no);
 		}
-		cudaDeviceSynchronize();
+		cuda::cuda_sync();
 	});
 
-	cudaDeviceSynchronize();
+	cuda::cuda_sync();
 
 	mat_a.start();
 	mat_b.start();
 	mat_c.start();
 
-	cudaDeviceSynchronize();
+	cuda::cuda_sync();
 	cudaError_t err = cudaGetLastError();
 	if(err != cudaSuccess)
 	{
@@ -519,6 +520,27 @@ void cuda_matrix_mul_test()
 	});
 
 	std::cout << std::endl;
+}
+
+void cuda_element_wise_operation_test()
+{
+	const unsigned n = 20;
+	mat_arr mat_a(1024, n, n);
+	mat_arr mat_b(1024, n, n);
+	mat_arr mat_c(1024, n, n);
+
+	random_matrix_arr(&mat_a);
+	random_matrix_arr(&mat_b);
+
+	time_execution("CUDA matrix mul", [&] {
+		linalg::cuda::cuda_element_wise_mul(mat_a, mat_b, &mat_c);
+		cuda::cuda_sync();
+	});
+
+	time_execution("CUDA matrix mul", [&] {
+		linalg::cuda::cuda_element_wise_mul(mat_a, 2.0f, &mat_c);
+		cuda::cuda_sync();
+	});	
 }
 #endif
 
@@ -555,6 +577,7 @@ int main()
 
 #ifdef LINALG_CUDA_SUPPORT
 	std::cout << "CUDA enabled" << std::endl;
+	cuda_element_wise_operation_test();
 	cuda_matrix_mul_test();
 #else
 	std::cout << "CUDA disabled" << std::endl;
@@ -587,7 +610,7 @@ int main()
 	trainer.cost_f = std::make_shared<cross_entropy_costs>();
 	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(static_cast<float>(3.0 / mnist_training.entry_count()));
 	//trainer.weight_norm_penalty = nullptr;
-	trainer.optimizer = std::make_shared<momentum_sgd>(.5f, 0.0f);
+	trainer.optimizer = std::make_shared<momentum_sgd>(.5f, 0.9f);
 	//trainer.optimizer = std::make_shared<adam>();
 	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 

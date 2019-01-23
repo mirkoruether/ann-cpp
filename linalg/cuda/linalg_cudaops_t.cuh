@@ -189,7 +189,7 @@ namespace linalg { namespace cuda
 		                {
 			                prepare_launch_linear(*C_nonnull, [&](unsigned size, unsigned threads, unsigned blocks)
 			                {
-				                _element_wise_operation_kernel
+				                _element_wise_operation_kernel<Fc>
 					                << <blocks, threads >> >(A.dev_start(),
 					                                         C_nonnull->dev_start(),
 					                                         size, f);

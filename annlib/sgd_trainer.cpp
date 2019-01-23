@@ -4,8 +4,11 @@
 #include <future>
 #include <random>
 
+#include "_calc_macros.h"
+
 #ifdef ANNLIB_USE_CUDA
 #include "sgd_trainer_cudaops.cuh"
+#include "cuda/linalg_cudaops.cuh"
 #endif
 
 using namespace linalg;
@@ -121,7 +124,6 @@ void sgd_trainer::feed_forward_detailed(const mat_arr& input,
 		                                weights_noarr[layerNo],
 		                                biases_noarr_rv[layerNo],
 		                                &weighted_inputs_rv->operator[](layerNo));
-		cudaDeviceSynchronize();
 #else
 		mat_matrix_mul(*layerInput,
 		               weights_noarr[layerNo],
@@ -148,11 +150,10 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
 {
 	const unsigned layer_count = get_layer_count();
 
-	cost_f->calculate_output_layer_error(net_output_rv,
-	                                     solution_rv,
-	                                     activation_dfs_rv[layer_count - 1],
-	                                     *activation_f,
-	                                     &errors_rv->operator[](layer_count - 1));
+	mat_arr* error_last_layer = &errors_rv->operator[](layer_count - 1);
+	cost_f->calculate_gradient(net_output_rv, solution_rv, error_last_layer);
+
+	M_MUL(*error_last_layer, activation_dfs_rv[layer_count - 1], error_last_layer);
 
 	for (int layer_no = layer_count - 2; layer_no >= 0; --layer_no)
 	{
@@ -161,7 +162,6 @@ void sgd_trainer::calculate_error(const mat_arr& net_output_rv,
 		                          weights_noarr[layer_no + 1],
 		                          activation_dfs_rv[layer_no],
 		                          &errors_rv->operator[](layer_no));
-		cudaDeviceSynchronize();
 #else
 		mat_matrix_mul(errors_rv->operator[](layer_no + 1),
 		               weights_noarr[layer_no + 1],
@@ -180,33 +180,35 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
                                             mat_arr* gradient_weight_noarr) const
 {
 	const unsigned batch_entry_count = previous_activation_rv.count;
-	mat_set_all(0, gradient_weight_noarr);
+	M_SET_ALL(0.0f, gradient_weight_noarr);
 
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
-		mat_matrix_mul_add(previous_activation_rv.get_mat(batch_entry_no),
-		                   error_rv.get_mat(batch_entry_no),
-		                   gradient_weight_noarr,
-		                   transpose_A);
+		M_MATMUL_ADD(previous_activation_rv.get_mat(batch_entry_no),
+		             error_rv.get_mat(batch_entry_no),
+		             gradient_weight_noarr,
+		             transpose_A);
 	}
 
-	mat_element_wise_div(*gradient_weight_noarr, static_cast<float>(batch_entry_count), gradient_weight_noarr);
+	M_DIV(*gradient_weight_noarr, static_cast<float>(batch_entry_count), gradient_weight_noarr);
 }
 
 void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
                                           mat_arr* gradient_bias_noarr_rv) const
 {
 	const unsigned batch_entry_count = error_rv.count;
-	mat_set_all(0, gradient_bias_noarr_rv);
+	M_SET_ALL(0.0f, gradient_bias_noarr_rv);
 
 	for (unsigned batch_entry_no = 0; batch_entry_no < batch_entry_count; batch_entry_no++)
 	{
-		mat_element_wise_add(*gradient_bias_noarr_rv,
-		                     error_rv.get_mat(batch_entry_no),
-		                     gradient_bias_noarr_rv);
+		M_ADD(*gradient_bias_noarr_rv,
+		      error_rv.get_mat(batch_entry_no),
+		      gradient_bias_noarr_rv);
 	}
 
-	mat_element_wise_div(*gradient_bias_noarr_rv, static_cast<float>(batch_entry_count), gradient_bias_noarr_rv);
+	M_DIV(*gradient_bias_noarr_rv,
+	      static_cast<float>(batch_entry_count),
+	      gradient_bias_noarr_rv);
 }
 
 void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)
@@ -283,7 +285,7 @@ mini_batch_builder::mini_batch_builder(training_data data)
 	: data(std::move(data)),
 	  distribution(0, data.input.count - 1)
 {
-	rng.seed(std::chrono::system_clock::now().time_since_epoch().count());
+	rng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
 }
 
 void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv)

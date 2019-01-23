@@ -4,19 +4,15 @@
 #include <cmath>
 #include "activation_function.h"
 
+#include "_calc_macros.h"
+
+#ifdef ANNLIB_USE_CUDA
+#include "cost_function_cudaops.cuh"
+#include "cuda/linalg_cudaops.cuh"
+#endif
+
 using namespace linalg;
 using namespace annlib;
-
-void cost_function::calculate_output_layer_error(const mat_arr& net_output_rv,
-                                                 const mat_arr& solution_rv,
-                                                 const mat_arr& activation_dfs_rv,
-                                                 const activation_function& activation_function,
-                                                 mat_arr* output_layer_error_rv) const
-{
-	calculate_gradient(net_output_rv, solution_rv, output_layer_error_rv);
-
-	mat_element_wise_mul(*output_layer_error_rv, activation_dfs_rv, output_layer_error_rv);
-}
 
 float quadratic_costs::calculate_costs(const mat_arr& net_output_rv, const mat_arr& solution_rv) const
 {
@@ -43,7 +39,7 @@ void quadratic_costs::calculate_gradient(const mat_arr& net_output_rv,
                                          const mat_arr& solution_rv,
                                          mat_arr* gradient_rv) const
 {
-	mat_element_wise_sub(net_output_rv, solution_rv, gradient_rv);
+	M_SUB(net_output_rv, solution_rv, gradient_rv);
 }
 
 float cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
@@ -71,7 +67,7 @@ float cross_entropy_costs::calculate_costs(const mat_arr& net_output_rv,
 	return -result;
 }
 
-struct calculate_gradient_kernel
+struct cross_entropy_gradient
 {
 	float operator()(float a, float y) const
 	{
@@ -83,7 +79,10 @@ void cross_entropy_costs::calculate_gradient(const mat_arr& net_output_rv,
                                              const mat_arr& solution_rv,
                                              mat_arr* gradient_rv) const
 {
+#ifdef ANNLIB_USE_CUDA
+	cuda::cuda_cross_entropy_cost_gradient(net_output_rv, solution_rv, gradient_rv);
+#else
 	mat_element_by_element_operation(net_output_rv, solution_rv, gradient_rv,
-	                                 calculate_gradient_kernel());
+	                                 cross_entropy_gradient());
+#endif
 }
-

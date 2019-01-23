@@ -1,5 +1,7 @@
 add_library(annlib_cudaops 
 activation_function_cudaops.cuh activation_function_cudaops.cu
+cost_function_cudaops.cuh cost_function_cudaops.cu
+gradient_based_optimizer_cudaops.cuh gradient_based_optimizer_cudaops.cu
 sgd_trainer_cudaops.cuh sgd_trainer_cudaops.cu
 )
 
@@ -8,5 +10,7 @@ add_dependencies(annlib_cudaops linalg linalg_cudaops)
 install(TARGETS annlib_cudaops DESTINATION lib)
 install(FILES 
 activation_function_cudaops.cuh
+cost_function_cudaops.cuh
+gradient_based_optimizer_cudaops.cuh
 sgd_trainer_cudaops.cuh
 DESTINATION include)

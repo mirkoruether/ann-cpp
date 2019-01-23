@@ -33,10 +33,10 @@ namespace linalg { namespace cuda
 	}
 
 	template <typename Fc, bool add>
-	void _matrix_mul_launch(const mat_arr& A, const mat_arr& B, mat_arr* C, Fc f)
+	void _matrix_mul_launch(const mat_arr& A, const mat_arr& B, mat_arr* C, mat_tr tr, Fc f)
 	{
-		const unsigned m = A.cols;
-		if (B.rows != m)
+		const unsigned m = (tr == transpose_A || tr == transpose_both) ? A.rows : A.cols;
+		if ((tr == transpose_B || tr == transpose_both) ? B.cols : B.rows != m)
 		{
 			throw std::runtime_error("matrices cannot be multiplied");
 		}
@@ -53,9 +53,9 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case0_helper_struct
 	{
-		__device__		float operator()(const float* a_mat, const float* b_mat,
-		                 const unsigned i, const unsigned k,
-		                 const unsigned l, const unsigned m, const unsigned n) const
+		__device__ float operator()(const float* a_mat, const float* b_mat,
+		                            const unsigned i, const unsigned k,
+		                            const unsigned l, const unsigned m, const unsigned n) const
 		{
 			return mat_mul_case0_helper(a_mat, b_mat, i, k, l, m, n);
 		}
@@ -63,9 +63,9 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case1_helper_struct
 	{
-		__device__		float operator()(const float* a_mat, const float* b_mat,
-		                 const unsigned i, const unsigned k,
-		                 const unsigned l, const unsigned m, const unsigned n) const
+		__device__ float operator()(const float* a_mat, const float* b_mat,
+		                            const unsigned i, const unsigned k,
+		                            const unsigned l, const unsigned m, const unsigned n) const
 		{
 			return mat_mul_case1_helper(a_mat, b_mat, i, k, l, m, n);
 		}
@@ -73,9 +73,9 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case2_helper_struct
 	{
-		__device__		float operator()(const float* a_mat, const float* b_mat,
-		                 const unsigned i, const unsigned k,
-		                 const unsigned l, const unsigned m, const unsigned n) const
+		__device__ float operator()(const float* a_mat, const float* b_mat,
+		                            const unsigned i, const unsigned k,
+		                            const unsigned l, const unsigned m, const unsigned n) const
 		{
 			return mat_mul_case2_helper(a_mat, b_mat, i, k, l, m, n);
 		}
@@ -83,9 +83,9 @@ namespace linalg { namespace cuda
 
 	struct mat_mul_case3_helper_struct
 	{
-		__device__		float operator()(const float* a_mat, const float* b_mat,
-		                 const unsigned i, const unsigned k,
-		                 const unsigned l, const unsigned m, const unsigned n) const
+		__device__ float operator()(const float* a_mat, const float* b_mat,
+		                            const unsigned i, const unsigned k,
+		                            const unsigned l, const unsigned m, const unsigned n) const
 		{
 			return mat_mul_case3_helper(a_mat, b_mat, i, k, l, m, n);
 		}
@@ -104,19 +104,19 @@ namespace linalg { namespace cuda
 			                switch (tr)
 			                {
 			                case transpose_no:
-				                _matrix_mul_launch<mat_mul_case0_helper_struct, add>(A, B, C_nonnull,
+				                _matrix_mul_launch<mat_mul_case0_helper_struct, add>(A, B, C_nonnull, tr,
 				                                                                     mat_mul_case0_helper_struct());
 				                break;
 			                case transpose_A:
-				                _matrix_mul_launch<mat_mul_case1_helper_struct, add>(A, B, C_nonnull,
+				                _matrix_mul_launch<mat_mul_case1_helper_struct, add>(A, B, C_nonnull, tr,
 				                                                                     mat_mul_case1_helper_struct());
 				                break;
 			                case transpose_B:
-				                _matrix_mul_launch<mat_mul_case2_helper_struct, add>(A, B, C_nonnull,
+				                _matrix_mul_launch<mat_mul_case2_helper_struct, add>(A, B, C_nonnull, tr,
 				                                                                     mat_mul_case2_helper_struct());
 				                break;
 			                case transpose_both:
-				                _matrix_mul_launch<mat_mul_case3_helper_struct, add>(A, B, C_nonnull,
+				                _matrix_mul_launch<mat_mul_case3_helper_struct, add>(A, B, C_nonnull, tr,
 				                                                                     mat_mul_case3_helper_struct());
 				                break;
 			                }
@@ -188,7 +188,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_add_kernel
 	{
 		float b;
-		explicit _cuda_e_wise_add_kernel(float b) : b(b) {}
+
+		explicit _cuda_e_wise_add_kernel(float b) : b(b)
+		{
+		}
 
 		__device__ float operator()(float a) const
 		{
@@ -209,7 +212,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_sub_kernel
 	{
 		float b;
-		explicit _cuda_e_wise_sub_kernel(float b) : b(b) {}
+
+		explicit _cuda_e_wise_sub_kernel(float b) : b(b)
+		{
+		}
 
 		__device__ float operator()(float a) const
 		{
@@ -225,7 +231,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_sub_kernel2
 	{
 		float a;
-		explicit _cuda_e_wise_sub_kernel2(float a) : a(a) {}
+
+		explicit _cuda_e_wise_sub_kernel2(float a) : a(a)
+		{
+		}
 
 		__device__ float operator()(float b) const
 		{
@@ -241,7 +250,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_mul_kernel
 	{
 		float b;
-		explicit _cuda_e_wise_mul_kernel(float b) : b(b) {}
+
+		explicit _cuda_e_wise_mul_kernel(float b) : b(b)
+		{
+		}
 
 		__device__ float operator()(float a) const
 		{
@@ -262,7 +274,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_div_kernel
 	{
 		float b;
-		explicit _cuda_e_wise_div_kernel(float b) : b(b) {}
+
+		explicit _cuda_e_wise_div_kernel(float b) : b(b)
+		{
+		}
 
 		__device__ float operator()(float a) const
 		{
@@ -278,7 +293,10 @@ namespace linalg { namespace cuda
 	struct _cuda_e_wise_div_kernel2
 	{
 		float a;
-		explicit _cuda_e_wise_div_kernel2(float a) : a(a) {}
+
+		explicit _cuda_e_wise_div_kernel2(float a) : a(a)
+		{
+		}
 
 		__device__ float operator()(float b) const
 		{
@@ -289,5 +307,23 @@ namespace linalg { namespace cuda
 	mat_arr cuda_element_wise_div(float a, const mat_arr& B, mat_arr* C)
 	{
 		return cuda_element_wise_operation(B, C, _cuda_e_wise_div_kernel2(a));
+	}
+
+	__global__ void _set_all_kernel(float val, float* c, unsigned size)
+	{
+		const unsigned pos = current_pos_linear();
+		if (pos < size)
+		{
+			c[pos] = val;
+		}
+	}
+
+	void cuda_set_all(float a, mat_arr* C)
+	{
+		prepare_launch_linear(*C, [&](unsigned size, unsigned threads, unsigned blocks)
+		{
+			_set_all_kernel
+				<< <blocks, threads >> >(a, C->dev_start(), size);
+		});
 	}
 }}

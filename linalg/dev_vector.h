@@ -10,6 +10,16 @@ namespace linalg
 	template <typename T>
 	void my_cuda_memcp(T* dst, const T* src, size_t length, cudaMemcpyKind kind)
 	{
+		if(cudaDeviceSynchronize() != cudaSuccess)
+		{
+			throw std::runtime_error("error on previous operation");
+		}
+
+		if(dst == nullptr || src == nullptr)
+		{
+			throw std::runtime_error("nullptr");
+		}
+
 		const cudaError_t result = cudaMemcpy(dst, src,
 		                                      length * sizeof(T),
 		                                      kind);
@@ -44,6 +54,7 @@ namespace linalg
 			{
 				cudaFree(start);
 				count = 0;
+				start = nullptr;
 			}
 		}
 

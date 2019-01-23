@@ -2,6 +2,11 @@
 #include "mat_arr_math.h"
 #include "mat_arr_math_t.h"
 #include <cmath>
+#include "_calc_macros.h"
+
+#ifdef ANNLIB_USE_CUDA
+#include "gradient_based_optimizer_cudaops.cuh"
+#endif
 
 using namespace annlib;
 
@@ -49,11 +54,15 @@ void ordinary_sgd::adjust(const mat_arr& gradient_noarr,
                           mat_arr* buffer,
                           mat_arr* target_noarr)
 {
+#ifdef ANNLIB_USE_CUDA
+	cuda::cuda_ordinary_sgd_update(learning_rate, gradient_noarr, target_noarr);
+#else
 	mat_element_by_element_operation(*target_noarr, gradient_noarr, target_noarr,
 	                                 [&](float target, float grad)
 	                                 {
 		                                 return target - learning_rate * grad;
 	                                 });
+#endif
 }
 
 momentum_sgd::momentum_sgd(float learning_rate, float alpha)
@@ -66,17 +75,21 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
                           mat_arr* buffer,
                           mat_arr* target_noarr)
 {
+#ifdef ANNLIB_USE_CUDA
+	cuda::cuda_momentum_sgd_update_velocities(alpha, learning_rate, gradient_noarr, buffer);
+#else
 	mat_element_by_element_operation(*buffer, gradient_noarr, buffer,
 	                                 [&](float v, float grad)
 	                                 {
 		                                 return alpha * v - learning_rate * grad;
 	                                 });
+#endif
 
-	mat_element_wise_add(*target_noarr, *buffer, target_noarr);
+	M_ADD(*target_noarr, *buffer, target_noarr);
 }
 
 adam::adam()
-	:adam(0.001f, 0.9f, 0.99f) 
+	: adam(0.001f, 0.9f, 0.99f)
 {
 }
 
@@ -124,11 +137,11 @@ void adam::adjust(const mat_arr& gradient_noarr,
 		                                 return beta2 * v + (1.0f - beta2) * grad * grad;
 	                                 });
 
-	mat_element_by_element_operation(m_buf, v_buf, &delta, 
-									 [&](float m, float v) 
-									 {
-										 return alpha_t * m / (std::sqrt(v) + 1e-8f);
-									 });
+	mat_element_by_element_operation(m_buf, v_buf, &delta,
+	                                 [&](float m, float v)
+	                                 {
+		                                 return alpha_t * m / (std::sqrt(v) + 1e-8f);
+	                                 });
 
 	mat_element_wise_sub(*target_noarr, delta, target_noarr);
 }

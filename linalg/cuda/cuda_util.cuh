@@ -8,6 +8,15 @@
 
 namespace linalg { namespace cuda
 {
+	inline void cuda_sync()
+	{
+		const cudaError_t err = cudaDeviceSynchronize();
+		if (err != cudaSuccess)
+		{
+			throw std::runtime_error("error. Code: " + err);
+		}
+	}
+
 	__device__ inline float mat_mul_case0_helper(const float* a_mat, const float* b_mat,
 	                                             const unsigned i, const unsigned k,
 	                                             const unsigned l, const unsigned m, const unsigned n)
@@ -118,6 +127,10 @@ namespace linalg { namespace cuda
 		                           unsigned(ceil(double(size.z) / double(threads_per_block.z))));
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
+
+#ifdef _DEBUG
+		cuda_sync();
+#endif
 	}
 
 	inline void prepare_launch_quadratic(const linalg::mat_arr& target,
@@ -130,6 +143,10 @@ namespace linalg { namespace cuda
 		                           1);
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
+
+#ifdef _DEBUG
+		cuda_sync();
+#endif
 	}
 
 	inline void prepare_launch_linear(const linalg::mat_arr& target,
@@ -140,6 +157,10 @@ namespace linalg { namespace cuda
 		const unsigned blocks_per_grid = unsigned(ceil(double(size) / double(threads_per_block)));
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
+
+#ifdef _DEBUG
+		cuda_sync();
+#endif
 	}
 }}
 #endif
