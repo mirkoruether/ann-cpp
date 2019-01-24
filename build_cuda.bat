@@ -3,13 +3,14 @@ set build_tools="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\V
 set myinclude=/I annlib /I linalg
 
 set out_dir=build\release
-set compilerflags=/GL /Gy /Gm- /Ox /sdl /Zc:inline /Oi /MD /EHsc /nologo
+::Error: Net not converging when /Zi is not set
+set compilerflags=/EHsc /W3 /nologo /Ox /Oi /MD /GL /Gy /Zc:inline /Zi
 set linkerflags=/OPT:REF /OPT:ICF
 
 set nvcc="C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v10.0\bin\nvcc.exe"
 set cuda_options=-link -ccbin cl.exe -Xcompiler="%compilerflags%"
 set cuda_include=-Ilinalg -Ilinalg\cuda -Iannlib -Iannlib\cuda
-set defs=-D_WINDOWS -DLINALG_CUDA_SUPPORT -DANNLIB_USE_CUDA
+set defs=-D_WINDOWS -DLINALG_CUDA_SUPPORT -DANNLIB_USE_CUDA -DNDEBUG
 
 setlocal EnableDelayedExpansion
 

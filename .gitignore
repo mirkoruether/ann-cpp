@@ -31,6 +31,8 @@
 *.out
 *.app
 
+*.pdb
+
 /.idea/*
 /.vs/*
 /cmake-build-*
