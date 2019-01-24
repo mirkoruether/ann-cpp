@@ -578,9 +578,17 @@ int main()
 	std::cout << std::endl;
 
 #ifdef LINALG_CUDA_SUPPORT
-	std::cout << "CUDA enabled" << std::endl;
+	std::cout << "CUDA supported" << std::endl;
 	cuda_element_wise_operation_test();
 	//cuda_matrix_mul_test();
+#else
+	std::cout << "CUDA not supported" << std::endl;
+#endif
+
+	std::cout << std::endl;
+
+#ifdef ANNLIB_USE_CUDA
+	std::cout << "CUDA enabled" << std::endl;
 #else
 	std::cout << "CUDA disabled" << std::endl;
 #endif
@@ -589,9 +597,13 @@ int main()
 
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
+	std::cout << "LINUX" << std::endl;
 #else
 	const std::string folder = "C:\\\\";
+	std::cout << "WINDOWS" << std::endl;
 #endif
+
+	std::cout << std::endl;
 
 	const std::string training_images = folder + "train-images.idx3-ubyte";
 	const std::string training_labels = folder + "train-labels.idx1-ubyte";
@@ -620,7 +632,7 @@ int main()
 	trainer.init(sizes);
 
 	time_execution("Train five epochs", [&]() {
-		trainer.train_epochs(mnist_training, 5, true);
+		trainer.train_epochs(mnist_training, 1, true);
 	});
 
 	neural_network net = trainer.to_neural_network(true);
@@ -630,5 +642,7 @@ int main()
 	});
 
 	std::cout << "Test accuracy: " << accuracy << "%" << std::endl;
+
+	std::cout << "Press any button to continue...";
 	std::cin.get();
 }

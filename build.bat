@@ -21,7 +21,7 @@ call %build_tools% x64
 cl.exe %compilerflags% %myinclude% linalg\*cpp annlib\*.cpp *.cpp /link %linkerflags% /OUT:"%out_dir%\ann-cpp-win32-%VSCMD_ARG_TGT_ARCH%.exe"
 
 call %build_tools% x64
-cl.exe %compilerflags% /openmp %myinclude% linalg\*cpp annlib\*.cpp *.cpp /link %linkerflags% /OUT:"%out_dir%\ann-cpp-win32-%VSCMD_ARG_TGT_ARCH%-openmp.exe"
+cl.exe %compilerflags% /openmp %myinclude% linalg\*.cpp annlib\*.cpp *.cpp /link %linkerflags% /OUT:"%out_dir%\ann-cpp-win32-%VSCMD_ARG_TGT_ARCH%-openmp.exe"
 
 ::call %build_tools% x86
 ::cl.exe %compilerflags% /Fo"%out_dir%\obj-x86/" %myinclude% linalg\*cpp annlib\*.cpp *.cpp /link %linkerflags% /OUT:"%out_dir%\ann-cpp--win32-%VSCMD_ARG_TGT_ARCH%.exe"

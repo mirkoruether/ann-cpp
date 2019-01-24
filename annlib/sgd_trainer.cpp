@@ -19,7 +19,7 @@ sgd_trainer::sgd_trainer()
 	  activation_f(std::make_shared<logistic_activation_function>()),
 	  cost_f(std::make_shared<cross_entropy_costs>()),
 	  weight_norm_penalty(nullptr),
-	  optimizer(std::make_shared<ordinary_sgd>(1.0)),
+	  optimizer(std::make_shared<ordinary_sgd>(1.0f)),
 	  net_init(std::make_shared<normalized_gaussian_net_init>())
 {
 }
