@@ -15,5 +15,12 @@ namespace annlib { namespace cuda
 	                         const mat_arr& weights_next_layer_noarr,
 	                         const mat_arr& act_df_rv,
 	                         mat_arr* error_rv);
+
+	void cuda_calculate_gradient_weight(const mat_arr& previous_activation_rv,
+	                                    const mat_arr& error_rv,
+	                                    mat_arr* gradient_weight_noarr);
+
+	void cuda_calculate_gradient_bias(const mat_arr& error_rv,
+	                                  mat_arr* gradient_bias_noarr);
 }}
 #endif

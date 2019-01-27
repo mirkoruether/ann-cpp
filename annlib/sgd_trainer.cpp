@@ -190,6 +190,7 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
                                             const mat_arr& error_rv,
                                             mat_arr* gradient_weight_noarr) const
 {
+	//CPU only
 	const unsigned batch_entry_count = previous_activation_rv.count;
 	M_SET_ALL(0.0f, gradient_weight_noarr);
 
@@ -207,6 +208,7 @@ void sgd_trainer::calculate_gradient_weight(const mat_arr& previous_activation_r
 void sgd_trainer::calculate_gradient_bias(const mat_arr& error_rv,
                                           mat_arr* gradient_bias_noarr_rv) const
 {
+	//CPU only
 	const unsigned batch_entry_count = error_rv.count;
 	M_SET_ALL(0.0f, gradient_bias_noarr_rv);
 
@@ -228,8 +230,13 @@ void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)
 		                                        ? buffer->input_rv
 		                                        : buffer->activations_rv[layer_no - 1];
 
-	calculate_gradient_weight(previous_activation_rv, buffer->errors_rv[layer_no],
-	                          &buffer->gradient_weights_noarr[layer_no]);
+#ifdef ANNLIB_USE_CUDA
+	cuda::cuda_calculate_gradient_weight
+#else
+	calculate_gradient_weight
+#endif
+		(previous_activation_rv, buffer->errors_rv[layer_no],
+		 &buffer->gradient_weights_noarr[layer_no]);
 
 	if (weight_norm_penalty != nullptr)
 	{
@@ -244,8 +251,13 @@ void sgd_trainer::adjust_weights(unsigned layer_no, training_buffer* buffer)
 
 void sgd_trainer::adjust_biases(unsigned layer_no, training_buffer* buffer)
 {
-	calculate_gradient_bias(buffer->errors_rv[layer_no],
-	                        &buffer->gradient_biases_rv_noarr[layer_no]);
+#ifdef ANNLIB_USE_CUDA
+	cuda::cuda_calculate_gradient_bias
+#else
+	calculate_gradient_bias
+#endif
+		(buffer->errors_rv[layer_no],
+		 &buffer->gradient_biases_rv_noarr[layer_no]);
 
 	optimizer->adjust(buffer->gradient_biases_rv_noarr[layer_no],
 	                  &biases_noarr_rv[layer_no], biases, layer_no);

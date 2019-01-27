@@ -66,3 +66,61 @@ void annlib::cuda::cuda_backprop_error(const mat_arr& error_next_layer_rv,
 		                                                error_next_layer_rv.cols, size);
 	});
 }
+
+__global__ void calculate_gradient_weight_kernel(const float* prev_act, const float* error, float* grad,
+                                                 unsigned prev_act_mat_size, unsigned error_mat_size,
+                                                 unsigned mini_batch_size, dim3 size)
+{
+	const dim3 pos = current_pos_cubic();
+	if (check_pos_cubic(pos, size))
+	{
+		float temp = 0.0f;
+		for (unsigned i = 0; i < mini_batch_size; i++)
+		{
+			const float* prev_act_mat = prev_act + i * prev_act_mat_size;
+			const float* error_mat = error + i * error_mat_size;
+			temp += mat_mul_case1_helper(prev_act_mat, error_mat, pos.y, pos.z, prev_act_mat_size, 1, error_mat_size);
+		}
+		grad[index_cubic(pos, size)] = temp / static_cast<float>(mini_batch_size);
+	}
+}
+
+void annlib::cuda::cuda_calculate_gradient_weight(const mat_arr& previous_activation_rv,
+                                                  const mat_arr& error_rv,
+                                                  mat_arr* gradient_weight_noarr)
+{
+	prepare_launch_cubic(*gradient_weight_noarr, [&](dim3 size, dim3 threads, dim3 blocks)
+	{
+		calculate_gradient_weight_kernel << < blocks, threads >> >(previous_activation_rv.dev_start(),
+		                                                           error_rv.dev_start(),
+		                                                           gradient_weight_noarr->dev_start(),
+		                                                           previous_activation_rv.cols, error_rv.cols,
+		                                                           previous_activation_rv.count, size);
+	});
+}
+
+__global__ void calculate_gradient_bias_kernel(const float* error, float* grad, unsigned mini_batch_size, unsigned size)
+{
+	const unsigned pos = current_pos_linear();
+	if (pos < size)
+	{
+		float temp = 0.0f;
+		for (unsigned i = 0; i < mini_batch_size; i++)
+		{
+			const float* error_mat = error + i * size;
+			temp += error_mat[pos];
+		}
+		grad[pos] = temp / static_cast<float>(mini_batch_size);
+	}
+}
+
+void annlib::cuda::cuda_calculate_gradient_bias(const mat_arr& error_rv,
+                                                mat_arr* gradient_bias_noarr)
+{
+	prepare_launch_linear(*gradient_bias_noarr, [&](unsigned size, unsigned threads, unsigned blocks)
+	{
+		calculate_gradient_bias_kernel << < blocks, threads >> >(error_rv.dev_start(),
+		                                                         gradient_bias_noarr->dev_start(),
+		                                                         error_rv.count, size);
+	});
+}
