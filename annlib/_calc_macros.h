@@ -13,6 +13,7 @@
 	#define M_MATMUL_ADD linalg::cuda::cuda_matrix_mul_add
 
 	#define M_SET_ALL linalg::cuda::cuda_set_all
+	#define M_SELECT linalg::cuda::cuda_select_mats
 #else
 	#define M_ADD linalg::mat_element_wise_add
 	#define M_SUB linalg::mat_element_wise_sub
@@ -23,6 +24,7 @@
 	#define M_MATMUL_ADD linalg::mat_matrix_mul_add
 
 	#define M_SET_ALL linalg::mat_set_all
+	#define M_SELECT linalg::mat_select_mats
 #endif
 
 #endif

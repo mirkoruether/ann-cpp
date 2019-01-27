@@ -23,6 +23,8 @@ if (TRY_ENABLE_CUDA)
 		include_directories("${CMAKE_CUDA_COMPILER}/../../include")
 
 		add_definitions(-DLINALG_CUDA_SUPPORT)
+		#add_definitions(-DLINALG_AUTOSYNC)
+		#add_definitions(-DLINALG_MONITOR_COPY)
 		add_definitions(-DANNLIB_USE_CUDA)
 
         message("-- >> CUDA enabled <<")

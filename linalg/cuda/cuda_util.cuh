@@ -128,9 +128,8 @@ namespace linalg { namespace cuda
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
 
-#ifdef _DEBUG
+#ifdef LINALG_AUTOSYNC
 		cuda_sync();
-		target.assert_only_real();
 #endif
 	}
 
@@ -145,9 +144,8 @@ namespace linalg { namespace cuda
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
 
-#ifdef _DEBUG
+#ifdef LINALG_AUTOSYNC
 		cuda_sync();
-		target.assert_only_real();
 #endif
 	}
 
@@ -160,9 +158,8 @@ namespace linalg { namespace cuda
 
 		kernel_launch(std::move(size), std::move(threads_per_block), std::move(blocks_per_grid));
 
-#ifdef _DEBUG
+#ifdef LINALG_AUTOSYNC
 		cuda_sync();
-		target.assert_only_real();
 #endif
 	}
 }}

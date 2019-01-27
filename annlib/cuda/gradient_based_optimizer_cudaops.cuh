@@ -13,6 +13,11 @@ namespace annlib { namespace cuda
 	void cuda_ordinary_sgd_update(float learning_rate,
 	                              const mat_arr& gradient_noarr,
 	                              mat_arr* target_noarr);
+
+	void cuda_adam_update(float alpha_t, float beta1, float beta2,
+	                      const mat_arr& gradient_noarr,
+	                      mat_arr* buffer,
+	                      mat_arr* target_noarr);
 }}
 
 #endif

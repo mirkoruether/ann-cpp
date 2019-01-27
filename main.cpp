@@ -632,7 +632,7 @@ int main()
 	trainer.init(sizes);
 
 	time_execution("Train five epochs", [&]() {
-		trainer.train_epochs(mnist_training, 1, true);
+		trainer.train_epochs(mnist_training, 5, true);
 	});
 
 	neural_network net = trainer.to_neural_network(true);

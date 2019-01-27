@@ -318,12 +318,28 @@ namespace linalg { namespace cuda
 		}
 	}
 
-	void cuda_set_all(float a, mat_arr* C)
+	mat_arr cuda_set_all(float a, mat_arr* C)
 	{
 		prepare_launch_linear(*C, [&](unsigned size, unsigned threads, unsigned blocks)
 		{
 			_set_all_kernel
 				<< <blocks, threads >> >(a, C->dev_start(), size);
+		});
+		return *C;
+	}
+
+	mat_arr cuda_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C)
+	{
+		return create_c(C, static_cast<unsigned>(indices.size()), A.rows, A.cols, [=](mat_arr* C_nonnull)
+		{
+			const float* a_start = A.dev_start();
+			float* c_pos = C->dev_start();
+			const unsigned mat_size = A.rows * A.cols;
+			for (unsigned in : indices)
+			{
+				my_cuda_memcp(c_pos, a_start + in * mat_size, mat_size, cudaMemcpyDeviceToDevice);
+				c_pos += mat_size;
+			}
 		});
 	}
 }}

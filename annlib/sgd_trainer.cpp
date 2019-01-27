@@ -280,7 +280,7 @@ void sgd_trainer::do_adjustments(training_buffer* buffer)
 #pragma omp parallel for
 	for (int i = 0; i < iterations; i++)
 	{
-		unsigned layer_no = i / 2;
+		const unsigned layer_no = i / 2;
 		if (i % 2 == 0)
 		{
 			adjust_weights(layer_no, buffer);
@@ -308,6 +308,6 @@ void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_r
 		batch_indices[i] = distribution(rng);
 	}
 
-	mat_select_mats(data.input, batch_indices, input_rv);
-	mat_select_mats(data.solution, batch_indices, solution_rv);
+	M_SELECT(data.input, batch_indices, input_rv);
+	M_SELECT(data.solution, batch_indices, solution_rv);
 }
