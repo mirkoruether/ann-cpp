@@ -48,6 +48,20 @@ namespace annlib
 
 		mat_arr apply_derivative(const mat_arr& in, mat_arr* target) const override;
 	};
+
+	class relu_activation_function : public activation_function
+	{
+	public:
+		relu_activation_function() = default;
+
+		float apply(float d) const override;
+
+		mat_arr apply(const mat_arr& in, mat_arr* target) const override;
+
+		float apply_derivative(float d) const override;
+
+		mat_arr apply_derivative(const mat_arr& in, mat_arr* target) const override;
+	};
 }
 
 #endif

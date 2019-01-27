@@ -24,6 +24,8 @@ public:
 	std::vector<mat_arr> build_buffer(unsigned count) const;
 
 	mat_arr feed_forward(const mat_arr& input, mat_arr* result = nullptr, std::vector<mat_arr>* buffer = nullptr) const;
+
+	bool only_real() const;
 };
 
 #endif

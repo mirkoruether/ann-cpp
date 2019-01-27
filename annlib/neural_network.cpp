@@ -69,3 +69,23 @@ mat_arr neural_network::feed_forward(const mat_arr& input, mat_arr* result, std:
 		return *result;
 	}
 }
+
+bool neural_network::only_real() const
+{
+	for (const auto& w : weights_noarr)
+	{
+		if (!w.only_real())
+		{
+			return false;
+		}
+	}
+
+	for (const auto& b : biases_noarr_rv)
+	{
+		if (!b.only_real())
+		{
+			return false;
+		}
+	}
+	return true;
+}

@@ -4,6 +4,7 @@ if(ANN_CUDA_ACTIVE)
 endif(ANN_CUDA_ACTIVE)
 
 add_library(annlib 
+_calc_macros.h
 activation_function.h       activation_function.cpp
 cost_function.h             cost_function.cpp
 gradient_based_optimizer.h  gradient_based_optimizer.cpp
@@ -22,6 +23,7 @@ endif(ANN_CUDA_ACTIVE)
 
 install(TARGETS annlib DESTINATION lib)
 install(FILES 
+_calc_macros.h
 activation_function.h     
 cost_function.h            
 gradient_based_optimizer.h  

@@ -33,3 +33,29 @@ void annlib::cuda::cuda_sigmoid_apply_derivative(const mat_arr& in, mat_arr* tar
 {
 	cuda_element_wise_operation(in, target, sigmoid_derivative());
 }
+
+struct relu
+{
+	__device__ float operator()(const float f) const
+	{
+		return std::max(0.0f, f);
+	}
+};
+
+void annlib::cuda::cuda_relu_apply(const mat_arr& in, mat_arr* target)
+{
+	cuda_element_wise_operation(in, target, relu());
+}
+
+struct relu_derivative
+{
+	__device__ float operator()(const float f) const
+	{
+		return f > 0 ? 1.0f : 0.0f;
+	}
+};
+
+void annlib::cuda::cuda_relu_apply_derivative(const mat_arr& in, mat_arr* target)
+{
+	cuda_element_wise_operation(in, target, relu_derivative());
+}

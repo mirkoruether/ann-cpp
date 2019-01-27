@@ -79,4 +79,24 @@ namespace annlib
 		return activation_function::apply_derivative(in, target);
 #endif
 	}
+
+	float relu_activation_function::apply(float d) const
+	{
+		return std::max(0.0f, d);
+	}
+
+	mat_arr relu_activation_function::apply(const mat_arr& in, mat_arr* target) const
+	{
+		return activation_function::apply(in, target);
+	}
+
+	float relu_activation_function::apply_derivative(float d) const
+	{
+		return d > 0 ? 1.0f : 0.0f;
+	}
+
+	mat_arr relu_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	{
+		return activation_function::apply_derivative(in, target);
+	}
 }

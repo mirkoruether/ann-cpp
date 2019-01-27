@@ -52,7 +52,7 @@ namespace annlib
 
 		void calculate_error(const mat_arr& net_output_rv,
 		                     const mat_arr& solution_rv,
-		                     const std::vector<mat_arr>& weighted_inputs_rv,
+		                     const std::vector<mat_arr>& activation_dfs_rv,
 		                     std::vector<mat_arr>* errors_rv) const;
 
 		void calculate_gradient_weight(const mat_arr& previous_activation_rv,
