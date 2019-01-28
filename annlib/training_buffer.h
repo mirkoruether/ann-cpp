@@ -40,27 +40,26 @@ namespace annlib
 	private:
 		std::map<std::string, std::unique_ptr<mat_arr>> m;
 
-	protected:
-		void add_custom_count(const std::string& key, std::array<unsigned, 3> dim);
-		void add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols);
-		
 	public:
 		const unsigned mini_batch_size;
 		const mat_arr* in;
 		const mat_arr* out;
-		const mat_arr* error;
+		const mat_arr* backprop_term;
 
-		layer_buffer(unsigned mini_batch_size, const mat_arr* in, const mat_arr* out, const mat_arr* error)
+		layer_buffer(unsigned mini_batch_size, const mat_arr* in, const mat_arr* out, const mat_arr* backprop_term)
 			: mini_batch_size(mini_batch_size),
 			  in(in),
 			  out(out),
-			  error(error)
+			  backprop_term(backprop_term)
 		{
 		}
 
+		void add_custom_count(const std::string& key, std::array<unsigned, 3> dim);
+		void add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols);
+
 		void add_mini_batch_size(const std::string& key, unsigned rows, unsigned cols);
 		void add_single(const std::string& key, unsigned rows, unsigned cols);
-		
+
 		void remove(const std::string& key);
 		mat_arr get_val(const std::string& key);
 		mat_arr* get_ptr(const std::string& key);

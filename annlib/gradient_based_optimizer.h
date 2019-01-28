@@ -2,44 +2,39 @@
 #define GRADIENT_BASED_OPTIMIZER_H
 
 #include "mat_arr.h"
+#include "training_buffer.h"
 using namespace linalg;
 
 namespace annlib
 {
-	enum adjust_target
-	{
-		weights,
-		biases
-	};
-
 	class gradient_based_optimizer
 	{
 	public:
 		virtual ~gradient_based_optimizer() = default;
 
-		virtual void init(const std::vector<unsigned>& sizes);
+		virtual void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned rows, unsigned cols) = 0;
+
+		virtual void start();
 
 		virtual void next_mini_batch();
 
 		virtual void adjust(const mat_arr& gradient_noarr,
 		                    mat_arr* target_noarr,
-		                    const adjust_target& at,
-		                    unsigned layer_no) = 0;
+		                    std::string prefix,
+		                    layer_buffer* buf) = 0;
 	};
 
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
 	{
 	public:
 		const unsigned buffer_count;
-		std::vector<mat_arr> weights_buffers;
-		std::vector<mat_arr> biases_buffers;
 
-		void init(const std::vector<unsigned>& sizes) override;
+		void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned rows, unsigned cols) override;
 
 		void adjust(const mat_arr& gradient_noarr,
 		            mat_arr* target_noarr,
-		            const adjust_target& at,
-		            unsigned layer_no) override;
+		            std::string prefix,
+		            layer_buffer* buf) override;
 	protected:
 		explicit abstract_gradient_based_optimizer(unsigned buffer_count);
 
@@ -88,7 +83,7 @@ namespace annlib
 		float beta2_pow_t;
 		float alpha_t;
 
-		void init(const std::vector<unsigned>& sizes) override;
+		void start() override;
 
 		void next_mini_batch() override;
 

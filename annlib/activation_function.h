@@ -15,11 +15,11 @@ namespace annlib
 
 		virtual float apply(float d) const = 0;
 
-		virtual mat_arr apply(const mat_arr& in, mat_arr* target) const;
+		virtual void apply(const mat_arr& in, mat_arr* target) const;
 
 		virtual float apply_derivative(float d) const = 0;
 
-		virtual mat_arr apply_derivative(const mat_arr& in, mat_arr* target) const;
+		virtual void apply_derivative(const mat_arr& in, mat_arr* target) const;
 	};
 
 	class abstract_activation_function : public activation_function
@@ -42,11 +42,11 @@ namespace annlib
 
 		float apply(float d) const override;
 
-		mat_arr apply(const mat_arr& in, mat_arr* target) const override;
+		void apply(const mat_arr& in, mat_arr* target) const override;
 
 		float apply_derivative(float d) const override;
 
-		mat_arr apply_derivative(const mat_arr& in, mat_arr* target) const override;
+		void apply_derivative(const mat_arr& in, mat_arr* target) const override;
 	};
 
 	class relu_activation_function : public activation_function
@@ -56,11 +56,11 @@ namespace annlib
 
 		float apply(float d) const override;
 
-		mat_arr apply(const mat_arr& in, mat_arr* target) const override;
+		void apply(const mat_arr& in, mat_arr* target) const override;
 
 		float apply_derivative(float d) const override;
 
-		mat_arr apply_derivative(const mat_arr& in, mat_arr* target) const override;
+		void apply_derivative(const mat_arr& in, mat_arr* target) const override;
 	};
 }
 

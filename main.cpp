@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iostream>
 #include <thread>
+#include <string>
 
 #ifdef _OPENMP
 #include <omp.h>

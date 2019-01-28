@@ -12,22 +12,22 @@ using namespace annlib;
 
 namespace annlib
 {
-	mat_arr activation_function::apply(const mat_arr& in, mat_arr* target) const
+	void activation_function::apply(const mat_arr& in, mat_arr* target) const
 	{
-		return mat_element_wise_operation(in, target,
-		                                  [&](float f)
-		                                  {
-			                                  return apply(f);
-		                                  });
+		mat_element_wise_operation(in, target,
+		                           [&](float f)
+		                           {
+			                           return apply(f);
+		                           });
 	}
 
-	mat_arr activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	void activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
 	{
-		return mat_element_wise_operation(in, target,
-		                                  [&](float f)
-		                                  {
-			                                  return apply_derivative(f);
-		                                  });
+		mat_element_wise_operation(in, target,
+		                           [&](float f)
+		                           {
+			                           return apply_derivative(f);
+		                           });
 	}
 
 	abstract_activation_function::abstract_activation_function(std::function<float(float)> f,
@@ -51,13 +51,12 @@ namespace annlib
 		return 1.0f / (1.0f + std::exp(-d));
 	}
 
-	mat_arr logistic_activation_function::apply(const mat_arr& in, mat_arr* target) const
+	void logistic_activation_function::apply(const mat_arr& in, mat_arr* target) const
 	{
 #ifdef ANNLIB_USE_CUDA
 		cuda::cuda_sigmoid_apply(in, target);
-		return *target;
 #else
-		return activation_function::apply(in, target);
+		activation_function::apply(in, target);
 #endif
 	}
 
@@ -70,13 +69,12 @@ namespace annlib
 		return std::exp(d) / (v * v);
 	}
 
-	mat_arr logistic_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	void logistic_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
 	{
 #ifdef ANNLIB_USE_CUDA
 		cuda::cuda_sigmoid_apply_derivative(in, target);
-		return *target;
 #else
-		return activation_function::apply_derivative(in, target);
+		activation_function::apply_derivative(in, target);
 #endif
 	}
 
@@ -85,9 +83,9 @@ namespace annlib
 		return std::max(0.0f, d);
 	}
 
-	mat_arr relu_activation_function::apply(const mat_arr& in, mat_arr* target) const
+	void relu_activation_function::apply(const mat_arr& in, mat_arr* target) const
 	{
-		return activation_function::apply(in, target);
+		activation_function::apply(in, target);
 	}
 
 	float relu_activation_function::apply_derivative(float d) const
@@ -95,8 +93,8 @@ namespace annlib
 		return d > 0 ? 1.0f : 0.0f;
 	}
 
-	mat_arr relu_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	void relu_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
 	{
-		return activation_function::apply_derivative(in, target);
+		activation_function::apply_derivative(in, target);
 	}
 }

@@ -9,9 +9,9 @@
 #include "training_data.h"
 #include "gradient_based_optimizer.h"
 #include <random>
-#include "net_init.h"
 #include "neural_network.h"
 #include "training_buffer.h"
+#include "network_layer.h"
 
 using namespace linalg;
 
@@ -25,46 +25,20 @@ namespace annlib
 		sgd_trainer();
 
 		unsigned mini_batch_size;
-		std::shared_ptr<activation_function> activation_f;
 		std::shared_ptr<cost_function> cost_f;
-		std::shared_ptr<weight_norm_penalty> weight_norm_penalty;
 		std::shared_ptr<gradient_based_optimizer> optimizer;
-		std::shared_ptr<net_init> net_init;
-
-		std::vector<unsigned> sizes() const;
 
 		unsigned get_layer_count() const;
 
-		void init(std::vector<unsigned>& sizes);
+		sgd_trainer add_layer(network_layer* layer);
+
+		void init();
 
 		void train_epochs(const training_data& training_data, double epoch_count, bool print = false);
 
 		neural_network to_neural_network(bool copy_parameters = false);
 
 	private:
-		std::vector<mat_arr> weights_noarr;
-		std::vector<mat_arr> biases_noarr_rv;
-
-		void feed_forward_detailed(const mat_arr& input,
-		                           std::vector<mat_arr>* weighted_inputs_rv,
-		                           std::vector<mat_arr>* activations_rv,
-		                           std::vector<mat_arr>* activations_dfs_rv) const;
-
-		void calculate_error(const mat_arr& net_output_rv,
-		                     const mat_arr& solution_rv,
-		                     const std::vector<mat_arr>& activation_dfs_rv,
-		                     std::vector<mat_arr>* errors_rv) const;
-
-		void calculate_gradient_weight(const mat_arr& previous_activation_rv,
-		                               const mat_arr& error_rv,
-		                               mat_arr* gradient_weight_noarr) const;
-
-		void calculate_gradient_bias(const mat_arr& error_rv,
-		                             mat_arr* gradient_bias_noarr_rv) const;
-
-		void adjust_weights(unsigned layer_no, training_buffer* buffer);
-		void adjust_biases(unsigned layer_no, training_buffer* buffer);
-
 		void do_feed_forward_and_backprop(training_buffer* buffer) const;
 		void do_adjustments(training_buffer* buffer);
 	};
