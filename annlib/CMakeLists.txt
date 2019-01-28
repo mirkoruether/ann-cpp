@@ -10,6 +10,7 @@ cost_function.h             cost_function.cpp
 gradient_based_optimizer.h  gradient_based_optimizer.cpp
 net_init.h                  net_init.cpp
 neural_network.h			neural_network.cpp
+network_layer.h				network_layer.cpp
 sgd_trainer.h               sgd_trainer.cpp
 training_buffer.h			training_buffer.cpp
 training_data.h             training_data.cpp

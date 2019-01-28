@@ -72,6 +72,42 @@ unsigned training_buffer::part_count() const
 	return static_cast<unsigned>(partial_buffers.size());
 }
 
+void layer_buffer::add_mini_batch_size(const std::string& key, unsigned rows, unsigned cols)
+{
+	add_custom_count(key, mini_batch_size, rows, cols);
+}
+
+void layer_buffer::add_single(const std::string& key, unsigned rows, unsigned cols)
+{
+	add_custom_count(key, 1, rows, cols);
+}
+
+void layer_buffer::add_custom_count(const std::string& key, std::array<unsigned, 3> dim)
+{
+	add_custom_count(key, dim[0], dim[1], dim[2]);
+}
+
+void layer_buffer::add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols)
+{
+	std::unique_ptr<mat_arr> ptr = std::make_unique<mat_arr>(count, rows, cols);
+	m[key] = std::move(ptr);
+}
+
+void layer_buffer::remove(const std::string& key)
+{
+	m.erase(key);
+}
+
+mat_arr layer_buffer::get_val(const std::string& key)
+{
+	return *m[key];
+}
+
+mat_arr* layer_buffer::get_ptr(const std::string& key)
+{
+	return m[key].get();
+}
+
 partial_training_buffer::partial_training_buffer(training_buffer* buf,
                                                  unsigned start, unsigned count)
 	: input_rv(buf->input_rv.get_mats(start, count)),
