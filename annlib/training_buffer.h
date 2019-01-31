@@ -2,43 +2,48 @@
 #define TRAINING_BUFFER_H
 
 #include "mat_arr.h"
+#include <vector>
 #include <map>
 
 using namespace linalg;
 
 namespace annlib
 {
-	class partial_training_buffer;
+	class layer_buffer;
 
 	class training_buffer
 	{
+	private:
+		std::vector<layer_buffer> lbufs;
+		std::vector<mat_arr> activations;
+		std::vector<mat_arr> backprop_terms;
+		mat_arr solution;
+
 	public:
-		training_buffer(std::vector<unsigned> sizes, unsigned mini_batch_size, unsigned part_count);
+		mat_arr* in(unsigned layer_no);
+		mat_arr* out(unsigned layer_no);
+		mat_arr* bpterm(unsigned layer_no);
+		mat_arr* sol();
+		layer_buffer* lbuf(unsigned layer_no);
 
-		mat_arr input_rv;
-		mat_arr solution_rv;
+		training_buffer(unsigned mini_batch_size, std::vector<unsigned> sizes);
+	};
 
-		std::vector<mat_arr> weighted_inputs_rv;
-		std::vector<mat_arr> activations_rv;
-		std::vector<mat_arr> activation_dfs_rv;
-		std::vector<mat_arr> errors_rv;
+	struct buf
+	{
+	public:
+		const bool split;
+		mat_arr mat;
 
-		std::vector<mat_arr> gradient_biases_rv_noarr;
-		std::vector<mat_arr> gradient_weights_noarr;
-
-		std::vector<partial_training_buffer> partial_buffers;
-
-		std::vector<mat_arr*> all();
-		void clear();
-
-		unsigned layer_count() const;
-		unsigned part_count() const;
+		buf(bool split, unsigned count, unsigned rows, unsigned cols);
 	};
 
 	class layer_buffer
 	{
 	private:
-		std::map<std::string, std::unique_ptr<mat_arr>> m;
+		std::map<std::string, std::shared_ptr<buf>> m;
+
+		void add(const std::string& key, unsigned count, unsigned rows, unsigned cols, bool split);
 
 	public:
 		const unsigned mini_batch_size;
@@ -46,13 +51,7 @@ namespace annlib
 		const mat_arr* out;
 		const mat_arr* backprop_term;
 
-		layer_buffer(unsigned mini_batch_size, const mat_arr* in, const mat_arr* out, const mat_arr* backprop_term)
-			: mini_batch_size(mini_batch_size),
-			  in(in),
-			  out(out),
-			  backprop_term(backprop_term)
-		{
-		}
+		layer_buffer(unsigned mini_batch_size, const mat_arr* in, const mat_arr* out, const mat_arr* backprop_term);
 
 		void add_custom_count(const std::string& key, std::array<unsigned, 3> dim);
 		void add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols);
@@ -63,21 +62,6 @@ namespace annlib
 		void remove(const std::string& key);
 		mat_arr get_val(const std::string& key);
 		mat_arr* get_ptr(const std::string& key);
-	};
-
-	class partial_training_buffer
-	{
-	public:
-		partial_training_buffer(training_buffer* buf,
-		                        unsigned start, unsigned count);
-
-		mat_arr input_rv;
-		mat_arr solution_rv;
-
-		std::vector<mat_arr> weighted_inputs_rv;
-		std::vector<mat_arr> activations_rv;
-		std::vector<mat_arr> activation_dfs_rv;
-		std::vector<mat_arr> errors_rv;
 	};
 }
 #endif

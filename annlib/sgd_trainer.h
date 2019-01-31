@@ -9,7 +9,6 @@
 #include "training_data.h"
 #include "gradient_based_optimizer.h"
 #include <random>
-#include "neural_network.h"
 #include "training_buffer.h"
 #include "network_layer.h"
 
@@ -26,21 +25,29 @@ namespace annlib
 
 		unsigned mini_batch_size;
 		std::shared_ptr<cost_function> cost_f;
-		std::shared_ptr<gradient_based_optimizer> optimizer;
 
 		unsigned get_layer_count() const;
 
-		sgd_trainer add_layer(network_layer* layer);
+		std::vector<unsigned> get_sizes() const;
+
+		unsigned get_input_size() const;
+
+		unsigned get_output_size() const;
+
+		void add_layer(std::shared_ptr<network_layer> layer);
 
 		void init();
 
-		void train_epochs(const training_data& training_data, double epoch_count, bool print = false);
+		void train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
+		                  double epoch_count, bool print = false);
 
-		neural_network to_neural_network(bool copy_parameters = false);
+		mat_arr feed_forward(const mat_arr& in) const;
 
 	private:
+		std::vector<std::shared_ptr<network_layer>> layers;
+
 		void do_feed_forward_and_backprop(training_buffer* buffer) const;
-		void do_adjustments(training_buffer* buffer);
+		void do_adjustments(gradient_based_optimizer* opt, training_buffer* buffer);
 	};
 
 	class mini_batch_builder

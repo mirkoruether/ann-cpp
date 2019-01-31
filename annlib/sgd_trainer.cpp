@@ -1,6 +1,7 @@
 #include "sgd_trainer.h"
 #include "mat_arr.h"
 #include "mat_arr_math.h"
+#include <iostream>
 #include <future>
 #include <random>
 
@@ -16,61 +17,80 @@ using namespace annlib;
 
 sgd_trainer::sgd_trainer()
 	: mini_batch_size(8),
-	  activation_f(std::make_shared<logistic_activation_function>()),
-	  cost_f(std::make_shared<cross_entropy_costs>()),
-	  weight_norm_penalty(nullptr),
-	  optimizer(std::make_shared<ordinary_sgd>(1.0f)),
-	  net_init(std::make_shared<normalized_gaussian_net_init>())
+	  cost_f(std::make_shared<quadratic_costs>())
 {
-}
-
-std::vector<unsigned> sgd_trainer::sizes() const
-{
-	const unsigned layer_count = get_layer_count();
-	std::vector<unsigned> sizes(layer_count + 1);
-	sizes[0] = weights_noarr[0].rows;
-	for (unsigned i = 0; i < layer_count; i++)
-	{
-		sizes[i + 1] = biases_noarr_rv[i].cols;
-	}
-	return sizes;
 }
 
 unsigned sgd_trainer::get_layer_count() const
 {
-	return static_cast<unsigned>(weights_noarr.size());
+	return static_cast<unsigned>(layers.size());
 }
 
-void sgd_trainer::init(std::vector<unsigned>& sizes)
+std::vector<unsigned> sgd_trainer::get_sizes() const
 {
-	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
-	weights_noarr.clear();
-	biases_noarr_rv.clear();
-
-	for (unsigned i = 0; i < layer_count; i++)
+	std::vector<unsigned> result;
+	result.emplace_back(get_input_size());
+	for (const auto& layer : layers)
 	{
-		weights_noarr.emplace_back(1, sizes[i], sizes[i + 1]);
-		biases_noarr_rv.emplace_back(1, 1, sizes[i + 1]);
+		result.emplace_back(layer->output_size);
+	}
+	return result;
+}
 
-		net_init->init_weights(&weights_noarr[i]);
-		net_init->init_biases(&biases_noarr_rv[i]);
+unsigned sgd_trainer::get_input_size() const
+{
+	if (layers.empty())
+	{
+		throw std::runtime_error("No layers");
+	}
+	return layers.front()->input_size;
+}
+
+unsigned sgd_trainer::get_output_size() const
+{
+	if (layers.empty())
+	{
+		throw std::runtime_error("No layers");
+	}
+	return layers.back()->output_size;
+}
+
+void sgd_trainer::add_layer(std::shared_ptr<network_layer> layer)
+{
+	if (layer == nullptr)
+	{
+		throw std::runtime_error("null");
 	}
 
-	optimizer->init(sizes);
+	if (!layers.empty() && layer->input_size != get_output_size())
+	{
+		throw std::runtime_error("sizes do not fit");
+	}
+
+	layers.emplace_back(layer);
 }
 
-void sgd_trainer::train_epochs(const training_data& training_data, const double epoch_count, bool print)
+void sgd_trainer::init()
+{
+	std::mt19937 rng;
+	rng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
+	for (const auto& layer_ptr : layers)
+	{
+		layer_ptr->init(&rng);
+	}
+}
+
+void sgd_trainer::train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
+                               const double epoch_count, bool print)
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
-#if _OPENMP
-	const unsigned part_count = std::thread::hardware_concurrency();
-#else
-	const unsigned part_count = 1;
-#endif
+	training_buffer buf(mini_batch_size, get_sizes());
+	for (unsigned i = 0; i < layers.size(); i++)
+	{
+		layers[i]->prepare_buffer(buf.lbuf(i), opt);
+	}
 
-
-	training_buffer buffer(sizes(), mini_batch_size, part_count);
 	mini_batch_builder mb_builder(training_data);
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
@@ -81,11 +101,11 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 				<< " [" << unsigned(100.0 * (batch_no + 1) / batch_count) << "%]";
 		}
 
-		mb_builder.build_mini_batch(&buffer.input_rv, &buffer.solution_rv);
+		mb_builder.build_mini_batch(buf.in(0), buf.sol());
 
-		do_feed_forward_and_backprop(&buffer);
+		do_feed_forward_and_backprop(&buf);
 
-		do_adjustments(&buffer);
+		do_adjustments(opt, &buf);
 	}
 
 	if (print)
@@ -94,104 +114,50 @@ void sgd_trainer::train_epochs(const training_data& training_data, const double 
 	}
 }
 
-neural_network sgd_trainer::to_neural_network(bool copy_parameters)
+mat_arr sgd_trainer::feed_forward(const mat_arr& in) const
 {
-	if (!copy_parameters)
+	std::vector<mat_arr> buffers;
+	for (unsigned i = 0; i < get_layer_count(); i++)
 	{
-		return neural_network(weights_noarr, biases_noarr_rv,
-		                      [=](float f)
-		                      {
-			                      return activation_f->apply(f);
-		                      });
+		buffers.emplace_back(in.count, 1, layers[i]->output_size);
 	}
 
-	std::vector<mat_arr> weights_copy_noarr;
-	std::vector<mat_arr> biases_copy_noarr_rv;
-
-	for (unsigned i = 0; i < biases_noarr_rv.size(); i++)
+	const mat_arr* la_in = &in;
+	for (unsigned i = 0; i < get_layer_count(); i++)
 	{
-		weights_copy_noarr.emplace_back(weights_noarr[i].duplicate());
-		biases_copy_noarr_rv.emplace_back(biases_noarr_rv[i].duplicate());
+		mat_arr* la_out = &buffers[i];
+		layers[i]->feed_forward(*la_in, la_out);
+		la_in = la_out;
 	}
-	return neural_network(move(weights_copy_noarr), std::move(biases_copy_noarr_rv),
-	                      [=](float f)
-	                      {
-		                      return activation_f->apply(f);
-	                      });
-}
-
-void sgd_trainer::feed_forward_detailed(const mat_arr& input,
-                                        std::vector<mat_arr>* weighted_inputs_rv,
-                                        std::vector<mat_arr>* activations_rv,
-                                        std::vector<mat_arr>* activations_dfs_rv) const
-{
-	const unsigned layer_count = get_layer_count();
-
-	const mat_arr* layerInput = &input;
-	for (unsigned layerNo = 0; layerNo < layer_count; layerNo++)
-	{
-#ifdef ANNLIB_USE_CUDA
-		annlib::cuda::cuda_weight_input(*layerInput,
-		                                weights_noarr[layerNo],
-		                                biases_noarr_rv[layerNo],
-		                                &weighted_inputs_rv->operator[](layerNo));
-#else
-		mat_matrix_mul(*layerInput,
-		               weights_noarr[layerNo],
-		               &weighted_inputs_rv->operator[](layerNo));
-
-		mat_element_wise_add(weighted_inputs_rv->operator[](layerNo),
-		                     biases_noarr_rv[layerNo],
-		                     &weighted_inputs_rv->operator[](layerNo));
-#endif
-		activation_f->apply(weighted_inputs_rv->operator[](layerNo),
-		                    &activations_rv->operator[](layerNo));
-
-		activation_f->apply_derivative(weighted_inputs_rv->operator[](layerNo),
-		                               &activations_dfs_rv->operator[](layerNo));
-
-		layerInput = &activations_rv->operator[](layerNo);
-	}
+	return *la_in;
 }
 
 void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 {
-	const int part_count = static_cast<int>(buffer->part_count());
-
-#pragma omp parallel for
-	for (int part_no = 0; part_no < part_count; part_no++)
+	const auto layer_count = get_layer_count();
+	for (unsigned i = 0; i < layer_count; i++)
 	{
-		partial_training_buffer* part_buf = &buffer->partial_buffers[part_no];
-		feed_forward_detailed(part_buf->input_rv,
-		                      &part_buf->weighted_inputs_rv,
-		                      &part_buf->activations_rv,
-		                      &part_buf->activation_dfs_rv);
-
-		calculate_error(part_buf->activations_rv.back(),
-		                part_buf->solution_rv,
-		                part_buf->activation_dfs_rv,
-		                &part_buf->errors_rv);
+		layers[i]->feed_forward_detailed(*buffer->in(i), buffer->out(i), buffer->lbuf(i));
 	}
+
+	const unsigned last_layer = layer_count - 1;
+	cost_f->calculate_gradient(*buffer->out(last_layer), *buffer->sol(), buffer->bpterm(last_layer));
+
+	for (unsigned i = last_layer; i >= 1; i--)
+	{
+		layers[i]->prepare_optimization(*buffer->bpterm(i), buffer->lbuf(i));
+		layers[i]->backprop(buffer->bpterm(i - 1), buffer->lbuf(i));
+	}
+	layers[0]->prepare_optimization(*buffer->bpterm(0), buffer->lbuf(0));
 }
 
-void sgd_trainer::do_adjustments(training_buffer* buffer)
+void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer* buffer)
 {
-	optimizer->next_mini_batch();
+	opt->next_mini_batch();
 
-	const int iterations = 2 * static_cast<int>(get_layer_count());
-
-#pragma omp parallel for
-	for (int i = 0; i < iterations; i++)
+	for (unsigned i = 0; i < get_layer_count(); i++)
 	{
-		const unsigned layer_no = i / 2;
-		if (i % 2 == 0)
-		{
-			adjust_weights(layer_no, buffer);
-		}
-		else
-		{
-			adjust_biases(layer_no, buffer);
-		}
+		layers[i]->optimize(opt, buffer->lbuf(i));
 	}
 }
 

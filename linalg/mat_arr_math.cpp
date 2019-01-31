@@ -591,7 +591,7 @@ namespace linalg
 		return *C;
 	}
 
-	mat_arr mat_random_gaussian(float mean, float sigma, std::random_device* rnd, mat_arr* C)
+	mat_arr mat_random_gaussian(float mean, float sigma, std::mt19937* rnd, mat_arr* C)
 	{
 		std::normal_distribution<float> distr(mean, sigma);
 		return mat_element_wise_operation(*C, C, [&](float a)

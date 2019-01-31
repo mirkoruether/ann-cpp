@@ -113,9 +113,9 @@ struct test_result
 	double accuracy;
 };
 
-test_result test_network(const neural_network& net, const cost_function& cf, const training_data& data)
+test_result test_network(const sgd_trainer& trainer, const training_data& data)
 {
-	const mat_arr net_output = net.feed_forward(data.input);
+	const mat_arr net_output = trainer.feed_forward(data.input);
 	double costs = 0.0;
 	unsigned correct = 0;
 	for (unsigned i = 0; i < net_output.count; i++)
@@ -123,7 +123,7 @@ test_result test_network(const neural_network& net, const cost_function& cf, con
 		const mat_arr& output = net_output.get_mat(i);
 		const mat_arr& solution = data.solution.get_mat(i);
 
-		costs += cf.calculate_costs(output, solution);
+		costs += trainer.cost_f->calculate_costs(output, solution);
 
 		if (get_max_index(output) == get_max_index(solution))
 		{
@@ -148,26 +148,26 @@ struct cycle_result
 };
 
 cycle_result train_and_test(double epochs_per_cycle, sgd_trainer* trainer,
-                            const training_data& train_data, const training_data& test_data)
+                            gradient_based_optimizer* opt,
+                            const training_data& train_data,
+                            const training_data& test_data)
 {
-	trainer->train_epochs(train_data, epochs_per_cycle, false);
+	trainer->train_epochs(train_data, opt, epochs_per_cycle, false);
 
-	neural_network net = trainer->to_neural_network(false);
-	test_result train_result = test_network(net, *trainer->cost_f, train_data);
-	test_result test_result = test_network(net, *trainer->cost_f, test_data);
+	const test_result train_result = test_network(*trainer, train_data);
+	const test_result test_result = test_network(*trainer, test_data);
 
 	return cycle_result{
 		train_result.costs,
 		train_result.accuracy,
 		test_result.costs,
 		test_result.accuracy,
-		!net.only_real()
 	};
 }
 
 int main(int argc, char** argv)
 {
-	double epoch_count = argc <= 1 ? 5 : std::stod(std::string(argv[1]));
+	double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
 
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
@@ -192,28 +192,27 @@ int main(int argc, char** argv)
 
 	sgd_trainer trainer;
 	trainer.mini_batch_size = 8;
-	trainer.activation_f = std::make_shared<logistic_activation_function>();
-	trainer.cost_f = std::make_shared<cross_entropy_costs>();
-	trainer.weight_norm_penalty = std::make_shared<L2_regularization>(
+	auto wnp = std::make_shared<L2_regularization>(
 		static_cast<float>(3.0 / mnist_training.entry_count()));
-	//trainer.weight_norm_penalty = nullptr;
-	//trainer.optimizer = std::make_shared<momentum_sgd>(.5f, 0.0f);
-	trainer.optimizer = std::make_shared<adam>();
-	trainer.net_init = std::make_shared<normalized_gaussian_net_init>();
 
-	std::vector<unsigned> sizes{{784, 100, 10}};
-	trainer.init(sizes);
+	const auto act_f = std::make_shared<logistic_activation_function>();
+	const unsigned hidden_layer_size = 100;
+	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size, act_f);
+	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10, act_f);
+
+	trainer.add_layer(layer1);
+	trainer.add_layer(layer2);
+
+	auto opt = ordinary_sgd(.5f);
 
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{
-		trainer.train_epochs(mnist_training, epoch_count, true);
+		trainer.train_epochs(mnist_training, &opt, epoch_count, true);
 	});
-
-	neural_network net = trainer.to_neural_network(true);
 
 	const auto accuracy = time_execution_func<double>("Test", [&]()
 	{
-		return test_network(net, *trainer.cost_f, mnist_test).accuracy;
+		return test_network(trainer, mnist_test).accuracy;
 	});
 
 	std::cout << "Test accuracy: " << accuracy << "%" << std::endl;

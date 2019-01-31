@@ -8,7 +8,6 @@ _calc_macros.h
 activation_function.h       activation_function.cpp
 cost_function.h             cost_function.cpp
 gradient_based_optimizer.h  gradient_based_optimizer.cpp
-neural_network.h			neural_network.cpp
 network_layer.h				network_layer.cpp
 sgd_trainer.h               sgd_trainer.cpp
 training_buffer.h			training_buffer.cpp
@@ -28,7 +27,6 @@ activation_function.h
 cost_function.h            
 gradient_based_optimizer.h  
 net_init.h
-neural_network.h
 sgd_trainer.h       
 training_buffer.h
 training_data.h

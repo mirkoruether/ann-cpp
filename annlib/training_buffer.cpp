@@ -3,83 +3,64 @@
 
 using namespace annlib;
 
-training_buffer::training_buffer(std::vector<unsigned> sizes, unsigned mini_batch_size, unsigned part_count)
-	: input_rv(mini_batch_size, 1, sizes.front()),
-	  solution_rv(mini_batch_size, 1, sizes.back())
+mat_arr* training_buffer::in(unsigned layer_no)
 {
-	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
-	for (unsigned i = 0; i < layer_count; i++)
-	{
-		const unsigned layer_size = sizes[i + 1];
-		weighted_inputs_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
-		activations_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
-		activation_dfs_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
-		errors_rv.emplace_back(mat_arr(mini_batch_size, 1, layer_size));
+	return &activations[layer_no];
+}
 
-		gradient_biases_rv_noarr.emplace_back(mat_arr(1, 1, layer_size));
-		gradient_weights_noarr.emplace_back(mat_arr(1, sizes[i], layer_size));
+mat_arr* training_buffer::out(unsigned layer_no)
+{
+	return &activations[layer_no + 1];
+}
+
+mat_arr* training_buffer::bpterm(unsigned layer_no)
+{
+	return &backprop_terms[layer_no];
+}
+
+mat_arr* training_buffer::sol()
+{
+	return &solution;
+}
+
+layer_buffer* training_buffer::lbuf(unsigned layer_no)
+{
+	return &lbufs[layer_no];
+}
+
+training_buffer::training_buffer(unsigned mini_batch_size, std::vector<unsigned> sizes)
+	: solution(mini_batch_size, 1, sizes[sizes.size() - 1])
+{
+	const unsigned layer_count = static_cast<unsigned>(sizes.size() - 1);
+	activations.emplace_back(mini_batch_size, 1, sizes[0]);
+	for (unsigned i = 1; i < layer_count + 1; i++)
+	{
+		activations.emplace_back(mini_batch_size, 1, sizes[i]);
+		backprop_terms.emplace_back(mini_batch_size, 1, sizes[i]);
 	}
 
-	const unsigned part_size = mini_batch_size / part_count;
-	const unsigned remainder = mini_batch_size % part_count;
-	unsigned current_start = 0;
-	for (unsigned i = 0; i < part_count; i++)
+	for(unsigned i=0; i<layer_count;i++)
 	{
-		const unsigned current_part_size = i < remainder ? part_size + 1 : part_size;
-		partial_buffers.emplace_back(this, current_start, current_part_size);
-		current_start += current_part_size;
+		lbufs.emplace_back(mini_batch_size, &activations[i], &activations[i + 1], &backprop_terms[i]);
 	}
-}
-
-template <typename t>
-void add_pointers(std::vector<t>* in, std::vector<t*>* target)
-{
-	for (size_t i = 0; i < in->size(); i++)
-	{
-		target->emplace_back(&in->operator[](i));
-	}
-}
-
-std::vector<mat_arr*> training_buffer::all()
-{
-	std::vector<mat_arr*> result;
-	add_pointers(&weighted_inputs_rv, &result);
-	add_pointers(&activations_rv, &result);
-	add_pointers(&activation_dfs_rv, &result);
-	add_pointers(&errors_rv, &result);
-	add_pointers(&gradient_biases_rv_noarr, &result);
-	add_pointers(&gradient_weights_noarr, &result);
-	result.emplace_back(&input_rv);
-	result.emplace_back(&solution_rv);
-	return result;
-}
-
-void training_buffer::clear()
-{
-	for (auto ma : all())
-	{
-		mat_set_all(0, ma);
-	}
-}
-
-unsigned training_buffer::layer_count() const
-{
-	return static_cast<unsigned>(errors_rv.size());
-}
-
-unsigned training_buffer::part_count() const
-{
-	return static_cast<unsigned>(partial_buffers.size());
 }
 
 void layer_buffer::add_mini_batch_size(const std::string& key, unsigned rows, unsigned cols)
 {
-	add_custom_count(key, mini_batch_size, rows, cols);
+	add(key, mini_batch_size, rows, cols, true);
 }
 
 void layer_buffer::add_single(const std::string& key, unsigned rows, unsigned cols)
 {
 	add_custom_count(key, 1, rows, cols);
+}
+
+layer_buffer::layer_buffer(unsigned mini_batch_size, const mat_arr* in,
+                           const mat_arr* out, const mat_arr* backprop_term)
+	: mini_batch_size(mini_batch_size),
+	  in(in), out(out),
+	  backprop_term(backprop_term)
+{
 }
 
 void layer_buffer::add_custom_count(const std::string& key, std::array<unsigned, 3> dim)
@@ -89,8 +70,18 @@ void layer_buffer::add_custom_count(const std::string& key, std::array<unsigned,
 
 void layer_buffer::add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols)
 {
-	std::unique_ptr<mat_arr> ptr = std::make_unique<mat_arr>(count, rows, cols);
-	m[key] = std::move(ptr);
+	add(key, count, rows, cols, false);
+}
+
+buf::buf(bool split, unsigned count, unsigned rows, unsigned cols)
+	: split(split),
+	  mat(count, rows, cols)
+{
+}
+
+void layer_buffer::add(const std::string& key, unsigned count, unsigned rows, unsigned cols, bool split)
+{
+	m.insert_or_assign(key, std::make_shared<buf>(split, count, rows, cols));
 }
 
 void layer_buffer::remove(const std::string& key)
@@ -100,25 +91,10 @@ void layer_buffer::remove(const std::string& key)
 
 mat_arr layer_buffer::get_val(const std::string& key)
 {
-	return *m[key];
+	return m[key]->mat;
 }
 
 mat_arr* layer_buffer::get_ptr(const std::string& key)
 {
-	return m[key].get();
-}
-
-partial_training_buffer::partial_training_buffer(training_buffer* buf,
-                                                 unsigned start, unsigned count)
-	: input_rv(buf->input_rv.get_mats(start, count)),
-	  solution_rv(buf->solution_rv.get_mats(start, count))
-{
-	const auto layer_count = buf->layer_count();
-	for (unsigned i = 0; i < layer_count; i++)
-	{
-		weighted_inputs_rv.emplace_back(buf->weighted_inputs_rv[i].get_mats(start, count));
-		activations_rv.emplace_back(buf->activations_rv[i].get_mats(start, count));
-		activation_dfs_rv.emplace_back(buf->activation_dfs_rv[i].get_mats(start, count));
-		errors_rv.emplace_back(buf->errors_rv[i].get_mats(start, count));
-	}
+	return &m[key]->mat;
 }
