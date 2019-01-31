@@ -162,12 +162,13 @@ cycle_result train_and_test(double epochs_per_cycle, sgd_trainer* trainer,
 		train_result.accuracy,
 		test_result.costs,
 		test_result.accuracy,
+		false
 	};
 }
 
 int main(int argc, char** argv)
 {
-	double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
+	double epoch_count = argc <= 1 ? 5 : std::stod(std::string(argv[1]));
 
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
@@ -196,14 +197,16 @@ int main(int argc, char** argv)
 		static_cast<float>(3.0 / mnist_training.entry_count()));
 
 	const auto act_f = std::make_shared<logistic_activation_function>();
-	const unsigned hidden_layer_size = 100;
+	const unsigned hidden_layer_size = 30;
 	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size, act_f);
 	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10, act_f);
 
 	trainer.add_layer(layer1);
 	trainer.add_layer(layer2);
 
-	auto opt = ordinary_sgd(.5f);
+	trainer.init();
+
+	auto opt = momentum_sgd(.5f, .9f);
 
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{

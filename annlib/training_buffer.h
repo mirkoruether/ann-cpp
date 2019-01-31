@@ -20,13 +20,18 @@ namespace annlib
 		mat_arr solution;
 
 	public:
+		const unsigned mini_batch_size;
+
 		mat_arr* in(unsigned layer_no);
 		mat_arr* out(unsigned layer_no);
 		mat_arr* bpterm(unsigned layer_no);
 		mat_arr* sol();
 		layer_buffer* lbuf(unsigned layer_no);
 
+		std::vector<training_buffer> do_split(unsigned part_count);
+
 		training_buffer(unsigned mini_batch_size, std::vector<unsigned> sizes);
+		training_buffer(training_buffer* buf, unsigned start, unsigned count);
 	};
 
 	struct buf
@@ -36,6 +41,7 @@ namespace annlib
 		mat_arr mat;
 
 		buf(bool split, unsigned count, unsigned rows, unsigned cols);
+		buf(bool split, mat_arr mat);
 	};
 
 	class layer_buffer
@@ -45,13 +51,16 @@ namespace annlib
 
 		void add(const std::string& key, unsigned count, unsigned rows, unsigned cols, bool split);
 
+	protected:
+		void add(const std::string& key, mat_arr mat, bool split);
+
 	public:
 		const unsigned mini_batch_size;
-		const mat_arr* in;
-		const mat_arr* out;
-		const mat_arr* backprop_term;
+		const mat_arr in;
+		const mat_arr out;
+		const mat_arr backprop_term;
 
-		layer_buffer(unsigned mini_batch_size, const mat_arr* in, const mat_arr* out, const mat_arr* backprop_term);
+		layer_buffer(unsigned mini_batch_size, mat_arr in, mat_arr out, mat_arr backprop_term);
 
 		void add_custom_count(const std::string& key, std::array<unsigned, 3> dim);
 		void add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols);
@@ -62,6 +71,8 @@ namespace annlib
 		void remove(const std::string& key);
 		mat_arr get_val(const std::string& key);
 		mat_arr* get_ptr(const std::string& key);
+
+		layer_buffer get_part(unsigned start, unsigned count);
 	};
 }
 #endif

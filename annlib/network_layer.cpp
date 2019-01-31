@@ -108,7 +108,7 @@ void annlib::fully_connected_layer::optimize(annlib::gradient_based_optimizer* o
 {
 	//TODO Parallel 
 	mat_arr* grad_w = buf->get_ptr("grad_w");
-	calculate_gradient_weight_cpu(*buf->in, buf->get_val("err"), grad_w);
+	calculate_gradient_weight_cpu(buf->in, buf->get_val("err"), grad_w);
 
 	if (wnp != nullptr)
 	{

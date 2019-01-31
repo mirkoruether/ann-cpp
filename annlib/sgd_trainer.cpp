@@ -91,6 +91,10 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 		layers[i]->prepare_buffer(buf.lbuf(i), opt);
 	}
 
+#ifdef _OPENMP
+	std::vector<training_buffer> partial_buffers = buf.do_split(std::thread::hardware_concurrency());
+#endif
+
 	mini_batch_builder mb_builder(training_data);
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
@@ -103,7 +107,16 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 
 		mb_builder.build_mini_batch(buf.in(0), buf.sol());
 
+
+#ifdef _OPENMP
+#pragma omp parallel for
+		for (int i = 0; i < static_cast<int>(partial_buffers.size()); i++)
+		{
+			do_feed_forward_and_backprop(&partial_buffers[i]);
+		}
+#else
 		do_feed_forward_and_backprop(&buf);
+#endif
 
 		do_adjustments(opt, &buf);
 	}
@@ -155,6 +168,7 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 {
 	opt->next_mini_batch();
 
+#pragma omp parallel for
 	for (unsigned i = 0; i < get_layer_count(); i++)
 	{
 		layers[i]->optimize(opt, buffer->lbuf(i));
