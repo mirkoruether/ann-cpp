@@ -22,21 +22,21 @@ namespace linalg
 	mat_arr mat_element_wise_div(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
 	                             mat_tr tr = transpose_no);
 
-	mat_arr mat_element_wise_add(const mat_arr& A, float b, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_add(const mat_arr& A, fpt b, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_add(float a, const mat_arr& B, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_add(fpt a, const mat_arr& B, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_sub(const mat_arr& A, float b, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_sub(const mat_arr& A, fpt b, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_sub(float a, const mat_arr& B, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_sub(fpt a, const mat_arr& B, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_mul(const mat_arr& A, float b, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_mul(const mat_arr& A, fpt b, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_mul(float a, const mat_arr& B, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_mul(fpt a, const mat_arr& B, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_div(const mat_arr& A, float b, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_div(const mat_arr& A, fpt b, mat_arr* C = nullptr);
 
-	mat_arr mat_element_wise_div(float a, const mat_arr& B, mat_arr* C = nullptr);
+	mat_arr mat_element_wise_div(fpt a, const mat_arr& B, mat_arr* C = nullptr);
 
 	mat_arr mat_matrix_mul_add(const mat_arr& A, const mat_arr& B, mat_arr* C = nullptr,
 	                           mat_tr tr = transpose_no);
@@ -46,18 +46,18 @@ namespace linalg
 
 	mat_arr mat_transpose(const mat_arr& A, mat_arr* C);
 
-	mat_arr mat_set_all(float val, mat_arr* C);
+	mat_arr mat_set_all(fpt val, mat_arr* C);
 
 	mat_arr mat_concat_mats(const std::vector<mat_arr>& mats, mat_arr* C);
 
 	mat_arr mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C);
 
-	mat_arr mat_random_gaussian(float mean, float sigma, std::mt19937* rnd, mat_arr* C);
+	mat_arr mat_random_gaussian(fpt mean, fpt sigma, std::mt19937* rnd, mat_arr* C);
 
 	mat_arr mat_copy(const mat_arr& A, mat_arr* C);
 
-	float mat_max(const mat_arr& A);
+	fpt mat_max(const mat_arr& A);
 
-	float mat_sum(const mat_arr& A);
+	fpt mat_sum(const mat_arr& A);
 } // namespace linalg
 #endif

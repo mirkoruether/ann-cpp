@@ -6,7 +6,7 @@
 
 using namespace linalg;
 
-mat_arr::mat_arr(std::shared_ptr<synced_vectors<float>> vector, unsigned offset,
+mat_arr::mat_arr(std::shared_ptr<synced_vectors<fpt>> vector, unsigned offset,
                  unsigned count, unsigned rows, unsigned cols)
 	: vec(std::move(vector)),
 	  offset(offset),
@@ -17,7 +17,7 @@ mat_arr::mat_arr(std::shared_ptr<synced_vectors<float>> vector, unsigned offset,
 }
 
 mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
-	: vec(std::make_shared<synced_vectors<float>>(count * rows * cols)),
+	: vec(std::make_shared<synced_vectors<fpt>>(count * rows * cols)),
 	  offset(0),
 	  count(count),
 	  rows(rows),
@@ -78,49 +78,49 @@ unsigned mat_arr::size() const
 	return count * rows * cols;
 }
 
-float* mat_arr::start()
+fpt* mat_arr::start()
 {
 	return vec->host_data() + offset;
 }
 
-const float* mat_arr::start() const
+const fpt* mat_arr::start() const
 {
 	return vec->host_data() + offset;
 }
 
-float* mat_arr::dev_start()
+fpt* mat_arr::dev_start()
 {
 	return vec->dev_data() + offset;
 }
 
-const float* mat_arr::dev_start() const
+const fpt* mat_arr::dev_start() const
 {
 	return vec->dev_data() + offset;
 }
 
-const float& mat_arr::operator[](unsigned index) const
+const fpt& mat_arr::operator[](unsigned index) const
 {
 	return *(start() + index);
 }
 
-float& mat_arr::operator[](unsigned index)
+fpt& mat_arr::operator[](unsigned index)
 {
 	return *(start() + index);
 }
 
 mat_arr mat_arr::duplicate(bool try_device_copy) const
 {
-	const auto new_vec = std::make_shared<synced_vectors<float>>(*vec, offset, size(), try_device_copy);
+	const auto new_vec = std::make_shared<synced_vectors<fpt>>(*vec, offset, size(), try_device_copy);
 	return mat_arr(new_vec, 0, count, rows, cols);
 }
 
 bool mat_arr::only_real() const
 {
 	const unsigned s = size();
-	const float* a = start();
+	const fpt* a = start();
 	for (unsigned i = 0; i < s; i++)
 	{
-		const float val = *(a + i);
+		const fpt val = *(a + i);
 		if (!std::isfinite(val))
 		{
 			return false;

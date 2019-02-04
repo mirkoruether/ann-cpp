@@ -23,9 +23,9 @@ namespace annlib
 
 		void apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target = nullptr) const override;
 
-		virtual float apply(float d) const = 0;
+		virtual fpt apply(fpt d) const = 0;
 
-		virtual float apply_derivative(float d) const = 0;
+		virtual fpt apply_derivative(fpt d) const = 0;
 	};
 
 	class logistic_activation_function : public abstract_activation_function
@@ -33,9 +33,9 @@ namespace annlib
 	public:
 		logistic_activation_function() = default;
 
-		float apply(float d) const override;
+		fpt apply(fpt d) const override;
 
-		float apply_derivative(float d) const override;
+		fpt apply_derivative(fpt d) const override;
 	};
 
 	class relu_activation_function : public abstract_activation_function
@@ -43,9 +43,9 @@ namespace annlib
 	public:
 		relu_activation_function() = default;
 
-		float apply(float d) const override;
+		fpt apply(fpt d) const override;
 
-		float apply_derivative(float d) const override;
+		fpt apply_derivative(fpt d) const override;
 	};
 }
 

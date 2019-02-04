@@ -7,6 +7,7 @@ message("${CMAKE_CXX_FLAGS_RELEASE}")
 include(CheckLanguage)
 set(TRY_ENABLE_CUDA FALSE)
 
+#add_definitions(-DLINALG_DOUBLE)
 #add_definitions(-DMATARRMATH_CHECK_NAN)
 
 if (TRY_ENABLE_CUDA)

@@ -37,7 +37,7 @@ training_data mnist_load_combined(const std::string& image_file, const std::stri
 	}
 
 	mat_arr solution(static_cast<unsigned>(labels.size()), 1, 10);
-	float* sol = solution.start();
+	fpt* sol = solution.start();
 	for (unsigned i = 0; i < solution.count; i++)
 	{
 		*(sol + labels[i]) = 1.0f;
@@ -64,7 +64,7 @@ mat_arr mnist_load_images(const std::string& file)
 	const int size = count * rows * cols;
 
 	mat_arr images(count, 1, rows * cols);
-	float* im = images.start();
+	fpt* im = images.start();
 
 	for (int i = 0; i < size; i++)
 	{

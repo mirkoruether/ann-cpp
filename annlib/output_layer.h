@@ -19,7 +19,7 @@ namespace annlib
 
 		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
 
-		virtual float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const = 0;
+		virtual fpt calculate_costs(const mat_arr& net_output, const mat_arr& solution) const = 0;
 
 		virtual void calculate_error_prev_layer(const mat_arr& net_output,
 		                                        const mat_arr& solution,
@@ -36,7 +36,7 @@ namespace annlib
 
 		void feed_forward(const mat_arr& in, mat_arr* out) const override;
 
-		float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const override;
+		fpt calculate_costs(const mat_arr& net_output, const mat_arr& solution) const override;
 
 		void calculate_error_prev_layer(const mat_arr& net_output,
 		                                const mat_arr& solution,
@@ -50,7 +50,7 @@ namespace annlib
 
 		void feed_forward(const mat_arr& in, mat_arr* out) const override;
 
-		float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const override;
+		fpt calculate_costs(const mat_arr& net_output, const mat_arr& solution) const override;
 
 		void calculate_error_prev_layer(const mat_arr& net_output,
 		                                const mat_arr& solution,

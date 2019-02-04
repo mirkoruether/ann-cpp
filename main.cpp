@@ -20,16 +20,16 @@ using namespace linalg;
 void random_matrix_arr(mat_arr* m)
 {
 	const unsigned size = m->size();
-	float* mat = m->start();
+	fpt* mat = m->start();
 	for (unsigned i = 0; i < size; i++)
 	{
-		*(mat + i) = static_cast<float>(rand()) / static_cast<float>(RAND_MAX);
+		*(mat + i) = static_cast<fpt>(rand()) / static_cast<fpt>(RAND_MAX);
 	}
 }
 
 unsigned get_max_index(const mat_arr& vec)
 {
-	float max = -1.0f * std::numeric_limits<float>::infinity();
+	fpt max = -1.0f * std::numeric_limits<fpt>::infinity();
 	unsigned maxIndex = std::numeric_limits<unsigned>::max();
 	for (unsigned i = 0; i < vec.size(); i++)
 	{
@@ -194,7 +194,7 @@ int main(int argc, char** argv)
 
 	sgd_trainer trainer;
 	auto wnp = std::make_shared<L2_regularization>(
-		static_cast<float>(3.0 / mnist_training.entry_count()));
+		static_cast<fpt>(3.0 / mnist_training.entry_count()));
 
 	const auto act_f = std::make_shared<logistic_activation_function>();
 	const unsigned hidden_layer_size = 100;

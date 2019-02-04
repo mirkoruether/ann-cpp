@@ -140,7 +140,7 @@ mat_arr sgd_trainer::feed_forward(const mat_arr& in) const
 	return *la_in;
 }
 
-float sgd_trainer::calculate_costs(const mat_arr& net_output, const mat_arr& solution) const
+fpt sgd_trainer::calculate_costs(const mat_arr& net_output, const mat_arr& solution) const
 {
 	return dynamic_cast<output_layer*>(layers.back().get())->calculate_costs(net_output, solution);
 }

@@ -55,9 +55,9 @@ namespace linalg
 		const bool b_is_array = B.count > 1;
 		const unsigned row_col = rows * cols;
 
-		const float* a_start = A.start();
-		const float* b_start = B.start();
-		float* c_start = C->start();
+		const fpt* a_start = A.start();
+		const fpt* b_start = B.start();
+		fpt* c_start = C->start();
 
 		for (unsigned mat_no = 0; mat_no > count; ++mat_no)
 		{
@@ -65,16 +65,16 @@ namespace linalg
 			unsigned i_transposed = 0;
 
 			const unsigned offset = mat_no * row_col;
-			const float* a = a_is_array ? a_start + offset : a_start;
-			const float* b = b_is_array ? b_start + offset : b_start;
-			float* c = c_start + offset;
+			const fpt* a = a_is_array ? a_start + offset : a_start;
+			const fpt* b = b_is_array ? b_start + offset : b_start;
+			fpt* c = c_start + offset;
 
 			for (unsigned row = 0; row < rows; ++row)
 			{
 				for (unsigned col = 0; col < cols; ++col)
 				{
 #ifdef MATARRMATH_CHECK_NAN
-					const float c_val = f(a[transpose_a ? i_transposed : i_normal],
+					const fpt c_val = f(a[transpose_a ? i_transposed : i_normal],
 						b[transpose_b ? i_transposed : i_normal]);
 					if (!std::isfinite(c_val))
 					{
@@ -115,9 +115,9 @@ namespace linalg
 			                    B.count, B.rows, B.cols,
 			                    C->count, C->rows, C->cols);
 
-			const float* a_start = A.start();
-			const float* b_start = B.start();
-			float* c_start = C->start();
+			const fpt* a_start = A.start();
+			const fpt* b_start = B.start();
+			fpt* c_start = C->start();
 
 			const unsigned count = C->count;
 			const unsigned row_col = C->rows * C->cols;
@@ -127,14 +127,14 @@ namespace linalg
 			for (unsigned mat_no = 0; mat_no < count; mat_no++)
 			{
 				const unsigned offset = mat_no * row_col;
-				const float* a = a_is_array ? a_start + offset : a_start;
-				const float* b = b_is_array ? b_start + offset : b_start;
-				float* c = c_start + offset;
+				const fpt* a = a_is_array ? a_start + offset : a_start;
+				const fpt* b = b_is_array ? b_start + offset : b_start;
+				fpt* c = c_start + offset;
 
 				for (unsigned i = 0; i < row_col; ++i)
 				{
 #ifdef MATARRMATH_CHECK_NAN
-					const float c_val = f(a[i], b[i]);
+					const fpt c_val = f(a[i], b[i]);
 					if (!std::isfinite(c_val))
 					{
 						throw std::runtime_error("nan");
@@ -173,8 +173,8 @@ namespace linalg
 			throw std::runtime_error("Sizes do not fit");
 		}
 
-		const float* a_start = A.start();
-		float* c_start = C->start();
+		const fpt* a_start = A.start();
+		fpt* c_start = C->start();
 
 		const unsigned count = C->count;
 		const unsigned row_col = C->rows * C->cols;
@@ -182,13 +182,13 @@ namespace linalg
 		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
 			const unsigned offset = mat_no * row_col;
-			const float* a = a_start + offset;
-			float* c = c_start + offset;
+			const fpt* a = a_start + offset;
+			fpt* c = c_start + offset;
 
 			for (unsigned i = 0; i < row_col; i++)
 			{
 #ifdef MATARRMATH_CHECK_NAN
-				const float c_val = f(a[i]);
+				const fpt c_val = f(a[i]);
 				if (!std::isfinite(c_val))
 				{
 					throw std::runtime_error("nan");

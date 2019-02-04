@@ -35,7 +35,7 @@ namespace annlib
 
 		mat_arr feed_forward(const mat_arr& in) const;
 
-		float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const;
+		fpt calculate_costs(const mat_arr& net_output, const mat_arr& solution) const;
 
 	private:
 		std::vector<std::shared_ptr<network_layer>> layers;

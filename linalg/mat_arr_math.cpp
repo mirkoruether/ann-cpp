@@ -7,7 +7,7 @@ namespace linalg
 {
 	struct _mat_e_by_e_add_kernel
 	{
-		float operator()(float a, float b) const
+		fpt operator()(fpt a, fpt b) const
 		{
 			return a + b;
 		}
@@ -20,7 +20,7 @@ namespace linalg
 
 	struct _mat_e_by_e_sub_kernel
 	{
-		float operator()(float a, float b) const
+		fpt operator()(fpt a, fpt b) const
 		{
 			return a - b;
 		}
@@ -33,7 +33,7 @@ namespace linalg
 
 	struct _mat_e_by_e_mul_kernel
 	{
-		float operator()(float a, float b) const
+		fpt operator()(fpt a, fpt b) const
 		{
 			return a * b;
 		}
@@ -46,7 +46,7 @@ namespace linalg
 
 	struct _mat_e_by_e_div_kernel
 	{
-		float operator()(float a, float b) const
+		fpt operator()(fpt a, fpt b) const
 		{
 			return a / b;
 		}
@@ -59,124 +59,124 @@ namespace linalg
 
 	struct _mat_e_wise_add_kernel
 	{
-		float b;
+		fpt b;
 
-		explicit _mat_e_wise_add_kernel(float b) : b(b)
+		explicit _mat_e_wise_add_kernel(fpt b) : b(b)
 		{
 		}
 
-		float operator()(float a) const
+		fpt operator()(fpt a) const
 		{
 			return a + b;
 		}
 	};
 
-	mat_arr mat_element_wise_add(const mat_arr& A, float b, mat_arr* C)
+	mat_arr mat_element_wise_add(const mat_arr& A, fpt b, mat_arr* C)
 	{
 		return mat_element_wise_operation(A, C, _mat_e_wise_add_kernel(b));
 	}
 
-	mat_arr mat_element_wise_add(float a, const mat_arr& B, mat_arr* C)
+	mat_arr mat_element_wise_add(fpt a, const mat_arr& B, mat_arr* C)
 	{
 		return mat_element_wise_operation(B, C, _mat_e_wise_add_kernel(a));
 	}
 
 	struct _mat_e_wise_sub_kernel
 	{
-		float b;
+		fpt b;
 
-		explicit _mat_e_wise_sub_kernel(float b) : b(b)
+		explicit _mat_e_wise_sub_kernel(fpt b) : b(b)
 		{
 		}
 
-		float operator()(float a) const
+		fpt operator()(fpt a) const
 		{
 			return a - b;
 		}
 	};
 
-	mat_arr mat_element_wise_sub(const mat_arr& A, float b, mat_arr* C)
+	mat_arr mat_element_wise_sub(const mat_arr& A, fpt b, mat_arr* C)
 	{
 		return mat_element_wise_operation(A, C, _mat_e_wise_sub_kernel(b));
 	}
 
 	struct _mat_e_wise_sub_kernel2
 	{
-		float a;
+		fpt a;
 
-		explicit _mat_e_wise_sub_kernel2(float a) : a(a)
+		explicit _mat_e_wise_sub_kernel2(fpt a) : a(a)
 		{
 		}
 
-		float operator()(float b) const
+		fpt operator()(fpt b) const
 		{
 			return a - b;
 		}
 	};
 
-	mat_arr mat_element_wise_sub(float a, const mat_arr& B, mat_arr* C)
+	mat_arr mat_element_wise_sub(fpt a, const mat_arr& B, mat_arr* C)
 	{
 		return mat_element_wise_operation(B, C, _mat_e_wise_sub_kernel2(a));
 	}
 
 	struct _mat_e_wise_mul_kernel
 	{
-		float b;
+		fpt b;
 
-		explicit _mat_e_wise_mul_kernel(float b) : b(b)
+		explicit _mat_e_wise_mul_kernel(fpt b) : b(b)
 		{
 		}
 
-		float operator()(float a) const
+		fpt operator()(fpt a) const
 		{
 			return a * b;
 		}
 	};
 
-	mat_arr mat_element_wise_mul(const mat_arr& A, float b, mat_arr* C)
+	mat_arr mat_element_wise_mul(const mat_arr& A, fpt b, mat_arr* C)
 	{
 		return mat_element_wise_operation(A, C, _mat_e_wise_mul_kernel(b));
 	}
 
-	mat_arr mat_element_wise_mul(float a, const mat_arr& B, mat_arr* C)
+	mat_arr mat_element_wise_mul(fpt a, const mat_arr& B, mat_arr* C)
 	{
 		return mat_element_wise_operation(B, C, _mat_e_wise_mul_kernel(a));
 	}
 
 	struct _mat_e_wise_div_kernel
 	{
-		float b;
+		fpt b;
 
-		explicit _mat_e_wise_div_kernel(float b) : b(b)
+		explicit _mat_e_wise_div_kernel(fpt b) : b(b)
 		{
 		}
 
-		float operator()(float a) const
+		fpt operator()(fpt a) const
 		{
 			return a / b;
 		}
 	};
 
-	mat_arr mat_element_wise_div(const mat_arr& A, float b, mat_arr* C)
+	mat_arr mat_element_wise_div(const mat_arr& A, fpt b, mat_arr* C)
 	{
 		return mat_element_wise_operation(A, C, _mat_e_wise_div_kernel(b));
 	}
 
 	struct _mat_e_wise_div_kernel2
 	{
-		float a;
+		fpt a;
 
-		explicit _mat_e_wise_div_kernel2(float a) : a(a)
+		explicit _mat_e_wise_div_kernel2(fpt a) : a(a)
 		{
 		}
 
-		float operator()(float b) const
+		fpt operator()(fpt b) const
 		{
 			return a / b;
 		}
 	};
 
-	mat_arr mat_element_wise_div(float a, const mat_arr& B, mat_arr* C)
+	mat_arr mat_element_wise_div(fpt a, const mat_arr& B, mat_arr* C)
 	{
 		return mat_element_wise_operation(B, C, _mat_e_wise_div_kernel2(a));
 	}
@@ -211,16 +211,16 @@ namespace linalg
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
 		void operator()(unsigned l, unsigned m, unsigned n,
-		                const float* a, const float* b, float* c) const
+		                const fpt* a, const fpt* b, fpt* c) const
 		{
 			for (unsigned i = 0; i < l; i++)
 			{
-				const float* a_row = a + i * m;
-				float* c_row = c + i * n;
+				const fpt* a_row = a + i * m;
+				fpt* c_row = c + i * n;
 				for (unsigned j = 0; j < m; j++)
 				{
-					const float a_val = a_row[j];
-					const float* b_row = b + j * n;
+					const fpt a_val = a_row[j];
+					const fpt* b_row = b + j * n;
 					for (unsigned k = 0; k < n; k++)
 					{
 						c_row[k] += a_val * b_row[k];
@@ -235,16 +235,16 @@ namespace linalg
 		// Cache miss analysis: Inner Loop
 		// A fixed, B row-wise, C row-wise
 		void operator()(unsigned l, unsigned m, unsigned n,
-		                const float* a, const float* b, float* c) const
+		                const fpt* a, const fpt* b, fpt* c) const
 		{
 			for (unsigned j = 0; j < m; j++)
 			{
-				const float* a_row = a + j * l;
-				const float* b_row = b + j * n;
+				const fpt* a_row = a + j * l;
+				const fpt* b_row = b + j * n;
 				for (unsigned i = 0; i < l; i++)
 				{
-					const float a_val = a_row[i];
-					float* c_row = c + i * n;
+					const fpt a_val = a_row[i];
+					fpt* c_row = c + i * n;
 					for (unsigned k = 0; k < n; k++)
 					{
 						c_row[k] += a_val * b_row[k];
@@ -259,16 +259,16 @@ namespace linalg
 		// Cache miss analysis: Inner Loop
 		// A row-wise, B row-wise, C fixed
 		void operator()(unsigned l, unsigned m, unsigned n,
-		                const float* a, const float* b, float* c) const
+		                const fpt* a, const fpt* b, fpt* c) const
 		{
 			for (unsigned i = 0; i < l; i++)
 			{
-				const float* a_row = a + i * m;
-				float* c_row = c + i * n;
+				const fpt* a_row = a + i * m;
+				fpt* c_row = c + i * n;
 				for (unsigned k = 0; k < n; k++)
 				{
-					const float* b_row = b + k * m;
-					float c_val = c_row[k];
+					const fpt* b_row = b + k * m;
+					fpt c_val = c_row[k];
 					for (unsigned j = 0; j < m; j++)
 					{
 						c_val += a_row[j] * b_row[j];
@@ -284,15 +284,15 @@ namespace linalg
 		// Cache miss analysis: Inner Loop
 		// A row-wise, B fixed, C column-wise (many cache misses!)
 		void operator()(unsigned l, unsigned m, unsigned n,
-		                const float* a, const float* b, float* c) const
+		                const fpt* a, const fpt* b, fpt* c) const
 		{
 			for (unsigned k = 0; k < n; k++)
 			{
-				const float* b_row = b + k * m;
+				const fpt* b_row = b + k * m;
 				for (unsigned j = 0; j < m; j++)
 				{
-					const float* a_row = a + j * l;
-					const float b_val = b_row[j];
+					const fpt* a_row = a + j * l;
+					const fpt b_val = b_row[j];
 					for (unsigned i = 0; i < l; i++)
 					{
 						c[i * n + k] += a_row[i] * b_val;
@@ -308,18 +308,18 @@ namespace linalg
 	{
 		const unsigned count = C->count;
 
-		const float* a_start = A.start();
-		const float* b_start = B.start();
-		float* c_start = C->start();
+		const fpt* a_start = A.start();
+		const fpt* b_start = B.start();
+		fpt* c_start = C->start();
 
 		const bool a_is_array = A.count > 1;
 		const bool b_is_array = B.count > 1;
 
 		for (unsigned matNo = 0; matNo < count; matNo++)
 		{
-			const float* a = a_is_array ? a_start + (matNo * l * m) : a_start;
-			const float* b = b_is_array ? b_start + (matNo * m * n) : b_start;
-			float* c = c_start + (matNo * l * n);
+			const fpt* a = a_is_array ? a_start + (matNo * l * m) : a_start;
+			const fpt* b = b_is_array ? b_start + (matNo * m * n) : b_start;
+			fpt* c = c_start + (matNo * l * n);
 
 			cs(l, m, n, a, b, c);
 		}
@@ -421,8 +421,8 @@ namespace linalg
 		__transpose_size_check(A.count, A.rows, A.cols,
 		                       C->count, C->rows, C->cols);
 
-		const float* a_start = A.start();
-		float* c_start = C->start();
+		const fpt* a_start = A.start();
+		fpt* c_start = C->start();
 
 		const unsigned count = C->count;
 		const unsigned rows = C->rows;
@@ -431,8 +431,8 @@ namespace linalg
 		for (unsigned mat_no = 0; mat_no < count; mat_no++)
 		{
 			const unsigned offset = mat_no * rows * cols;
-			const float* a = a_start + offset;
-			float* c = c_start + offset;
+			const fpt* a = a_start + offset;
+			fpt* c = c_start + offset;
 
 			unsigned i_normal = 0;
 			unsigned i_transposed = 0;
@@ -461,14 +461,14 @@ namespace linalg
 		return *C;
 	}
 
-	mat_arr mat_set_all(float val, mat_arr* C)
+	mat_arr mat_set_all(fpt val, mat_arr* C)
 	{
 		if (C == nullptr)
 		{
 			throw std::runtime_error("C is nullptr");
 		}
 		const unsigned size = C->size();
-		float* c = C->start();
+		fpt* c = C->start();
 		for (unsigned i = 0; i < size; i++)
 		{
 			c[i] = val;
@@ -506,12 +506,12 @@ namespace linalg
 		__mat_concat_size_check(mats, C);
 		const auto mat_arr_count = static_cast<unsigned>(mats.size());
 		const unsigned row_col = C->rows * C->cols;
-		float* c = C->start();
+		fpt* c = C->start();
 
 		for (unsigned mat_arr_no = 0; mat_arr_no < mat_arr_count; mat_arr_no++)
 		{
 			const unsigned size = row_col * mats[mat_arr_no].count;
-			const float* m = mats[mat_arr_no].start();
+			const fpt* m = mats[mat_arr_no].start();
 
 			for (unsigned i = 0; i < size; i++)
 			{
@@ -564,13 +564,13 @@ namespace linalg
 		const auto mat_count = static_cast<unsigned>(indices.size());
 		const unsigned row_col = C->rows * C->cols;
 
-		const float* a_start = A.start();
-		float* c_start = C->start();
+		const fpt* a_start = A.start();
+		fpt* c_start = C->start();
 
 		for (unsigned mat_no = 0; mat_no < mat_count; mat_no++)
 		{
-			const float* a = a_start + indices[mat_no] * row_col;
-			float* c = c_start + (mat_no * row_col);
+			const fpt* a = a_start + indices[mat_no] * row_col;
+			fpt* c = c_start + (mat_no * row_col);
 
 			for (unsigned i = 0; i < row_col; i++)
 			{
@@ -591,10 +591,10 @@ namespace linalg
 		return *C;
 	}
 
-	mat_arr mat_random_gaussian(float mean, float sigma, std::mt19937* rnd, mat_arr* C)
+	mat_arr mat_random_gaussian(fpt mean, fpt sigma, std::mt19937* rnd, mat_arr* C)
 	{
-		std::normal_distribution<float> distr(mean, sigma);
-		return mat_element_wise_operation(*C, C, [&](float a)
+		std::normal_distribution<fpt> distr(mean, sigma);
+		return mat_element_wise_operation(*C, C, [&](fpt a)
 		{
 			return distr(*rnd);
 		});
@@ -602,17 +602,17 @@ namespace linalg
 
 	mat_arr mat_copy(const mat_arr& A, mat_arr* C)
 	{
-		return mat_element_wise_operation(A, C, [](float a)
+		return mat_element_wise_operation(A, C, [](fpt a)
 		{
 			return a;
 		});
 	}
 
-	float mat_max(const mat_arr& A)
+	fpt mat_max(const mat_arr& A)
 	{
 		const unsigned size = A.size();
-		const float* start = A.start();
-		float max = -1.0f * std::numeric_limits<float>::infinity();
+		const fpt* start = A.start();
+		fpt max = -1.0f * std::numeric_limits<fpt>::infinity();
 		for (unsigned i = 0; i < size; i++)
 		{
 			if (start[i] > max)
@@ -623,11 +623,11 @@ namespace linalg
 		return max;
 	}
 
-	float mat_sum(const mat_arr& A)
+	fpt mat_sum(const mat_arr& A)
 	{
 		const unsigned size = A.size();
-		const float* start = A.start();
-		float sum = 0.0f;
+		const fpt* start = A.start();
+		fpt sum = 0.0f;
 		for (unsigned i = 0; i < size; i++)
 		{
 			sum += start[i];

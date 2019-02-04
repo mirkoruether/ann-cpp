@@ -2,6 +2,7 @@
 #define LINALG_TESTS_H
 #include "mat_arr_math.h"
 #include "mat_arr_math_t.h"
+#include <functional>
 
 #ifdef LINALG_CUDA_SUPPORT
 #include "cuda/cuda_util.cuh"
@@ -26,7 +27,7 @@ void do_assert(bool b)
 void testTranspose()
 {
 	mat_arr A(1, 2, 3);
-	float* a = A.start();
+	fpt* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -36,7 +37,7 @@ void testTranspose()
 
 	mat_arr C(1, 3, 2);
 	mat_transpose(A, &C);
-	float* c = C.start();
+	fpt* c = C.start();
 
 	do_assert(*(c + 0) == 0);
 	do_assert(*(c + 1) == 3);
@@ -46,7 +47,7 @@ void testTranspose()
 	do_assert(*(c + 5) == 5);
 }
 
-void __testAddTranspose_check(const float* c)
+void __testAddTranspose_check(const fpt* c)
 {
 	do_assert(*(c + 0) == 12);
 	do_assert(*(c + 1) == 15);
@@ -59,7 +60,7 @@ void __testAddTranspose_check(const float* c)
 void testAddTranspose()
 {
 	mat_arr A(1, 2, 3);
-	float* a = A.start();
+	fpt* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -68,7 +69,7 @@ void testAddTranspose()
 	*(a + 5) = 5;
 
 	mat_arr B(1, 2, 3);
-	float* b = B.start();
+	fpt* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -96,7 +97,7 @@ void testAddTranspose()
 	__testAddTranspose_check(C.start());
 }
 
-void testMatMul_CheckC(const float* c)
+void testMatMul_CheckC(const fpt* c)
 {
 	do_assert(*(c + 0) == 56);
 	do_assert(*(c + 1) == 62);
@@ -107,7 +108,7 @@ void testMatMul_CheckC(const float* c)
 void testMatMul()
 {
 	mat_arr A(1, 2, 3);
-	float* a = A.start();
+	fpt* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -116,7 +117,7 @@ void testMatMul()
 	*(a + 5) = 5;
 
 	mat_arr B(1, 3, 2);
-	float* b = B.start();
+	fpt* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -126,14 +127,14 @@ void testMatMul()
 
 	mat_arr C(1, 2, 2);
 	mat_matrix_mul(A, B, &C);
-	float* c = C.start();
+	fpt* c = C.start();
 	testMatMul_CheckC(c);
 }
 
 void testMatMulTransposed()
 {
 	mat_arr A(1, 2, 3);
-	float* a = A.start();
+	fpt* a = A.start();
 	*(a + 0) = 0;
 	*(a + 1) = 1;
 	*(a + 2) = 2;
@@ -145,7 +146,7 @@ void testMatMulTransposed()
 	mat_transpose(A, &A_t);
 
 	mat_arr B(1, 3, 2);
-	float* b = B.start();
+	fpt* b = B.start();
 	*(b + 0) = 12;
 	*(b + 1) = 14;
 	*(b + 2) = 16;
@@ -157,7 +158,7 @@ void testMatMulTransposed()
 	mat_transpose(B, &B_t);
 
 	mat_arr C(1, 2, 2);
-	float* c = C.start();
+	fpt* c = C.start();
 
 
 	mat_matrix_mul(A, B, &C, transpose_no);
@@ -201,10 +202,10 @@ void speedAddTranspose()
 
 struct add3
 {
-	float operator()(float a, float b) const { return a + b; }
+	fpt operator()(fpt a, fpt b) const { return a + b; }
 };
 
-float test_add(float a, float b)
+fpt test_add(fpt a, fpt b)
 {
 	return a + b;
 }
@@ -215,9 +216,9 @@ void test_add_3(const mat_arr& mat_a, const mat_arr& mat_b, mat_arr* mat_c, F f)
 	const unsigned n3 = mat_a.size();
 	for (unsigned iterations = 0; iterations < 10; iterations++)
 	{
-		const float* a = mat_a.start();
-		const float* b = mat_b.start();
-		float* c = mat_c->start();
+		const fpt* a = mat_a.start();
+		const fpt* b = mat_b.start();
+		fpt* c = mat_c->start();
 
 		for (unsigned i = 0; i < n3; i++)
 		{
@@ -245,9 +246,9 @@ void mat_arr_math_add_speed_test()
 	mat_arr_math_add_speed_test2();
 	const unsigned n = 200;
 	const unsigned n3 = n * n * n;
-	std::vector<float> vec_a(n3);
-	std::vector<float> vec_b(n3);
-	std::vector<float> vec_c(n3);
+	std::vector<fpt> vec_a(n3);
+	std::vector<fpt> vec_b(n3);
+	std::vector<fpt> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_b(n, n, n);
@@ -263,7 +264,7 @@ void mat_arr_math_add_speed_test()
 
 	time_execution("mat e by e operation with std::function", [&]
 	{
-		const std::function<float(float, float)> func = [](float a, float b) { return a + b; };
+		const std::function<fpt(fpt, fpt)> func = [](fpt a, fpt b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c, func);
@@ -274,9 +275,9 @@ void mat_arr_math_add_speed_test()
 	{
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
-			float* a = mat_a.start();
-			float* b = mat_b.start();
-			float* c = mat_c.start();
+			fpt* a = mat_a.start();
+			fpt* b = mat_b.start();
+			fpt* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -287,12 +288,12 @@ void mat_arr_math_add_speed_test()
 
 	time_execution("mat add loop with std::function call   ", [&]
 	{
-		const std::function<float(float, float)> add = [](float a, float b) { return a + b; };
+		const std::function<fpt(fpt, fpt)> add = [](fpt a, fpt b) { return a + b; };
 		for (unsigned iterations = 0; iterations < 10; iterations++)
 		{
-			float* a = mat_a.start();
-			float* b = mat_b.start();
-			float* c = mat_c.start();
+			fpt* a = mat_a.start();
+			fpt* b = mat_b.start();
+			fpt* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -330,9 +331,9 @@ void mat_arr_math_mat_mul_speed_test()
 	const unsigned n = 100;
 	const unsigned n2 = n * n;
 	const unsigned n3 = n * n * n;
-	std::vector<float> vec_a(n3);
-	std::vector<float> vec_b(n3);
-	std::vector<float> vec_c(n3);
+	std::vector<fpt> vec_a(n3);
+	std::vector<fpt> vec_b(n3);
+	std::vector<fpt> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_b(n, n, n);
@@ -352,9 +353,9 @@ void mat_arr_math_mat_mul_speed_test()
 		{
 			for (unsigned matNo = 0; matNo < n; matNo++)
 			{
-				const float* a = mat_a.start() + (matNo * n2);
-				const float* b = mat_b.start() + (matNo * n2);
-				float* c = mat_c.start() + (matNo * n2);
+				const fpt* a = mat_a.start() + (matNo * n2);
+				const fpt* b = mat_b.start() + (matNo * n2);
+				fpt* c = mat_c.start() + (matNo * n2);
 
 				for (unsigned i = 0; i < n; i++)
 				{
@@ -395,18 +396,18 @@ void mat_arr_math_mat_mul_speed_test()
 
 struct mat_arr_math_scalar_mul_test_kernel
 {
-	float operator()(float a, float b) const
+	fpt operator()(fpt a, fpt b) const
 	{
 		return a * b;
 	}
 };
 
 template <typename Fc>
-void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, float b, mat_arr* mat_c, Fc f)
+void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, fpt b, mat_arr* mat_c, Fc f)
 {
 	const unsigned n3 = mat_a.size();
-	const float* a = mat_a.start();
-	float* c = mat_c->start();
+	const fpt* a = mat_a.start();
+	fpt* c = mat_c->start();
 	for (unsigned i = 0; i < n3; i++)
 	{
 		c[i] = f(a[i], b);
@@ -419,8 +420,8 @@ void mat_arr_math_scalar_mul_speed_test()
 	const unsigned n_it = 1000;
 	const unsigned n = 100;
 	const unsigned n3 = n * n * n;
-	std::vector<float> vec_a(n3);
-	std::vector<float> vec_c(n3);
+	std::vector<fpt> vec_a(n3);
+	std::vector<fpt> vec_c(n3);
 
 	mat_arr mat_a(n, n, n);
 	mat_arr mat_c(n, n, n);
@@ -437,8 +438,8 @@ void mat_arr_math_scalar_mul_speed_test()
 	{
 		for (unsigned iterations = 0; iterations < n_it; iterations++)
 		{
-			float* a = mat_a.start();
-			float* c = mat_c.start();
+			fpt* a = mat_a.start();
+			fpt* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -451,8 +452,8 @@ void mat_arr_math_scalar_mul_speed_test()
 	{
 		for (unsigned iterations = 0; iterations < n_it; iterations++)
 		{
-			float* a = mat_a.start();
-			float* c = mat_c.start();
+			fpt* a = mat_a.start();
+			fpt* c = mat_c.start();
 
 			for (unsigned i = 0; i < n3; i++)
 			{
@@ -465,18 +466,18 @@ void mat_arr_math_scalar_mul_speed_test()
 
 struct addmul
 {
-	float factor;
+	fpt factor;
 
-	explicit addmul(float factor) : factor(factor)
+	explicit addmul(fpt factor) : factor(factor)
 	{
 	}
 
-	float operator()(float a, float b) const { return a + factor * b; }
+	fpt operator()(fpt a, fpt b) const { return a + factor * b; }
 };
 
 struct addmul_fixed4
 {
-	float operator()(float a, float b) const { return a + 4.0f * b; }
+	fpt operator()(fpt a, fpt b) const { return a + 4.0f * b; }
 };
 
 void mat_arr_math_addmul_speed_test()
@@ -493,14 +494,14 @@ void mat_arr_math_addmul_speed_test()
 	random_matrix_arr(&mat_b);
 	random_matrix_arr(&mat_c);
 
-	float factor = 4;
+	fpt factor = 4;
 
 	time_execution("mat add mul with std::function", [&]
 	{
 		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			mat_element_by_element_operation(mat_a, mat_b, &mat_c,
-			                                 [&](float a, float b)
+			                                 [&](fpt a, fpt b)
 			                                 {
 				                                 return a + factor * b;
 			                                 });
@@ -555,7 +556,7 @@ void mat_arr_math_multipleadd_speed_test()
 		for (unsigned iterations = 0; iterations < 100; iterations++)
 		{
 			std::vector<mat_arr*> in = {{&mat_a, &mat_b, &mat_c}};
-			mat_multiple_e_by_e_operation(in, &mat_d, [&](const std::vector<float>& vec) {
+			mat_multiple_e_by_e_operation(in, &mat_d, [&](const std::vector<fpt>& vec) {
 				return vec[0] + vec[1] + vec[2];
 			});
 		}

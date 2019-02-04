@@ -1,6 +1,12 @@
 #ifndef MAT_ARR_H
 #define MAT_ARR_H
 
+#ifdef LINALG_DOUBLE
+#define fpt double
+#else
+#define fpt float
+#endif
+
 #include <memory>
 #include <array>
 #include "synced_vectors.h"
@@ -18,7 +24,7 @@ namespace linalg
 	class mat_arr
 	{
 	private:
-		const std::shared_ptr<synced_vectors<float>> vec;
+		const std::shared_ptr<synced_vectors<fpt>> vec;
 		const unsigned offset;
 
 	public:
@@ -27,7 +33,7 @@ namespace linalg
 		const unsigned cols;
 
 	protected:
-		mat_arr(std::shared_ptr<synced_vectors<float>> vector, unsigned offset,
+		mat_arr(std::shared_ptr<synced_vectors<fpt>> vector, unsigned offset,
 		        unsigned count, unsigned rows, unsigned cols);
 
 	public:
@@ -49,17 +55,17 @@ namespace linalg
 
 		unsigned size() const;
 
-		float* start();
+		fpt* start();
 
-		const float* start() const;
+		const fpt* start() const;
 
-		const float& operator[](unsigned index) const;
+		const fpt& operator[](unsigned index) const;
 
-		float& operator[](unsigned index);
+		fpt& operator[](unsigned index);
 
-		float* dev_start();
+		fpt* dev_start();
 
-		const float* dev_start() const;
+		const fpt* dev_start() const;
 
 		mat_arr duplicate(bool try_device_copy = true) const;
 

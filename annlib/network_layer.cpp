@@ -44,7 +44,7 @@ void annlib::fully_connected_layer::feed_forward(const mat_arr& in, mat_arr* out
 void annlib::fully_connected_layer::init(std::mt19937* rnd)
 {
 	mat_random_gaussian(0.0f, 1.0f, rnd, &biases_noarr);
-	const auto factor = static_cast<float>(2.0 / std::sqrt(1.0 * input_size));
+	const auto factor = static_cast<fpt>(2.0 / std::sqrt(1.0 * input_size));
 	mat_random_gaussian(0.0f, factor, rnd, &weights_noarr);
 }
 
@@ -77,7 +77,7 @@ void calculate_gradient_weight_cpu(const mat_arr& previous_activation_rv,
 		                   transpose_A);
 	}
 
-	mat_element_wise_div(*gradient_weight_noarr, static_cast<float>(batch_entry_count), gradient_weight_noarr);
+	mat_element_wise_div(*gradient_weight_noarr, static_cast<fpt>(batch_entry_count), gradient_weight_noarr);
 }
 
 void calculate_gradient_bias_cpu(const mat_arr& error_rv,
@@ -94,7 +94,7 @@ void calculate_gradient_bias_cpu(const mat_arr& error_rv,
 	}
 
 	mat_element_wise_div(*gradient_bias_noarr_rv,
-	                     static_cast<float>(batch_entry_count),
+	                     static_cast<fpt>(batch_entry_count),
 	                     gradient_bias_noarr_rv);
 }
 

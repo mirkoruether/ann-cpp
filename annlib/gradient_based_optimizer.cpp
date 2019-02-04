@@ -38,7 +38,7 @@ abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(unsigned bu
 {
 }
 
-ordinary_sgd::ordinary_sgd(float learning_rate)
+ordinary_sgd::ordinary_sgd(fpt learning_rate)
 	: abstract_gradient_based_optimizer(0),
 	  learning_rate(learning_rate)
 {
@@ -52,14 +52,14 @@ void ordinary_sgd::adjust(const mat_arr& gradient_noarr,
 	cuda::cuda_ordinary_sgd_update(learning_rate, gradient_noarr, target_noarr);
 #else
 	mat_element_by_element_operation(*target_noarr, gradient_noarr, target_noarr,
-	                                 [&](float target, float grad)
+	                                 [&](fpt target, fpt grad)
 	                                 {
 		                                 return target - learning_rate * grad;
 	                                 });
 #endif
 }
 
-momentum_sgd::momentum_sgd(float learning_rate, float alpha)
+momentum_sgd::momentum_sgd(fpt learning_rate, fpt alpha)
 	: abstract_gradient_based_optimizer(1),
 	  learning_rate(learning_rate), alpha(alpha)
 {
@@ -73,7 +73,7 @@ void momentum_sgd::adjust(const mat_arr& gradient_noarr,
 	cuda::cuda_momentum_sgd_update_velocities(alpha, learning_rate, gradient_noarr, buffer);
 #else
 	mat_element_by_element_operation(*buffer, gradient_noarr, buffer,
-	                                 [&](float v, float grad)
+	                                 [&](fpt v, fpt grad)
 	                                 {
 		                                 return alpha * v - learning_rate * grad;
 	                                 });
@@ -87,7 +87,7 @@ adam::adam()
 {
 }
 
-adam::adam(float alpha, float beta1, float beta2)
+adam::adam(fpt alpha, fpt beta1, fpt beta2)
 	: abstract_gradient_based_optimizer(3),
 	  alpha(alpha), beta1(beta1), beta2(beta2),
 	  beta1_pow_t(1.0f), beta2_pow_t(1.0f), alpha_t(0.0f)
@@ -118,19 +118,19 @@ void adam::adjust(const mat_arr& gradient_noarr,
 	mat_arr delta = buffer->get_mat(2);
 
 	mat_element_by_element_operation(m_buf, gradient_noarr, &m_buf,
-	                                 [&](float m, float grad)
+	                                 [&](fpt m, fpt grad)
 	                                 {
 		                                 return beta1 * m + (1.0f - beta1) * grad;
 	                                 });
 
 	mat_element_by_element_operation(v_buf, gradient_noarr, &v_buf,
-	                                 [&](float v, float grad)
+	                                 [&](fpt v, fpt grad)
 	                                 {
 		                                 return beta2 * v + (1.0f - beta2) * grad * grad;
 	                                 });
 
 	mat_element_by_element_operation(m_buf, v_buf, &delta,
-	                                 [&](float m, float v)
+	                                 [&](fpt m, fpt v)
 	                                 {
 		                                 return alpha_t * m / (std::sqrt(v) + 1e-8f);
 	                                 });
