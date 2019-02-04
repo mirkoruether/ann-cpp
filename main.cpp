@@ -197,7 +197,7 @@ int main(int argc, char** argv)
 		static_cast<float>(3.0 / mnist_training.entry_count()));
 
 	const auto act_f = std::make_shared<logistic_activation_function>();
-	const unsigned hidden_layer_size = 30;
+	const unsigned hidden_layer_size = 100;
 	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size);
 	auto layer1_act = std::make_shared<activation_layer>(hidden_layer_size, act_f);
 	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10);

@@ -47,14 +47,6 @@ namespace annlib
 
 		float apply_derivative(float d) const override;
 	};
-
-	class softmax_activation_function : public activation_function
-	{
-	public:
-		softmax_activation_function() = default;
-
-		void apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target = nullptr) const override;
-	};
 }
 
 #endif

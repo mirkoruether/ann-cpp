@@ -2,7 +2,6 @@
 #define MAT_ARR_H
 
 #include <memory>
-#include <vector>
 #include <array>
 #include "synced_vectors.h"
 

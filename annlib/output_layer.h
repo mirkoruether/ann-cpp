@@ -29,7 +29,7 @@ namespace annlib
 	class logistic_act_cross_entropy_costs : public output_layer
 	{
 	private:
-		std::shared_ptr<activation_function> act;;
+		std::shared_ptr<activation_function> act;
 
 	public:
 		logistic_act_cross_entropy_costs(unsigned size);
@@ -40,8 +40,21 @@ namespace annlib
 
 		void calculate_error_prev_layer(const mat_arr& net_output,
 		                                const mat_arr& solution,
-		                                mat_arr* error_prev) const
-		override;
+		                                mat_arr* error_prev) const override;
+	};
+
+	class softmax_act_cross_entropy_costs : public output_layer
+	{
+	public:
+		softmax_act_cross_entropy_costs(unsigned size);
+
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
+		float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const override;
+
+		void calculate_error_prev_layer(const mat_arr& net_output,
+		                                const mat_arr& solution,
+		                                mat_arr* error_prev) const override;
 	};
 }
 #endif // OUTPUT_LAYER_H

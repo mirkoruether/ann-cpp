@@ -166,7 +166,7 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 	opt->next_mini_batch();
 
 #pragma omp parallel for
-	for (unsigned i = 0; i < get_layer_count(); i++)
+	for (int i = 0; i < static_cast<int>(get_layer_count()); i++)
 	{
 		layers[i]->optimize(*buffer->error(i), opt, buffer->lbuf(i));
 	}
