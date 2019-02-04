@@ -6,6 +6,7 @@
 #include <random>
 
 #include "_calc_macros.h"
+#include "output_layer.h"
 
 #ifdef ANNLIB_USE_CUDA
 #include "sgd_trainer_cudaops.cuh"
@@ -14,12 +15,6 @@
 
 using namespace linalg;
 using namespace annlib;
-
-sgd_trainer::sgd_trainer()
-	: mini_batch_size(8),
-	  cost_f(std::make_shared<quadratic_costs>())
-{
-}
 
 unsigned sgd_trainer::get_layer_count() const
 {
@@ -81,7 +76,7 @@ void sgd_trainer::init()
 }
 
 void sgd_trainer::train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-                               const double epoch_count, bool print)
+                               const unsigned mini_batch_size, const double epoch_count, bool print)
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
@@ -145,6 +140,11 @@ mat_arr sgd_trainer::feed_forward(const mat_arr& in) const
 	return *la_in;
 }
 
+float sgd_trainer::calculate_costs(const mat_arr& net_output, const mat_arr& solution) const
+{
+	return dynamic_cast<output_layer*>(layers.back().get())->calculate_costs(net_output, solution);
+}
+
 void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 {
 	const auto layer_count = get_layer_count();
@@ -153,15 +153,12 @@ void sgd_trainer::do_feed_forward_and_backprop(training_buffer* buffer) const
 		layers[i]->feed_forward_detailed(*buffer->in(i), buffer->out(i), buffer->lbuf(i));
 	}
 
-	const unsigned last_layer = layer_count - 1;
-	cost_f->calculate_gradient(*buffer->out(last_layer), *buffer->sol(), buffer->bpterm(last_layer));
+	const auto last_layer = layer_count - 1;
 
 	for (unsigned i = last_layer; i >= 1; i--)
 	{
-		layers[i]->prepare_optimization(*buffer->bpterm(i), buffer->lbuf(i));
-		layers[i]->backprop(buffer->bpterm(i - 1), buffer->lbuf(i));
+		layers[i]->backprop(*buffer->error(i), buffer->error(i - 1), buffer->lbuf(i));
 	}
-	layers[0]->prepare_optimization(*buffer->bpterm(0), buffer->lbuf(0));
 }
 
 void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer* buffer)
@@ -171,7 +168,7 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 #pragma omp parallel for
 	for (unsigned i = 0; i < get_layer_count(); i++)
 	{
-		layers[i]->optimize(opt, buffer->lbuf(i));
+		layers[i]->optimize(*buffer->error(i), opt, buffer->lbuf(i));
 	}
 }
 

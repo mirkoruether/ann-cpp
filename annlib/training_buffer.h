@@ -16,15 +16,14 @@ namespace annlib
 	private:
 		std::vector<layer_buffer> lbufs;
 		std::vector<mat_arr> activations;
-		std::vector<mat_arr> backprop_terms;
-		mat_arr solution;
+		std::vector<mat_arr> errors;
 
 	public:
 		const unsigned mini_batch_size;
 
 		mat_arr* in(unsigned layer_no);
 		mat_arr* out(unsigned layer_no);
-		mat_arr* bpterm(unsigned layer_no);
+		mat_arr* error(unsigned layer_no);
 		mat_arr* sol();
 		layer_buffer* lbuf(unsigned layer_no);
 
@@ -58,9 +57,9 @@ namespace annlib
 		const unsigned mini_batch_size;
 		const mat_arr in;
 		const mat_arr out;
-		const mat_arr backprop_term;
+		const mat_arr error;
 
-		layer_buffer(unsigned mini_batch_size, mat_arr in, mat_arr out, mat_arr backprop_term);
+		layer_buffer(unsigned mini_batch_size, mat_arr in, mat_arr out, mat_arr error);
 
 		void add_custom_count(const std::string& key, std::array<unsigned, 3> dim);
 		void add_custom_count(const std::string& key, unsigned count, unsigned rows, unsigned cols);

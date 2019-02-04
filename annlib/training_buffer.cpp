@@ -4,17 +4,16 @@
 using namespace annlib;
 
 training_buffer::training_buffer(training_buffer* buf, unsigned start, unsigned count)
-	: solution(buf->solution.get_mats(start, count)),
-	  mini_batch_size(count)
+	: mini_batch_size(count)
 {
 	for (auto& act : buf->activations)
 	{
 		activations.emplace_back(act.get_mats(start, count));
 	}
 
-	for (auto& bpt : buf->backprop_terms)
+	for (auto& err : buf->errors)
 	{
-		backprop_terms.emplace_back(bpt.get_mats(start, count));
+		errors.emplace_back(err.get_mats(start, count));
 	}
 
 	for (auto& lb : buf->lbufs)
@@ -33,14 +32,14 @@ mat_arr* training_buffer::out(unsigned layer_no)
 	return &activations[layer_no + 1];
 }
 
-mat_arr* training_buffer::bpterm(unsigned layer_no)
+mat_arr* training_buffer::error(unsigned layer_no)
 {
-	return &backprop_terms[layer_no];
+	return &errors[layer_no];
 }
 
 mat_arr* training_buffer::sol()
 {
-	return &solution;
+	return &errors.back();
 }
 
 layer_buffer* training_buffer::lbuf(unsigned layer_no)
@@ -66,20 +65,19 @@ std::vector<training_buffer> training_buffer::do_split(unsigned part_count)
 }
 
 training_buffer::training_buffer(unsigned mini_batch_size, std::vector<unsigned> sizes)
-	: solution(mini_batch_size, 1, sizes[sizes.size() - 1]),
-	  mini_batch_size(mini_batch_size)
+	: mini_batch_size(mini_batch_size)
 {
 	const auto layer_count = static_cast<unsigned>(sizes.size() - 1);
 	activations.emplace_back(mini_batch_size, 1, sizes[0]);
 	for (unsigned i = 1; i < layer_count + 1; i++)
 	{
 		activations.emplace_back(mini_batch_size, 1, sizes[i]);
-		backprop_terms.emplace_back(mini_batch_size, 1, sizes[i]);
+		errors.emplace_back(mini_batch_size, 1, sizes[i]);
 	}
 
 	for (unsigned i = 0; i < layer_count; i++)
 	{
-		lbufs.emplace_back(mini_batch_size, activations[i], activations[i + 1], backprop_terms[i]);
+		lbufs.emplace_back(mini_batch_size, activations[i], activations[i + 1], errors[i]);
 	}
 }
 
@@ -94,10 +92,10 @@ void layer_buffer::add_single(const std::string& key, unsigned rows, unsigned co
 }
 
 layer_buffer::layer_buffer(unsigned mini_batch_size, mat_arr in,
-                           mat_arr out, mat_arr backprop_term)
+                           mat_arr out, mat_arr error)
 	: mini_batch_size(mini_batch_size),
 	  in(std::move(in)), out(std::move(out)),
-	  backprop_term(std::move(backprop_term))
+	  error(std::move(error))
 {
 }
 
@@ -153,7 +151,7 @@ layer_buffer layer_buffer::get_part(unsigned start, unsigned count)
 	layer_buffer res(count,
 	                 in.get_mats(start, count),
 	                 out.get_mats(start, count),
-	                 backprop_term.get_mats(start, count));
+	                 error.get_mats(start, count));
 
 	for (const auto& e : m)
 	{

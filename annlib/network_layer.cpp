@@ -9,13 +9,28 @@ annlib::network_layer::network_layer(unsigned input_size, unsigned output_size)
 {
 }
 
+void annlib::network_layer::init(std::mt19937* rnd)
+{
+}
+
+void annlib::network_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+{
+}
+
+void annlib::network_layer::feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const
+{
+	feed_forward(in, out);
+}
+
+void annlib::network_layer::optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf)
+{
+}
+
 annlib::fully_connected_layer::fully_connected_layer(unsigned input_size, unsigned output_size,
-                                                     std::shared_ptr<activation_function> act,
                                                      std::shared_ptr<weight_norm_penalty> wnp)
 	: network_layer(input_size, output_size),
 	  weights_noarr(1, input_size, output_size),
 	  biases_noarr(1, 1, output_size),
-	  act(std::move(act)),
 	  wnp(std::move(wnp))
 {
 }
@@ -24,7 +39,6 @@ void annlib::fully_connected_layer::feed_forward(const mat_arr& in, mat_arr* out
 {
 	mat_matrix_mul(in, weights_noarr, out);
 	mat_element_wise_add(*out, biases_noarr, out);
-	act->apply(*out, out);
 }
 
 void annlib::fully_connected_layer::init(std::mt19937* rnd)
@@ -36,10 +50,6 @@ void annlib::fully_connected_layer::init(std::mt19937* rnd)
 
 void annlib::fully_connected_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
 {
-	buf->add_mini_batch_size("wi", 1, output_size);
-	buf->add_mini_batch_size("out_df", 1, output_size);
-	buf->add_mini_batch_size("err", 1, output_size);
-
 	buf->add_single("grad_b", 1, output_size);
 	buf->add_single("grad_w", input_size, output_size);
 
@@ -47,25 +57,9 @@ void annlib::fully_connected_layer::prepare_buffer(layer_buffer* buf, gradient_b
 	opt->add_to_buffer("opt_w", buf, input_size, output_size);
 }
 
-void annlib::fully_connected_layer::feed_forward_detailed(const mat_arr& in,
-                                                          mat_arr* out,
-                                                          layer_buffer* buf) const
+void annlib::fully_connected_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const
 {
-	mat_matrix_mul(in, weights_noarr, buf->get_ptr("wi"));
-	mat_element_wise_add(buf->get_val("wi"), biases_noarr, buf->get_ptr("wi"));
-
-	act->apply(buf->get_val("wi"), out);
-	act->apply_derivative(buf->get_val("wi"), buf->get_ptr("out_df"));
-}
-
-void annlib::fully_connected_layer::prepare_optimization(const mat_arr& backprop_term, layer_buffer* buf) const
-{
-	mat_element_wise_mul(backprop_term, buf->get_val("out_df"), buf->get_ptr("err"));
-}
-
-void annlib::fully_connected_layer::backprop(mat_arr* backprop_term_prev, layer_buffer* buf) const
-{
-	mat_matrix_mul(buf->get_val("err"), weights_noarr, backprop_term_prev, transpose_B);
+	mat_matrix_mul(error, weights_noarr, error_prev, transpose_B);
 }
 
 void calculate_gradient_weight_cpu(const mat_arr& previous_activation_rv,
@@ -104,11 +98,11 @@ void calculate_gradient_bias_cpu(const mat_arr& error_rv,
 	                     gradient_bias_noarr_rv);
 }
 
-void annlib::fully_connected_layer::optimize(annlib::gradient_based_optimizer* opt, layer_buffer* buf)
+void annlib::fully_connected_layer::optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf)
 {
 	//TODO Parallel 
 	mat_arr* grad_w = buf->get_ptr("grad_w");
-	calculate_gradient_weight_cpu(buf->in, buf->get_val("err"), grad_w);
+	calculate_gradient_weight_cpu(buf->in, error, grad_w);
 
 	if (wnp != nullptr)
 	{
@@ -118,6 +112,32 @@ void annlib::fully_connected_layer::optimize(annlib::gradient_based_optimizer* o
 	opt->adjust(*grad_w, &weights_noarr, "opt_w", buf);
 
 	mat_arr* grad_b = buf->get_ptr("grad_b");
-	calculate_gradient_bias_cpu(buf->get_val("err"), grad_b);
+	calculate_gradient_bias_cpu(error, grad_b);
 	opt->adjust(*grad_b, &biases_noarr, "opt_b", buf);
+}
+
+annlib::activation_layer::activation_layer(unsigned size, std::shared_ptr<activation_function> act)
+	: network_layer(size, size),
+	  act(std::move(act))
+{
+}
+
+void annlib::activation_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+{
+	buf->add_mini_batch_size("df", 1, output_size);
+}
+
+void annlib::activation_layer::feed_forward(const mat_arr& in, mat_arr* out) const
+{
+	act->apply(in, out);
+}
+
+void annlib::activation_layer::feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const
+{
+	act->apply(in, out, buf->get_ptr("df"));
+}
+
+void annlib::activation_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const
+{
+	mat_element_wise_mul(error, buf->get_val("df"), error_prev);
 }

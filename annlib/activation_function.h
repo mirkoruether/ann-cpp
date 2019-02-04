@@ -13,54 +13,47 @@ namespace annlib
 	public:
 		virtual ~activation_function() = default;
 
-		virtual float apply(float d) const = 0;
-
-		virtual void apply(const mat_arr& in, mat_arr* target) const;
-
-		virtual float apply_derivative(float d) const = 0;
-
-		virtual void apply_derivative(const mat_arr& in, mat_arr* target) const;
+		virtual void apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target = nullptr) const = 0;
 	};
 
 	class abstract_activation_function : public activation_function
 	{
 	public:
-		const std::function<float(float)> f;
-		const std::function<float(float)> df;
+		virtual ~abstract_activation_function() = default;
 
-		abstract_activation_function(std::function<float(float)> f, std::function<float(float)> df);
+		void apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target = nullptr) const override;
 
-		float apply(float d) const override;
+		virtual float apply(float d) const = 0;
 
-		float apply_derivative(float d) const override;
+		virtual float apply_derivative(float d) const = 0;
 	};
 
-	class logistic_activation_function : public activation_function
+	class logistic_activation_function : public abstract_activation_function
 	{
 	public:
 		logistic_activation_function() = default;
 
 		float apply(float d) const override;
 
-		void apply(const mat_arr& in, mat_arr* target) const override;
-
 		float apply_derivative(float d) const override;
-
-		void apply_derivative(const mat_arr& in, mat_arr* target) const override;
 	};
 
-	class relu_activation_function : public activation_function
+	class relu_activation_function : public abstract_activation_function
 	{
 	public:
 		relu_activation_function() = default;
 
 		float apply(float d) const override;
 
-		void apply(const mat_arr& in, mat_arr* target) const override;
-
 		float apply_derivative(float d) const override;
+	};
 
-		void apply_derivative(const mat_arr& in, mat_arr* target) const override;
+	class softmax_activation_function : public activation_function
+	{
+	public:
+		softmax_activation_function() = default;
+
+		void apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target = nullptr) const override;
 	};
 }
 

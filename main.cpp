@@ -5,6 +5,7 @@
 #include <iostream>
 #include <thread>
 #include <string>
+#include "output_layer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -123,7 +124,7 @@ test_result test_network(const sgd_trainer& trainer, const training_data& data)
 		const mat_arr& output = net_output.get_mat(i);
 		const mat_arr& solution = data.solution.get_mat(i);
 
-		costs += trainer.cost_f->calculate_costs(output, solution);
+		costs += trainer.calculate_costs(output, solution);
 
 		if (get_max_index(output) == get_max_index(solution))
 		{
@@ -168,7 +169,7 @@ cycle_result train_and_test(double epochs_per_cycle, sgd_trainer* trainer,
 
 int main(int argc, char** argv)
 {
-	double epoch_count = argc <= 1 ? 5 : std::stod(std::string(argv[1]));
+	double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
 
 #ifdef __linux__
 	const std::string folder = "/mnt/c/";
@@ -192,25 +193,31 @@ int main(int argc, char** argv)
 	});
 
 	sgd_trainer trainer;
-	trainer.mini_batch_size = 8;
 	auto wnp = std::make_shared<L2_regularization>(
 		static_cast<float>(3.0 / mnist_training.entry_count()));
 
 	const auto act_f = std::make_shared<logistic_activation_function>();
 	const unsigned hidden_layer_size = 30;
-	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size, act_f);
-	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10, act_f);
+	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size);
+	auto layer1_act = std::make_shared<activation_layer>(hidden_layer_size, act_f);
+	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10);
+	auto out_la = std::make_shared<logistic_act_cross_entropy_costs>(10);
 
 	trainer.add_layer(layer1);
+	trainer.add_layer(layer1_act);
+
 	trainer.add_layer(layer2);
+
+	trainer.add_layer(out_la);
 
 	trainer.init();
 
-	auto opt = momentum_sgd(.5f, .9f);
+	//auto opt = momentum_sgd(.5f, .9f);
+	auto opt = adam();
 
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{
-		trainer.train_epochs(mnist_training, &opt, epoch_count, true);
+		trainer.train_epochs(mnist_training, &opt, 8, epoch_count, true);
 	});
 
 	const auto accuracy = time_execution_func<double>("Test", [&]()

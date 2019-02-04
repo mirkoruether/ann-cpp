@@ -12,52 +12,27 @@ using namespace annlib;
 
 namespace annlib
 {
-	void activation_function::apply(const mat_arr& in, mat_arr* target) const
+	void abstract_activation_function::apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target) const
 	{
 		mat_element_wise_operation(in, target,
 		                           [&](float f)
 		                           {
 			                           return apply(f);
 		                           });
-	}
 
-	void activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
-	{
-		mat_element_wise_operation(in, target,
-		                           [&](float f)
-		                           {
-			                           return apply_derivative(f);
-		                           });
-	}
-
-	abstract_activation_function::abstract_activation_function(std::function<float(float)> f,
-	                                                           std::function<float(float)> df)
-		: f(std::move(f)), df(std::move(df))
-	{
-	}
-
-	float abstract_activation_function::apply(float d) const
-	{
-		return f(d);
-	}
-
-	float abstract_activation_function::apply_derivative(float d) const
-	{
-		return df(d);
+		if (derivative_target != nullptr)
+		{
+			mat_element_wise_operation(in, derivative_target,
+			                           [&](float f)
+			                           {
+				                           return apply_derivative(f);
+			                           });
+		}
 	}
 
 	float logistic_activation_function::apply(float d) const
 	{
 		return 1.0f / (1.0f + std::exp(-d));
-	}
-
-	void logistic_activation_function::apply(const mat_arr& in, mat_arr* target) const
-	{
-#ifdef ANNLIB_USE_CUDA
-		cuda::cuda_sigmoid_apply(in, target);
-#else
-		activation_function::apply(in, target);
-#endif
 	}
 
 	float logistic_activation_function::apply_derivative(float d) const
@@ -69,23 +44,9 @@ namespace annlib
 		return std::exp(d) / (v * v);
 	}
 
-	void logistic_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
-	{
-#ifdef ANNLIB_USE_CUDA
-		cuda::cuda_sigmoid_apply_derivative(in, target);
-#else
-		activation_function::apply_derivative(in, target);
-#endif
-	}
-
 	float relu_activation_function::apply(float d) const
 	{
 		return std::max(0.0f, d);
-	}
-
-	void relu_activation_function::apply(const mat_arr& in, mat_arr* target) const
-	{
-		activation_function::apply(in, target);
 	}
 
 	float relu_activation_function::apply_derivative(float d) const
@@ -93,8 +54,54 @@ namespace annlib
 		return d > 0 ? 1.0f : 0.0f;
 	}
 
-	void relu_activation_function::apply_derivative(const mat_arr& in, mat_arr* target) const
+	void softmax_jacobian_times_input(const mat_arr& in_noarr, const mat_arr& softmax_noarr,
+	                                  mat_arr* derivative_target_noarr)
 	{
-		activation_function::apply_derivative(in, target);
+		const unsigned size = in_noarr.size();
+		const float* a = in_noarr.start();
+		const float* y = softmax_noarr.start();
+		float* d = derivative_target_noarr->start();
+
+		for (unsigned i = 0; i < size; i++)
+		{
+			float temp = 0.0f;
+			for (unsigned j = 0; j < size; j++)
+			{
+				if (i == j)
+				{
+					temp += a[j] * (y[i] * (1 - y[j]));
+				}
+				else
+				{
+					temp += a[j] * (-1.0f * y[i] * y[j]);
+				}
+			}
+			d[i] = temp;
+		}
+	}
+
+	void softmax_activation_function::apply(const mat_arr& in, mat_arr* target, mat_arr* derivative_target) const
+	{
+		const unsigned count = in.count;
+		for (unsigned i = 0; i < count; i++)
+		{
+			const mat_arr in_mat = in.get_mat(i);
+			mat_arr target_mat = target->get_mat(i);
+
+			const float max = mat_max(in_mat);
+			mat_element_wise_operation(in_mat, &target_mat, [=](float z)
+			{
+				return std::exp(z - max);
+			});
+
+			const float den = mat_sum(target_mat);
+			mat_element_wise_div(target_mat, den, &target_mat);
+
+			if (derivative_target != nullptr)
+			{
+				mat_arr derivative_target_mat = derivative_target->get_mat(i);
+				softmax_jacobian_times_input(in_mat, target_mat, &derivative_target_mat);
+			}
+		}
 	}
 }

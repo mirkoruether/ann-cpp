@@ -3,9 +3,6 @@
 
 #include <vector>
 #include "mat_arr.h"
-#include "cost_function.h"
-#include "activation_function.h"
-#include "weight_norm_penalty.h"
 #include "training_data.h"
 #include "gradient_based_optimizer.h"
 #include <random>
@@ -21,11 +18,6 @@ namespace annlib
 	class sgd_trainer
 	{
 	public:
-		sgd_trainer();
-
-		unsigned mini_batch_size;
-		std::shared_ptr<cost_function> cost_f;
-
 		unsigned get_layer_count() const;
 
 		std::vector<unsigned> get_sizes() const;
@@ -39,9 +31,11 @@ namespace annlib
 		void init();
 
 		void train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-		                  double epoch_count, bool print = false);
+		                  unsigned mini_batch_size, double epoch_count, bool print = false);
 
 		mat_arr feed_forward(const mat_arr& in) const;
+
+		float calculate_costs(const mat_arr& net_output, const mat_arr& solution) const;
 
 	private:
 		std::vector<std::shared_ptr<network_layer>> layers;

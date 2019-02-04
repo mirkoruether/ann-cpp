@@ -599,4 +599,39 @@ namespace linalg
 			return distr(*rnd);
 		});
 	}
+
+	mat_arr mat_copy(const mat_arr& A, mat_arr* C)
+	{
+		return mat_element_wise_operation(A, C, [](float a)
+		{
+			return a;
+		});
+	}
+
+	float mat_max(const mat_arr& A)
+	{
+		const unsigned size = A.size();
+		const float* start = A.start();
+		float max = -1.0f * std::numeric_limits<float>::infinity();
+		for (unsigned i = 0; i < size; i++)
+		{
+			if (start[i] > max)
+			{
+				max = start[i];
+			}
+		}
+		return max;
+	}
+
+	float mat_sum(const mat_arr& A)
+	{
+		const unsigned size = A.size();
+		const float* start = A.start();
+		float sum = 0.0f;
+		for (unsigned i = 0; i < size; i++)
+		{
+			sum += start[i];
+		}
+		return sum;
+	}
 }

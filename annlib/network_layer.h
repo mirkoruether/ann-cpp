@@ -22,19 +22,17 @@ namespace annlib
 		const unsigned input_size;
 		const unsigned output_size;
 
+		virtual void init(std::mt19937* rnd);
+
+		virtual void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const;
+
 		virtual void feed_forward(const mat_arr& in, mat_arr* out) const = 0;
 
-		virtual void init(std::mt19937* rnd) = 0;
+		virtual void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const;
 
-		virtual void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const = 0;
+		virtual void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const = 0;
 
-		virtual void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const = 0;
-
-		virtual void prepare_optimization(const mat_arr& backprop_term, layer_buffer* buf) const = 0;
-
-		virtual void backprop(mat_arr* backprop_term_prev, layer_buffer* buf) const = 0;
-
-		virtual void optimize(annlib::gradient_based_optimizer* opt, layer_buffer* buf) = 0;
+		virtual void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf);
 	};
 
 	class fully_connected_layer : public network_layer
@@ -43,29 +41,42 @@ namespace annlib
 		mat_arr weights_noarr;
 		mat_arr biases_noarr;
 
-		std::shared_ptr<activation_function> act;
 		std::shared_ptr<weight_norm_penalty> wnp;
 
 	public:
 		virtual ~fully_connected_layer() = default;
 
 		fully_connected_layer(unsigned input_size, unsigned output_size,
-		                      std::shared_ptr<activation_function> act,
 		                      std::shared_ptr<weight_norm_penalty> wnp = nullptr);
-
-		void feed_forward(const mat_arr& in, mat_arr* out) const override;
 
 		void init(std::mt19937* rnd) override;
 
 		void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const override;
 
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
+		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
+
+		void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf) override;
+	};
+
+	class activation_layer : public network_layer
+	{
+	private:
+		std::shared_ptr<activation_function> act;
+
+	public:
+		virtual ~activation_layer() = default;
+
+		activation_layer(unsigned size, std::shared_ptr<activation_function> act);
+
+		void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const override;
+
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
 		void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const override;
 
-		void prepare_optimization(const mat_arr& backprop_term, layer_buffer* buf) const override;
-
-		void backprop(mat_arr* backprop_term_prev, layer_buffer* buf) const override;
-
-		void optimize(annlib::gradient_based_optimizer* opt, layer_buffer* buf) override;
+		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
 	};
 }
 #endif // NETWORK_LAYER_H

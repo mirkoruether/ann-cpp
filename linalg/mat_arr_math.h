@@ -53,5 +53,11 @@ namespace linalg
 	mat_arr mat_select_mats(const mat_arr& A, const std::vector<unsigned>& indices, mat_arr* C);
 
 	mat_arr mat_random_gaussian(float mean, float sigma, std::mt19937* rnd, mat_arr* C);
+
+	mat_arr mat_copy(const mat_arr& A, mat_arr* C);
+
+	float mat_max(const mat_arr& A);
+
+	float mat_sum(const mat_arr& A);
 } // namespace linalg
 #endif

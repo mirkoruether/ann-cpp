@@ -6,9 +6,9 @@ endif(ANN_CUDA_ACTIVE)
 add_library(annlib 
 _calc_macros.h
 activation_function.h       activation_function.cpp
-cost_function.h             cost_function.cpp
 gradient_based_optimizer.h  gradient_based_optimizer.cpp
 network_layer.h				network_layer.cpp
+output_layer.h              output_layer.cpp
 sgd_trainer.h               sgd_trainer.cpp
 training_buffer.h			training_buffer.cpp
 training_data.h             training_data.cpp
@@ -23,12 +23,12 @@ endif(ANN_CUDA_ACTIVE)
 install(TARGETS annlib DESTINATION lib)
 install(FILES 
 _calc_macros.h
-activation_function.h     
-cost_function.h            
-gradient_based_optimizer.h  
-net_init.h
-sgd_trainer.h       
-training_buffer.h
-training_data.h
-weight_norm_penalty.h 
+activation_function.h 
+gradient_based_optimizer.h 
+network_layer.h		
+output_layer.h      
+sgd_trainer.h      
+training_buffer.h	
+training_data.h            
+weight_norm_penalty.h       
 DESTINATION include)
