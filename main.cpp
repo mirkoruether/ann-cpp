@@ -196,19 +196,11 @@ int main(int argc, char** argv)
 	auto wnp = std::make_shared<L2_regularization>(
 		static_cast<fpt>(3.0 / mnist_training.entry_count()));
 
-	const auto act_f = std::make_shared<logistic_activation_function>();
-	const unsigned hidden_layer_size = 100;
-	auto layer1 = std::make_shared<fully_connected_layer>(784, hidden_layer_size);
-	auto layer1_act = std::make_shared<activation_layer>(hidden_layer_size, act_f);
-	auto layer2 = std::make_shared<fully_connected_layer>(hidden_layer_size, 10);
-	auto out_la = std::make_shared<logistic_act_cross_entropy_costs>(10);
+	trainer.add_new_layer<fully_connected_layer>(784, 100);
+	trainer.add_new_layer<logistic_activation_layer>(100);
 
-	trainer.add_layer(layer1);
-	trainer.add_layer(layer1_act);
-
-	trainer.add_layer(layer2);
-
-	trainer.add_layer(out_la);
+	trainer.add_new_layer<fully_connected_layer>(100, 10);
+	trainer.add_new_layer<logistic_act_cross_entropy_costs>(10);
 
 	trainer.init();
 

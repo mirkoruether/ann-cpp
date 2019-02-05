@@ -78,5 +78,19 @@ namespace annlib
 
 		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
 	};
+
+	template <typename Ty>
+	class activation_layer_t : public activation_layer
+	{
+	public:
+		template <typename... Tys>
+		activation_layer_t(unsigned size, Tys&&... args)
+			: activation_layer(size, std::make_shared<Ty>(std::forward<Tys>(args)...))
+		{
+		}
+	};
+
+	typedef activation_layer_t<logistic_activation_function> logistic_activation_layer;
+	typedef activation_layer_t<relu_activation_function> relu_activation_layer;
 }
 #endif // NETWORK_LAYER_H

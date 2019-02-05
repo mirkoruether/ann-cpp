@@ -28,6 +28,12 @@ namespace annlib
 
 		void add_layer(std::shared_ptr<network_layer> layer);
 
+		template <typename Ty, typename... Tys>
+		void add_new_layer(Tys&&... args)
+		{
+			add_layer(std::make_shared<Ty>(std::forward<Tys>(args)...));
+		}
+
 		void init();
 
 		void train_epochs(const training_data& training_data, gradient_based_optimizer* opt,

@@ -1,13 +1,25 @@
 out_dir="build"
+out_dir_deb="${out_dir}/debug/linux/"
+out_dir_rel="${out_dir}/release/linux/"
 compilerflags="-std=c++17 -Wall -Wextra -Wno-unused-parameter"
 includeflags="-pthread -Ilinalg -Iannlib"
 linkerflags="-lstdc++fs"
 
 files="**/*.cpp *.cpp"
 
-mkdir -p ${out_dir}/release ${out_dir}/debug
-#clang++ ${compilerflags} ${includeflags} -target x86_64-linux ${files} -o ${out_dir}/debug/ann-cpp-linux-x64 ${linkerflags}
-clang++ ${compilerflags} -fopenmp -Ofast ${includeflags} -target x86_64-linux ${files} -o ${out_dir}/release/ann-cpp-linux-x64-openmp ${linkerflags}
-#clang++ ${compilerflags} -Ofast ${includeflags} -target x86_64-linux ${files} -o ${out_dir}/release/ann-cpp-linux-x64 ${linkerflags}
+mkdir -p ${out_dir_rel} ${out_dir_deb}
 
-#clang++ ${compilerflags} -Ofast -march=native ${includeflags} ${files} -o ${out_dir}/release/ann-cpp-native ${linkerflags}
+#Debug x64
+#clang++ ${compilerflags} ${includeflags} -target x86_64-linux ${files} -o ${out_dir_deb}ann-cpp-x64 ${linkerflags}
+
+#Release x64 Ofast
+#clang++ ${compilerflags} -Ofast ${includeflags} -target x86_64-linux ${files} -o ${out_dir_rel}ann-cpp-x64 ${linkerflags}
+
+#Release x64 Ofast, openmp
+clang++ ${compilerflags} -fopenmp -Ofast ${includeflags} -target x86_64-linux ${files} -o ${out_dir_rel}ann-cpp-x64-openmp ${linkerflags}
+
+#Release native Ofast
+#clang++ ${compilerflags} -Ofast -march=native ${includeflags} ${files} -o ${out_dir_rel}ann-cpp-native ${linkerflags}
+
+#Release native Ofast, openmp
+#clang++ ${compilerflags} -fopenmp -Ofast -march=native ${includeflags} -target x86_64-linux ${files} -o ${out_dir_rel}ann-cpp-native-openmp ${linkerflags}
