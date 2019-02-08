@@ -1,5 +1,6 @@
 #include "mat_arr_math.h"
 #include "mat_arr_math_t.h"
+#include "cuda/linalg_cudaops_t.cuh"
 
 using namespace linalg;
 
@@ -55,6 +56,32 @@ namespace linalg
 	mat_arr mat_element_wise_div(const mat_arr& A, const mat_arr& B, mat_arr* C, const mat_tr tr)
 	{
 		return mat_element_by_element_operation(A, B, C, _mat_e_by_e_div_kernel(), tr);
+	}
+
+	struct _mat_e_by_e_max_kernel
+	{
+		fpt operator()(fpt a, fpt b) const
+		{
+			return std::max(a, b);
+		}
+	};
+
+	mat_arr mat_element_wise_max(const mat_arr& A, const mat_arr& B, mat_arr* C, mat_tr tr)
+	{
+		return mat_element_by_element_operation(A, B, C, _mat_e_by_e_max_kernel(), tr);
+	}
+
+	struct _mat_e_by_e_min_kernel
+	{
+		fpt operator()(fpt a, fpt b) const
+		{
+			return std::min(a, b);
+		}
+	};
+
+	mat_arr mat_element_wise_min(const mat_arr& A, const mat_arr& B, mat_arr* C, mat_tr tr)
+	{
+		return mat_element_by_element_operation(A, B, C, _mat_e_by_e_min_kernel(), tr);
 	}
 
 	struct _mat_e_wise_add_kernel
@@ -179,6 +206,54 @@ namespace linalg
 	mat_arr mat_element_wise_div(fpt a, const mat_arr& B, mat_arr* C)
 	{
 		return mat_element_wise_operation(B, C, _mat_e_wise_div_kernel2(a));
+	}
+
+	struct _mat_e_wise_max_kernel
+	{
+		fpt b;
+
+		explicit _mat_e_wise_max_kernel(fpt b) : b(b)
+		{
+		}
+
+		fpt operator()(fpt a) const
+		{
+			return std::max(a, b);
+		}
+	};
+
+	mat_arr mat_element_wise_max(const mat_arr& A, float b, mat_arr* C)
+	{
+		return mat_element_wise_operation(A, C, _mat_e_wise_max_kernel(b));
+	}
+
+	mat_arr mat_element_wise_max(float a, const mat_arr& B, mat_arr* C)
+	{
+		return mat_element_wise_operation(B, C, _mat_e_wise_max_kernel(a));
+	}
+
+	struct _mat_e_wise_min_kernel
+	{
+		fpt b;
+
+		explicit _mat_e_wise_min_kernel(fpt b) : b(b)
+		{
+		}
+
+		fpt operator()(fpt a) const
+		{
+			return std::min(a, b);
+		}
+	};
+
+	mat_arr mat_element_wise_min(const mat_arr& A, float b, mat_arr* C)
+	{
+		return mat_element_wise_operation(A, C, _mat_e_wise_min_kernel(b));
+	}
+
+	mat_arr mat_element_wise_min(float a, const mat_arr& B, mat_arr* C)
+	{
+		return mat_element_wise_operation(B, C, _mat_e_wise_min_kernel(a));
 	}
 
 	inline void __matrix_mul_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
@@ -608,30 +683,43 @@ namespace linalg
 		});
 	}
 
-	fpt mat_max(const mat_arr& A)
+	mat_arr mat_max(const mat_arr& A, mat_arr* C)
 	{
-		const unsigned size = A.size();
-		const fpt* start = A.start();
-		fpt max = -1.0f * std::numeric_limits<fpt>::infinity();
-		for (unsigned i = 0; i < size; i++)
-		{
-			if (start[i] > max)
-			{
-				max = start[i];
-			}
-		}
-		return max;
+		return mat_aggregate(A, C, -1.0f * std::numeric_limits<fpt>::infinity(), _mat_e_by_e_max_kernel());
 	}
 
-	fpt mat_sum(const mat_arr& A)
+	mat_arr mat_min(const mat_arr& A, mat_arr* C)
 	{
-		const unsigned size = A.size();
-		const fpt* start = A.start();
-		fpt sum = 0.0f;
-		for (unsigned i = 0; i < size; i++)
-		{
-			sum += start[i];
-		}
-		return sum;
+		return mat_aggregate(A, C, std::numeric_limits<fpt>::infinity(), _mat_e_by_e_min_kernel());
+	}
+
+	mat_arr mat_sum(const mat_arr& A, mat_arr* C)
+	{
+		return mat_aggregate(A, C, 0.0f, _mat_e_by_e_add_kernel());
+	}
+
+	mat_arr mat_product(const mat_arr& A, mat_arr* C)
+	{
+		return mat_aggregate(A, C, 1.0f, _mat_e_by_e_mul_kernel());
+	}
+
+	float mat_total_max(const mat_arr& A)
+	{
+		return mat_total_aggregate(A, -1.0f * std::numeric_limits<fpt>::infinity(), _mat_e_by_e_max_kernel());
+	}
+
+	float mat_total_min(const mat_arr& A)
+	{
+		return mat_total_aggregate(A, std::numeric_limits<fpt>::infinity(), _mat_e_by_e_min_kernel());
+	}
+
+	float mat_total_sum(const mat_arr& A)
+	{
+		return mat_total_aggregate(A, 0.0f, _mat_e_by_e_add_kernel());
+	}
+
+	float mat_total_product(const mat_arr& A)
+	{
+		return mat_total_aggregate(A, 1.0f, _mat_e_by_e_mul_kernel());
 	}
 }

@@ -14,6 +14,31 @@ namespace linalg
 	template <typename Fc>
 	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C, const Fc& f);
 
+	template <typename Fc>
+	mat_arr mat_aggregate(const mat_arr& A, mat_arr* C, fpt init, const Fc& f);
+
+	template <typename Fc>
+	fpt mat_total_aggregate(const mat_arr& A, fpt init, const Fc& f);
+
+	template <typename Fc>
+	mat_arr create_c(mat_arr* C, unsigned count, unsigned rows, unsigned cols, Fc f)
+	{
+		if (C == nullptr)
+		{
+			mat_arr temp_C(count, rows, cols);
+			f(&temp_C);
+			return temp_C;
+		}
+
+		if (C->count != count || C->rows != rows || C->cols != cols)
+		{
+			throw std::runtime_error("C has wrong dimensions");
+		}
+
+		f(C);
+		return *C;
+	}
+
 	inline void __e_by_e_size_check(const unsigned count_a, const unsigned rows_a, const unsigned cols_a,
 	                                const unsigned count_b, const unsigned rows_b, const unsigned cols_b,
 	                                const unsigned count_c, const unsigned rows_c, const unsigned cols_c)
@@ -151,18 +176,14 @@ namespace linalg
 	template <typename Fc>
 	mat_arr mat_element_by_element_operation(const mat_arr& A, const mat_arr& B, mat_arr* C, const Fc& f, mat_tr tr)
 	{
-		if (C == nullptr)
-		{
-			const bool tr_A = (tr == transpose_A || tr == transpose_both);
-			mat_arr tempC = mat_arr(std::max(A.count, B.count),
-			                        tr_A ? A.cols : A.rows,
-			                        tr_A ? A.rows : A.cols);
-			__mat_element_by_element_operation(A, B, &tempC, f, tr);
-			return tempC;
-		}
-		__mat_element_by_element_operation(A, B, C, f, tr);
-
-		return *C;
+		const bool tr_A = (tr == transpose_A || tr == transpose_both);
+		return create_c(C, std::max(A.count, B.count),
+		                tr_A ? A.cols : A.rows,
+		                tr_A ? A.rows : A.cols,
+		                [&](mat_arr* C_nonnull)
+		                {
+			                __mat_element_by_element_operation(A, B, C_nonnull, f, tr);
+		                });
 	}
 
 	template <typename Fc>
@@ -204,15 +225,53 @@ namespace linalg
 	template <typename Fc>
 	mat_arr mat_element_wise_operation(const mat_arr& A, mat_arr* C, const Fc& f)
 	{
-		if (C == nullptr)
+		return create_c(C, A.count, A.rows, A.cols, [&](mat_arr* C_nonnull)
 		{
-			mat_arr tempC = mat_arr(A.count, A.rows, A.cols);
-			__mat_element_wise_operation(A, &tempC, f);
-			return tempC;
-		}
-		__mat_element_wise_operation(A, C, f);
+			__mat_element_wise_operation(A, C_nonnull, f);
+		});
+	}
 
-		return *C;
+	template <typename Fc>
+	void __mat_aggregate(const mat_arr& A, mat_arr* C, fpt init, const Fc& f)
+	{
+		const unsigned row_col = A.rows * A.cols;
+		const unsigned count = A.count;
+
+		const fpt* a_start = A.start();
+		fpt* c_start = C->start();
+
+		for (unsigned mat_no = 0; mat_no < count; mat_no++)
+		{
+			const fpt* a_mat = a_start + row_col * mat_no;
+			fpt agg = init;
+			for (unsigned i = 0; i < row_col; i++)
+			{
+				agg = f(a_mat[i], agg);
+			}
+			c_start[mat_no] = agg;
+		}
+	}
+
+	template <typename Fc>
+	mat_arr mat_aggregate(const mat_arr& A, mat_arr* C, fpt init, const Fc& f)
+	{
+		return create_c(C, A.count, 1, 1, [&](mat_arr* C_nonnull)
+		{
+			__mat_aggregate(A, C_nonnull, init, f);
+		});
+	}
+
+	template <typename Fc>
+	fpt mat_total_aggregate(const mat_arr& A, fpt init, const Fc& f)
+	{
+		const unsigned size = A.size();
+		const fpt* a_start = A.start();
+		fpt agg = init;
+		for (unsigned i = 0; i < size; i++)
+		{
+			agg = f(a_start[i], agg);
+		}
+		return agg;
 	}
 }
 
