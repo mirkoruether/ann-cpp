@@ -38,13 +38,13 @@ else (TRY_ENABLE_CUDA)
     message("-- >> CUDA ignored <<")
 endif (TRY_ENABLE_CUDA)
 
-include_directories(linalg)
-add_subdirectory(linalg)
+include_directories(src/linalg)
+add_subdirectory(src/linalg)
 
-include_directories(annlib)
-add_subdirectory(annlib)
+include_directories(src/annlib)
+add_subdirectory(src/annlib)
 
-add_executable(ann_cpp main.cpp mnist.h mnist.cpp)
+add_executable(ann_cpp src/main.cpp src/mnist.h src/mnist.cpp)
 
 add_dependencies(ann_cpp annlib linalg)
 

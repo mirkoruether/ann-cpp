@@ -1,11 +1,11 @@
 out_dir="build"
-out_dir_deb="${out_dir}/debug/linux/"
-out_dir_rel="${out_dir}/release/linux/"
+out_dir_deb="${out_dir}/debug-linux/"
+out_dir_rel="${out_dir}/release-linux/"
 compilerflags="-std=c++17 -Wall -Wextra -Wno-unused-parameter"
-includeflags="-pthread -Ilinalg -Iannlib"
+includeflags="-pthread -Isrc/linalg -Isrc/annlib"
 linkerflags="-lstdc++fs"
 
-files="**/*.cpp *.cpp"
+files="src/**/*.cpp src/*.cpp"
 
 mkdir -p ${out_dir_rel} ${out_dir_deb}
 
