@@ -6,6 +6,7 @@
 #include <thread>
 #include <string>
 #include "output_layer.h"
+#include "log/training_logger.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -148,12 +149,13 @@ struct cycle_result
 	bool nan_detected;
 };
 
-cycle_result train_and_test(double epochs_per_cycle, sgd_trainer* trainer,
+cycle_result train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
+                            sgd_trainer* trainer,
                             gradient_based_optimizer* opt,
                             const training_data& train_data,
                             const training_data& test_data)
 {
-	trainer->train_epochs(train_data, opt, epochs_per_cycle, false);
+	trainer->train_epochs(train_data, opt, mini_batch_size, epochs_per_cycle);
 
 	const test_result train_result = test_network(*trainer, train_data);
 	const test_result test_result = test_network(*trainer, test_data);
@@ -196,20 +198,40 @@ int main(int argc, char** argv)
 	auto wnp = std::make_shared<L2_regularization>(
 		static_cast<fpt>(3.0 / mnist_training.entry_count()));
 
-	trainer.add_new_layer<fully_connected_layer>(784, 100);
-	trainer.add_new_layer<logistic_activation_layer>(100);
+	//trainer.add_new_layer<fully_connected_layer>(784, 500);
+	//trainer.add_new_layer<relu_activation_layer>(500);
 
-	trainer.add_new_layer<fully_connected_layer>(100, 10);
-	trainer.add_new_layer<logistic_act_cross_entropy_costs>(10);
+	//trainer.add_new_layer<fully_connected_layer>(500, 300);
+	//trainer.add_new_layer<relu_activation_layer>(300);
+
+	//trainer.add_new_layer<fully_connected_layer>(300, 200);
+	//trainer.add_new_layer<relu_activation_layer>(200);
+
+	//trainer.add_new_layer<fully_connected_layer>(200, 50);
+	//trainer.add_new_layer<relu_activation_layer>(50);
+
+	trainer.add_new_layer<fully_connected_layer>(784, 30, wnp);
+	trainer.add_new_layer<logistic_activation_layer>(30);
+
+	trainer.add_new_layer<fully_connected_layer>(30, 10, wnp);
+	trainer.add_new_layer<softmax_act_cross_entropy_costs>(10);
 
 	trainer.init();
 
 	//auto opt = momentum_sgd(.5f, .9f);
 	auto opt = adam();
 
+	//TODO timestamp
+	log::training_logger log(folder + "log.csv");
+
+	const std::function<void(training_status)> logf([&](training_status lr)
+	{
+		log.log_status(lr);
+	});
+
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{
-		trainer.train_epochs(mnist_training, &opt, 8, epoch_count, true);
+		trainer.train_epochs(mnist_training, &opt, 8, epoch_count, &logf, 100);
 	});
 
 	const auto accuracy = time_execution_func<double>("Test", [&]()

@@ -13,6 +13,7 @@ sgd_trainer.h               sgd_trainer.cpp
 training_buffer.h			training_buffer.cpp
 training_data.h             training_data.cpp
 weight_norm_penalty.h       weight_norm_penalty.cpp
+log/training_logger.h       log/training_logger.cpp
 )
 
 add_dependencies(annlib linalg)
@@ -31,4 +32,5 @@ sgd_trainer.h
 training_buffer.h	
 training_data.h            
 weight_norm_penalty.h       
+log/training_logger.h
 DESTINATION include)

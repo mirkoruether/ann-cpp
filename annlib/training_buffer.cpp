@@ -22,6 +22,11 @@ training_buffer::training_buffer(training_buffer* buf, unsigned start, unsigned 
 	}
 }
 
+unsigned training_buffer::layer_count() const
+{
+	return static_cast<unsigned>(lbufs.size());
+}
+
 mat_arr* training_buffer::in(unsigned layer_no)
 {
 	return &activations[layer_no];

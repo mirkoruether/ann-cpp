@@ -1,7 +1,6 @@
 #include "sgd_trainer.h"
 #include "mat_arr.h"
 #include "mat_arr_math.h"
-#include <iostream>
 #include <future>
 #include <random>
 
@@ -76,7 +75,9 @@ void sgd_trainer::init()
 }
 
 void sgd_trainer::train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-                               const unsigned mini_batch_size, const double epoch_count, bool print)
+                               const unsigned mini_batch_size, const double epoch_count,
+                               const std::function<void(training_status)>* logger,
+                               unsigned interval)
 {
 	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
 
@@ -92,16 +93,14 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 
 	mini_batch_builder mb_builder(training_data);
 
+	if (logger != nullptr)
+	{
+		logger->operator()(training_status{0, batch_count, &buf});
+	}
+
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
 	{
-		if (print && batch_no % 100 == 0)
-		{
-			std::cout << "\r" << batch_no << "/" << batch_count
-				<< " [" << unsigned(100.0 * (batch_no + 1) / batch_count) << "%]";
-		}
-
 		mb_builder.build_mini_batch(buf.in(0), buf.sol());
-
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -114,11 +113,16 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 #endif
 
 		do_adjustments(opt, &buf);
+
+		if (logger != nullptr && batch_no % interval == 0)
+		{
+			logger->operator()(training_status{batch_no, batch_count, &buf});
+		}
 	}
 
-	if (print)
+	if (logger != nullptr)
 	{
-		std::cout << "\r" << batch_count << "/" << batch_count << " [100%]" << std::endl;
+		logger->operator()(training_status{batch_count, batch_count, &buf});
 	}
 }
 

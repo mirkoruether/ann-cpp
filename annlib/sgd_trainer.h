@@ -13,7 +13,12 @@ using namespace linalg;
 
 namespace annlib
 {
-	class training_buffer;
+	struct training_status
+	{
+		unsigned batch_no;
+		unsigned batch_count;
+		training_buffer* buf;
+	};
 
 	class sgd_trainer
 	{
@@ -37,7 +42,9 @@ namespace annlib
 		void init();
 
 		void train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-		                  unsigned mini_batch_size, double epoch_count, bool print = false);
+		                  unsigned mini_batch_size, double epoch_count,
+		                  const std::function<void(training_status)>* logger = nullptr,
+		                  unsigned interval = 100);
 
 		mat_arr feed_forward(const mat_arr& in) const;
 

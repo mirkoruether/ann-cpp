@@ -31,6 +31,8 @@ namespace annlib
 
 		training_buffer(unsigned mini_batch_size, std::vector<unsigned> sizes);
 		training_buffer(training_buffer* buf, unsigned start, unsigned count);
+
+		unsigned layer_count() const;
 	};
 
 	struct buf
