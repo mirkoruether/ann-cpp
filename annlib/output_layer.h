@@ -1,7 +1,6 @@
 #ifndef OUTPUT_LAYER_H
 #define OUTPUT_LAYER_H
 
-#include "mat_arr.h"
 #include "network_layer.h"
 #include "activation_function.h"
 

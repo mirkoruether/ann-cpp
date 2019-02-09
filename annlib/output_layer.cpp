@@ -62,31 +62,15 @@ softmax_act_cross_entropy_costs::softmax_act_cross_entropy_costs(unsigned size)
 
 void softmax_act_cross_entropy_costs::feed_forward(const mat_arr& in, mat_arr* out) const
 {
-	const unsigned count = in.count;
-	for (unsigned i = 0; i < count; i++)
-	{
-		const mat_arr in_mat = in.get_mat(i);
-		mat_arr out_mat = out->get_mat(i);
+	const mat_arr max = mat_max(in);
+	mat_element_by_element_operation(in, max, out,
+	                                 [=](fpt in_el, fpt max_el)
+	                                 {
+		                                 return std::exp(in_el - max_el);
+	                                 });
 
-		const fpt max = mat_max(in_mat);
-		mat_element_wise_operation(in_mat, &out_mat, [=](fpt z)
-		{
-			return std::exp(z - max);
-		});
-
-		const fpt den = mat_sum(out_mat);
-		if (std::isfinite(den))
-		{
-			mat_element_wise_div(out_mat, den, &out_mat);
-		}
-		mat_element_wise_operation(out_mat, &out_mat, [=](fpt o)
-		{
-			const fpt res = o / den;
-			return std::isfinite(res) ? res : 0.9999f;
-		});
-
-		out_mat.assert_only_real();
-	}
+	const mat_arr den = mat_sum(*out);
+	mat_element_wise_div(*out, den, out);
 }
 
 fpt softmax_act_cross_entropy_costs::calculate_costs(const mat_arr& net_output, const mat_arr& solution) const
