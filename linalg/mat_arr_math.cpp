@@ -1,6 +1,5 @@
 #include "mat_arr_math.h"
 #include "mat_arr_math_t.h"
-#include "cuda/linalg_cudaops_t.cuh"
 
 using namespace linalg;
 

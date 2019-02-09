@@ -16,7 +16,7 @@ void time_execution(const std::string& name, const std::function<void()>& func);
 
 void random_matrix_arr(mat_arr* m);
 
-void do_assert(bool b)
+inline void do_assert(bool b)
 {
 	if (!b)
 	{
@@ -24,7 +24,7 @@ void do_assert(bool b)
 	}
 }
 
-void testTranspose()
+inline void testTranspose()
 {
 	mat_arr A(1, 2, 3);
 	fpt* a = A.start();
@@ -47,7 +47,7 @@ void testTranspose()
 	do_assert(*(c + 5) == 5);
 }
 
-void __testAddTranspose_check(const fpt* c)
+inline void __testAddTranspose_check(const fpt* c)
 {
 	do_assert(*(c + 0) == 12);
 	do_assert(*(c + 1) == 15);
@@ -57,7 +57,7 @@ void __testAddTranspose_check(const fpt* c)
 	do_assert(*(c + 5) == 27);
 }
 
-void testAddTranspose()
+inline void testAddTranspose()
 {
 	mat_arr A(1, 2, 3);
 	fpt* a = A.start();
@@ -97,7 +97,7 @@ void testAddTranspose()
 	__testAddTranspose_check(C.start());
 }
 
-void testMatMul_CheckC(const fpt* c)
+inline void testMatMul_CheckC(const fpt* c)
 {
 	do_assert(*(c + 0) == 56);
 	do_assert(*(c + 1) == 62);
@@ -105,7 +105,7 @@ void testMatMul_CheckC(const fpt* c)
 	do_assert(*(c + 3) == 224);
 }
 
-void testMatMul()
+inline void testMatMul()
 {
 	mat_arr A(1, 2, 3);
 	fpt* a = A.start();
@@ -131,7 +131,7 @@ void testMatMul()
 	testMatMul_CheckC(c);
 }
 
-void testMatMulTransposed()
+inline void testMatMulTransposed()
 {
 	mat_arr A(1, 2, 3);
 	fpt* a = A.start();
@@ -174,7 +174,7 @@ void testMatMulTransposed()
 	testMatMul_CheckC(c);
 }
 
-void speedAddTranspose()
+inline void speedAddTranspose()
 {
 	mat_arr a(500, 1000, 100);
 	mat_arr b(500, 1000, 100);
@@ -205,7 +205,7 @@ struct add3
 	fpt operator()(fpt a, fpt b) const { return a + b; }
 };
 
-fpt test_add(fpt a, fpt b)
+inline fpt test_add(fpt a, fpt b)
 {
 	return a + b;
 }
@@ -227,7 +227,7 @@ void test_add_3(const mat_arr& mat_a, const mat_arr& mat_b, mat_arr* mat_c, F f)
 	}
 }
 
-void mat_arr_math_add_speed_test2()
+inline void mat_arr_math_add_speed_test2()
 {
 	const unsigned n = 200;
 	mat_arr mat_a(n, n, n);
@@ -240,7 +240,7 @@ void mat_arr_math_add_speed_test2()
 	test_add_3(mat_a, mat_b, &mat_c, add3());
 }
 
-void mat_arr_math_add_speed_test()
+inline void mat_arr_math_add_speed_test()
 {
 	std::cout << std::endl;
 	mat_arr_math_add_speed_test2();
@@ -325,7 +325,7 @@ void mat_arr_math_add_speed_test()
 	std::cout << std::endl;
 }
 
-void mat_arr_math_mat_mul_speed_test()
+inline void mat_arr_math_mat_mul_speed_test()
 {
 	std::cout << std::endl;
 	const unsigned n = 100;
@@ -414,7 +414,7 @@ void mat_arr_math_scalar_mul_test_template(const mat_arr& mat_a, fpt b, mat_arr*
 	}
 }
 
-void mat_arr_math_scalar_mul_speed_test()
+inline void mat_arr_math_scalar_mul_speed_test()
 {
 	std::cout << std::endl;
 	const unsigned n_it = 1000;
@@ -480,7 +480,7 @@ struct addmul_fixed4
 	fpt operator()(fpt a, fpt b) const { return a + 4.0f * b; }
 };
 
-void mat_arr_math_addmul_speed_test()
+inline void mat_arr_math_addmul_speed_test()
 {
 	std::cout << std::endl;
 	mat_arr_math_add_speed_test2();
@@ -526,7 +526,7 @@ void mat_arr_math_addmul_speed_test()
 	std::cout << std::endl;
 }
 
-void mat_arr_math_multipleadd_speed_test()
+inline void mat_arr_math_multipleadd_speed_test()
 {
 	std::cout << std::endl;
 	mat_arr_math_add_speed_test2();
@@ -564,7 +564,7 @@ void mat_arr_math_multipleadd_speed_test()
 	std::cout << std::endl;
 }
 
-void feedfoward_speed_test()
+inline void feedfoward_speed_test()
 {
 	std::cout << std::endl;
 	const unsigned n_in = 784;
@@ -584,6 +584,30 @@ void feedfoward_speed_test()
 			mat_element_wise_add(out, biases, &out);
 		}
 	});
+	std::cout << std::endl;
+}
+
+void test_e_by_e_with_scalar()
+{
+	std::cout << std::endl;
+
+	mat_arr A(1, 2, 3);
+	fpt* a = A.start();
+	*(a + 0) = 0;
+	*(a + 1) = 1;
+	*(a + 2) = 2;
+	*(a + 3) = 3;
+	*(a + 4) = 4;
+	*(a + 5) = 5;
+
+	mat_arr B(1, 1, 1);
+	fpt* b = B.start();
+	b[0] = 3;
+
+	mat_arr C(1, 2, 3);
+
+	mat_element_wise_add(A, B, &C);
+
 	std::cout << std::endl;
 }
 
