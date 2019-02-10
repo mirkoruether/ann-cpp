@@ -1,8 +1,6 @@
 #include "sgd_trainer.h"
-#include "mat_arr_math.h"
 #include <future>
 
-#include "_calc_macros.h"
 #include "output_layer.h"
 
 #ifdef ANNLIB_USE_CUDA
@@ -64,20 +62,18 @@ void sgd_trainer::add_layer(std::shared_ptr<network_layer> layer)
 
 void sgd_trainer::init()
 {
-	std::mt19937 rng;
-	rng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
+	std::mt19937 rng(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
 	for (const auto& layer_ptr : layers)
 	{
 		layer_ptr->init(&rng);
 	}
 }
 
-void sgd_trainer::train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-                               const unsigned mini_batch_size, const double epoch_count,
-                               const std::function<void(training_status)>* logger,
-                               unsigned interval)
+void sgd_trainer::train_epochs(gradient_based_optimizer* opt, const mini_batch_builder& mini_batch_builder, const double epoch_count,
+                               const std::function<void(training_status)>* logger, unsigned log_interval)
 {
-	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * training_data.input.count);
+	const unsigned mini_batch_size = mini_batch_builder.mini_batch_size;
+	const auto batch_count = static_cast<unsigned>((epoch_count / mini_batch_size) * mini_batch_builder.training_data_size);
 
 	training_buffer buf(mini_batch_size, get_sizes());
 	for (unsigned i = 0; i < layers.size(); i++)
@@ -89,8 +85,6 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 	std::vector<training_buffer> partial_buffers = buf.do_split(std::thread::hardware_concurrency());
 #endif
 
-	mini_batch_builder mb_builder(training_data);
-
 	if (logger != nullptr)
 	{
 		logger->operator()(training_status{0, batch_count, &buf});
@@ -98,7 +92,7 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 
 	for (unsigned batch_no = 0; batch_no < batch_count; batch_no++)
 	{
-		mb_builder.build_mini_batch(buf.in(0), buf.sol());
+		mini_batch_builder.build_mini_batch(buf.in(0), buf.sol());
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -112,7 +106,7 @@ void sgd_trainer::train_epochs(const training_data& training_data, gradient_base
 
 		do_adjustments(opt, &buf);
 
-		if (logger != nullptr && batch_no % interval == 0)
+		if (logger != nullptr && batch_no % log_interval == 0)
 		{
 			logger->operator()(training_status{batch_no, batch_count, &buf});
 		}
@@ -170,26 +164,7 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 #pragma omp parallel for
 	for (int i = 0; i < static_cast<int>(get_layer_count()); i++)
 	{
-		layers[i]->optimize(*buffer->error(i), opt, buffer->lbuf(i));
+		const auto ui = static_cast<unsigned >(i);
+		layers[i]->optimize(*buffer->error(ui), opt, buffer->lbuf(ui));
 	}
-}
-
-mini_batch_builder::mini_batch_builder(training_data data)
-	: data(std::move(data)),
-	  distribution(0, data.input.count - 1)
-{
-	rng.seed(static_cast<unsigned>(std::chrono::system_clock::now().time_since_epoch().count()));
-}
-
-void mini_batch_builder::build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv)
-{
-	const unsigned mini_batch_size = input_rv->count;
-	std::vector<unsigned> batch_indices(mini_batch_size);
-	for (unsigned i = 0; i < mini_batch_size; i++)
-	{
-		batch_indices[i] = distribution(rng);
-	}
-
-	M_SELECT(data.input, batch_indices, input_rv);
-	M_SELECT(data.solution, batch_indices, solution_rv);
 }

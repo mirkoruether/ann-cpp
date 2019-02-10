@@ -1,5 +1,4 @@
 #include "mnist.h"
-#include "sgd_trainer.h"
 #include "output_layer.h"
 #include <chrono>
 #include <fstream>
@@ -12,34 +11,9 @@
 typedef std::chrono::high_resolution_clock Clock;
 
 using namespace annlib;
+using namespace annlib::tasks;
 using namespace std::chrono;
 using namespace linalg;
-
-void random_matrix_arr(mat_arr* m)
-{
-	const unsigned size = m->size();
-
-	fpt* mat = m->start();
-	for (unsigned i = 0; i < size; i++)
-	{
-		*(mat + i) = static_cast<fpt>(rand()) / static_cast<fpt>(RAND_MAX);
-	}
-}
-
-unsigned get_max_index(const mat_arr& vec)
-{
-	fpt max = -1.0f * std::numeric_limits<fpt>::infinity();
-	unsigned maxIndex = std::numeric_limits<unsigned>::max();
-	for (unsigned i = 0; i < vec.size(); i++)
-	{
-		if (std::isfinite(vec[i]) && vec[i] > max)
-		{
-			max = vec[i];
-			maxIndex = i;
-		}
-	}
-	return maxIndex;
-}
 
 template <typename T>
 T time_execution_func(const std::string& name, const std::function<T()>& func)
@@ -106,60 +80,27 @@ void print_settings()
 	std::cout << std::endl;
 }
 
-struct test_result
-{
-	double costs;
-	double accuracy;
-};
-
-test_result test_network(const sgd_trainer& trainer, const training_data& data)
-{
-	const mat_arr net_output = trainer.feed_forward(data.input);
-	double costs = 0.0;
-	unsigned correct = 0;
-	for (unsigned i = 0; i < net_output.count; i++)
-	{
-		const mat_arr& output = net_output.get_mat(i);
-		const mat_arr& solution = data.solution.get_mat(i);
-
-		costs += trainer.calculate_costs(output, solution);
-
-		if (get_max_index(output) == get_max_index(solution))
-		{
-			correct++;
-		}
-	}
-
-	return test_result{
-		costs / net_output.count,
-		100.0 * correct / net_output.count
-	};
-}
+typedef annlib::tasks::classification_test_result test_result;
 
 struct cycle_result
 {
-	double training_costs;
-	double training_accuracy;
-	double test_costs;
-	double test_accuracy;
+	annlib::tasks::classification_test_result training_result;
+	annlib::tasks::classification_test_result test_result;
 };
 
-cycle_result train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
-                            sgd_trainer* trainer,
-                            gradient_based_optimizer* opt,
-                            const training_data& train_data,
-                            const training_data& test_data)
+cycle_result train_and_test(unambiguous_classification* cl,
+                            double epoch_count,
+                            const classification_data& train_data,
+                            const classification_data& test_data)
 {
-	trainer->train_epochs(train_data, opt, mini_batch_size, epochs_per_cycle);
+	cl->train(epoch_count);
 
-	const test_result train_result = test_network(*trainer, train_data);
-	const test_result test_result = test_network(*trainer, test_data);
+	const test_result train_result = cl->test(train_data);
+	const test_result test_result = cl->test(test_data);
 
 	return cycle_result{
-		train_result.costs,
-		train_result.accuracy,
-		test_result.costs,
-		test_result.accuracy
+		train_result,
+		test_result
 	};
 }
 
@@ -167,25 +108,24 @@ void log_cycle_result(unsigned i, cycle_result res, std::ofstream* fs)
 {
 	std::cout << std::endl;
 	std::cout << "Cycle Number:      " << i << std::endl;
-	std::cout << "Training costs:    " << res.training_costs << std::endl;
-	std::cout << "Training accuracy: " << res.training_accuracy << std::endl;
-	std::cout << "Test costs:        " << res.test_costs << std::endl;
-	std::cout << "Test accuracy:     " << res.test_accuracy << std::endl;
+	std::cout << "Training costs:    " << res.training_result.average_costs << std::endl;
+	std::cout << "Training accuracy: " << res.training_result.accuracy << std::endl;
+	std::cout << "Test costs:        " << res.test_result.average_costs << std::endl;
+	std::cout << "Test accuracy:     " << res.test_result.accuracy << std::endl;
 	std::cout << std::endl;
 
 	*fs << i << ','
-	    << res.training_costs << ','
-	    << res.training_accuracy << ','
-	    << res.test_costs << ','
-	    << res.test_accuracy << ','
+	    << res.training_result.average_costs << ','
+	    << res.training_result.accuracy << ','
+	    << res.test_result.average_costs << ','
+	    << res.test_result.accuracy << ','
 	    << std::endl;
 }
 
-void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
-                    unsigned cycles, sgd_trainer* trainer,
-                    gradient_based_optimizer* opt,
-                    const training_data& train_data,
-                    const training_data& test_data)
+void train_and_test(double epochs_per_cycle, unsigned cycles,
+                    unambiguous_classification* cl,
+                    const classification_data& train_data,
+                    const classification_data& test_data)
 {
 	const std::string path = "log.csv";
 	std::ofstream fs(path);
@@ -199,53 +139,17 @@ void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
 
 	for (unsigned c = 0; c < cycles; c++)
 	{
-		const cycle_result cres = train_and_test(mini_batch_size, epochs_per_cycle,
-		                                         trainer, opt, train_data, test_data);
+		const cycle_result cres = train_and_test(cl, epochs_per_cycle, train_data, test_data);
 		log_cycle_result(c, cres, &fs);
 	}
-}
-
-void train_and_test_once(double epoch_count, sgd_trainer* trainer, gradient_based_optimizer* opt,
-                         const training_data& train, const training_data& test)
-{
-	const std::function<void(training_status)> logf
-		([&](training_status stat)
-		 {
-			 const unsigned batch_no = stat.batch_no;
-			 const unsigned batch_count = stat.batch_count;
-
-			 if (batch_no < batch_count)
-			 {
-				 std::cout << "\r" << batch_no << "/" << batch_count
-				           << " ["
-				           << unsigned(100.0 * (batch_no + 1) / batch_count)
-				           << "%]";
-			 }
-			 else
-			 {
-				 std::cout << "\r" << batch_count << "/" << batch_count
-				           << " [100%]" << std::endl;
-			 }
-		 });
-
-	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
-	{
-		trainer->train_epochs(train, opt, 8, epoch_count, &logf, 100);
-	});
-
-	const auto accuracy = time_execution_func<double>("Test", [&]()
-	{
-		return test_network(*trainer, test).accuracy;
-	});
-
-	std::cout << "Test accuracy: " << accuracy << "%" << std::endl;
 }
 
 int main(int argc, char** argv)
 {
 	try
 	{
-		const double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
+		const unsigned cycle_count = 10;
+		const double epochs_per_cycle = (argc <= 1 ? 1.0 : std::stod(std::string(argv[1]))) / cycle_count;
 
 #ifdef __linux__
 		const std::string folder = "/mnt/c/";
@@ -258,18 +162,18 @@ int main(int argc, char** argv)
 		const std::string test_images = folder + "t10k-images.idx3-ubyte";
 		const std::string test_labels = folder + "t10k-labels.idx1-ubyte";
 
-		const training_data mnist_training = time_execution_func<training_data>("Load MNIST training data", [&]()
+		const auto mnist_training = time_execution_func<classification_data>("Load MNIST training data", [&]()
 		{
 			return mnist_load_combined(training_images, training_labels);
 		});
 
-		const training_data mnist_test = time_execution_func<training_data>("Load MNIST test data", [&]()
+		const auto mnist_test = time_execution_func<classification_data>("Load MNIST test data", [&]()
 		{
 			return mnist_load_combined(test_images, test_labels);
 		});
 
 		sgd_trainer trainer;
-		auto wnp = std::make_shared<L2_regularization>(static_cast<fpt>(3.0 / mnist_training.entry_count()));
+		auto wnp = std::make_shared<L2_regularization>(static_cast<fpt>(3.0 / mnist_training.input.count));
 
 		//trainer.add_new_layer<fully_connected_layer>(784, 500);
 		//trainer.add_new_layer<relu_activation_layer>(500);
@@ -291,10 +195,32 @@ int main(int argc, char** argv)
 
 		trainer.init();
 
-		//auto opt = momentum_sgd(.5f, .9f);
-		auto opt = adam();
+		const std::function<void(training_status)> logf
+			([&](training_status stat)
+			 {
+				 const unsigned batch_no = stat.batch_no;
+				 const unsigned batch_count = stat.batch_count;
 
-		train_and_test(8, epoch_count, 10, &trainer, &opt, mnist_training, mnist_test);
+				 if (batch_no < batch_count)
+				 {
+					 std::cout << "\r" << batch_no << "/" << batch_count
+					           << " ["
+					           << unsigned(100.0 * (batch_no + 1) / batch_count)
+					           << "%]";
+				 }
+				 else
+				 {
+					 std::cout << "\r" << batch_count << "/" << batch_count
+					           << " [100%]" << std::endl;
+				 }
+			 });
+
+		unambiguous_classification cl;
+		cl.set_optimizer<adam>();
+		cl.set_trainer<sgd_trainer>(trainer);
+		cl.set_data(mnist_training, 8);
+
+		train_and_test(epochs_per_cycle, cycle_count, &cl, mnist_training, mnist_test);
 
 		std::cout << "Press any button to continue...";
 		std::cin.get();

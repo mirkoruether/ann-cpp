@@ -15,7 +15,16 @@ T time_execution_func(const std::string& name, const std::function<T()>& func);
 
 void time_execution(const std::string& name, const std::function<void()>& func);
 
-void random_matrix_arr(mat_arr* m);
+void random_matrix_arr(mat_arr* m)
+{
+	const unsigned size = m->size();
+
+	fpt* mat = m->start();
+	for (unsigned i = 0; i < size; i++)
+	{
+		*(mat + i) = static_cast<fpt>(rand()) / static_cast<fpt>(RAND_MAX);
+	}
+}
 
 inline void do_assert(bool b)
 {

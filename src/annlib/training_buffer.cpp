@@ -128,12 +128,12 @@ buf::buf(bool split, mat_arr mat)
 
 void layer_buffer::add(const std::string& key, unsigned count, unsigned rows, unsigned cols, bool split)
 {
-	m.insert_or_assign(key, std::make_shared<buf>(split, count, rows, cols));
+	m[key] = std::make_shared<buf>(split, count, rows, cols);
 }
 
 void layer_buffer::add(const std::string& key, mat_arr mat, bool split)
 {
-	m.insert_or_assign(key, std::make_shared<buf>(split, std::move(mat)));
+	m[key] = std::make_shared<buf>(split, std::move(mat));
 }
 
 void layer_buffer::remove(const std::string& key)

@@ -1,8 +1,8 @@
 @echo off
 set build_tools="C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat"
-set myinclude=/I src /I src\annlib /I src\linalg
+set myinclude=/I src /I src\annlib_tasks /I src\annlib /I src\linalg
 
-set sourcefiles=src\linalg\*.cpp src\annlib\*.cpp src\*.cpp
+set sourcefiles=src\linalg\*.cpp src\annlib\*.cpp src\annlib_tasks\*.cpp src\*.cpp
 
 set out_dir=build\debug-windows
 set compilerflags=/GL /Gy /Zi /Gm- /sdl /Fd"%out_dir%\vc141.pdb" /Zc:inline /MD /EHsc /nologo /Fo"%out_dir%\obj/"

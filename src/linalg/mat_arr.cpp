@@ -13,6 +13,11 @@ mat_arr::mat_arr(std::shared_ptr<synced_vectors<fpt>> vector, unsigned offset,
 {
 }
 
+mat_arr::mat_arr()
+	: mat_arr(0, 0, 0)
+{
+}
+
 mat_arr::mat_arr(unsigned count, unsigned rows, unsigned cols)
 	: vec(std::make_shared<synced_vectors<fpt>>(count * rows * cols)),
 	  offset(0),

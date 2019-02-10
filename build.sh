@@ -2,7 +2,7 @@ out_dir="build"
 out_dir_deb="${out_dir}/debug-linux/"
 out_dir_rel="${out_dir}/release-linux/"
 compilerflags="-std=c++17 -Wall -Wextra -Wno-unused-parameter"
-includeflags="-pthread -Isrc/linalg -Isrc/annlib"
+includeflags="-pthread -Isrc/linalg -Isrc/annlib -Isrc/annlib_tasks"
 linkerflags="-lstdc++fs"
 
 files="src/**/*.cpp src/*.cpp"

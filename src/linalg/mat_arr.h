@@ -37,6 +37,8 @@ namespace linalg
 		        unsigned count, unsigned rows, unsigned cols);
 
 	public:
+		mat_arr();
+
 		mat_arr(unsigned count, unsigned rows, unsigned cols);
 
 		explicit mat_arr(std::array<unsigned, 3> dim);

@@ -5,6 +5,7 @@
 #include "mat_arr.h"
 #include "training_data.h"
 #include "gradient_based_optimizer.h"
+#include "mini_batch_builder.h"
 #include <random>
 #include "training_buffer.h"
 #include "network_layer.h"
@@ -41,10 +42,8 @@ namespace annlib
 
 		void init();
 
-		void train_epochs(const training_data& training_data, gradient_based_optimizer* opt,
-		                  unsigned mini_batch_size, double epoch_count,
-		                  const std::function<void(training_status)>* logger = nullptr,
-		                  unsigned interval = 100);
+		void train_epochs(gradient_based_optimizer* opt, const mini_batch_builder& mini_batch_builder, double epoch_count,
+		                  const std::function<void(training_status)>* logger = nullptr, unsigned log_interval = 100);
 
 		mat_arr feed_forward(const mat_arr& in) const;
 
@@ -56,20 +55,6 @@ namespace annlib
 		void do_feed_forward_and_backprop(training_buffer* buffer) const;
 
 		void do_adjustments(gradient_based_optimizer* opt, training_buffer* buffer);
-	};
-
-	class mini_batch_builder
-	{
-	public:
-		const training_data& data;
-
-		explicit mini_batch_builder(training_data data);
-
-		void build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv);
-
-	private:
-		std::uniform_int_distribution<unsigned> distribution;
-		std::mt19937 rng;
 	};
 }
 #endif
