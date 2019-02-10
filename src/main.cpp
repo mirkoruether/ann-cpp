@@ -1,11 +1,11 @@
-#include "mat_arr.h"
 #include "mnist.h"
 #include "sgd_trainer.h"
+#include "output_layer.h"
 #include <chrono>
 #include <iostream>
+#include <fstream>
 #include <thread>
 #include <string>
-#include "output_layer.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -20,6 +20,7 @@ using namespace linalg;
 void random_matrix_arr(mat_arr* m)
 {
 	const unsigned size = m->size();
+
 	fpt* mat = m->start();
 	for (unsigned i = 0; i < size; i++)
 	{
@@ -144,8 +145,6 @@ struct cycle_result
 	double training_accuracy;
 	double test_costs;
 	double test_accuracy;
-
-	bool nan_detected;
 };
 
 cycle_result train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
@@ -163,63 +162,55 @@ cycle_result train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
 		train_result.costs,
 		train_result.accuracy,
 		test_result.costs,
-		test_result.accuracy,
-		false
+		test_result.accuracy
 	};
 }
 
-int main(int argc, char** argv)
+void log_cycle_result(unsigned i, cycle_result res, std::ofstream* fs)
 {
-	double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
+	std::cout << std::endl;
+	std::cout << "Cycle Number:      " << i << std::endl;
+	std::cout << "Training costs:    " << res.training_costs << std::endl;
+	std::cout << "Training accuracy: " << res.training_accuracy << std::endl;
+	std::cout << "Test costs:        " << res.test_costs << std::endl;
+	std::cout << "Test accuracy:     " << res.test_accuracy << std::endl;
+	std::cout << std::endl;
 
-#ifdef __linux__
-	const std::string folder = "/mnt/c/";
-#else
-	const std::string folder = "C:\\\\";
-#endif
+	*fs << i << ','
+		<< res.training_costs << ','
+		<< res.training_accuracy << ','
+		<< res.test_costs << ','
+		<< res.test_accuracy << ','
+		<< std::endl;
+}
 
-	const std::string training_images = folder + "train-images.idx3-ubyte";
-	const std::string training_labels = folder + "train-labels.idx1-ubyte";
-	const std::string test_images = folder + "t10k-images.idx3-ubyte";
-	const std::string test_labels = folder + "t10k-labels.idx1-ubyte";
+void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
+                    unsigned cycles, sgd_trainer* trainer,
+                    gradient_based_optimizer* opt,
+                    const training_data& train_data,
+                    const training_data& test_data)
+{
+	const std::string path = "log.csv";
+	std::ofstream fs(path);
 
-	const training_data mnist_training = time_execution_func<training_data>("Load MNIST training data", [&]()
+	fs << "cycle_number" << ','
+		<< "training_costs" << ','
+		<< "training_accuracy" << ','
+		<< "test_costs" << ','
+		<< "test_accuracy" << ','
+		<< std::endl;
+
+	for (unsigned c = 0; c < cycles; c++)
 	{
-		return mnist_load_combined(training_images, training_labels);
-	});
+		const cycle_result cres = train_and_test(mini_batch_size, epochs_per_cycle,
+		                                         trainer, opt, train_data, test_data);
+		log_cycle_result(c, cres, &fs);
+	}
+}
 
-	const training_data mnist_test = time_execution_func<training_data>("Load MNIST test data", [&]()
-	{
-		return mnist_load_combined(test_images, test_labels);
-	});
-
-	sgd_trainer trainer;
-	auto wnp = std::make_shared<L2_regularization>(
-		static_cast<fpt>(3.0 / mnist_training.entry_count()));
-
-	//trainer.add_new_layer<fully_connected_layer>(784, 500);
-	//trainer.add_new_layer<relu_activation_layer>(500);
-
-	//trainer.add_new_layer<fully_connected_layer>(500, 300);
-	//trainer.add_new_layer<relu_activation_layer>(300);
-
-	//trainer.add_new_layer<fully_connected_layer>(300, 200);
-	//trainer.add_new_layer<relu_activation_layer>(200);
-
-	//trainer.add_new_layer<fully_connected_layer>(200, 50);
-	//trainer.add_new_layer<relu_activation_layer>(50);
-
-	trainer.add_new_layer<fully_connected_layer>(784, 30, wnp);
-	trainer.add_new_layer<logistic_activation_layer>(30);
-
-	trainer.add_new_layer<fully_connected_layer>(30, 10, wnp);
-	trainer.add_new_layer<softmax_act_cross_entropy_costs>(10);
-
-	trainer.init();
-
-	//auto opt = momentum_sgd(.5f, .9f);
-	auto opt = adam();
-
+void train_and_test_once(double epoch_count, sgd_trainer* trainer, gradient_based_optimizer* opt,
+                         const training_data& train, const training_data& test)
+{
 	const std::function<void(training_status)> logf([&](training_status stat)
 	{
 		const unsigned batch_no = stat.batch_no;
@@ -238,16 +229,80 @@ int main(int argc, char** argv)
 
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{
-		trainer.train_epochs(mnist_training, &opt, 8, epoch_count, &logf, 100);
+		trainer->train_epochs(train, opt, 8, epoch_count, &logf, 100);
 	});
 
 	const auto accuracy = time_execution_func<double>("Test", [&]()
 	{
-		return test_network(trainer, mnist_test).accuracy;
+		return test_network(*trainer, test).accuracy;
 	});
 
 	std::cout << "Test accuracy: " << accuracy << "%" << std::endl;
+}
 
-	std::cout << "Press any button to continue...";
-	std::cin.get();
+int main(int argc, char** argv)
+{
+	try
+	{
+		const double epoch_count = argc <= 1 ? 1 : std::stod(std::string(argv[1]));
+
+#ifdef __linux__
+		const std::string folder = "/mnt/c/";
+#else
+		const std::string folder = "C:\\\\";
+#endif
+
+		const std::string training_images = folder + "train-images.idx3-ubyte";
+		const std::string training_labels = folder + "train-labels.idx1-ubyte";
+		const std::string test_images = folder + "t10k-images.idx3-ubyte";
+		const std::string test_labels = folder + "t10k-labels.idx1-ubyte";
+
+		const training_data mnist_training = time_execution_func<training_data>("Load MNIST training data", [&]()
+		{
+			return mnist_load_combined(training_images, training_labels);
+		});
+
+		const training_data mnist_test = time_execution_func<training_data>("Load MNIST test data", [&]()
+		{
+			return mnist_load_combined(test_images, test_labels);
+		});
+
+		sgd_trainer trainer;
+		auto wnp = std::make_shared<L2_regularization>(
+			static_cast<fpt>(3.0 / mnist_training.entry_count()));
+
+		//trainer.add_new_layer<fully_connected_layer>(784, 500);
+		//trainer.add_new_layer<relu_activation_layer>(500);
+
+		//trainer.add_new_layer<fully_connected_layer>(500, 300);
+		//trainer.add_new_layer<relu_activation_layer>(300);
+
+		//trainer.add_new_layer<fully_connected_layer>(300, 200);
+		//trainer.add_new_layer<relu_activation_layer>(200);
+
+		//trainer.add_new_layer<fully_connected_layer>(200, 50);
+		//trainer.add_new_layer<relu_activation_layer>(50);
+
+		trainer.add_new_layer<fully_connected_layer>(784, 100, wnp);
+		trainer.add_new_layer<logistic_activation_layer>(100);
+
+		trainer.add_new_layer<fully_connected_layer>(100, 10, wnp);
+		trainer.add_new_layer<softmax_act_cross_entropy_costs>(10);
+
+		trainer.init();
+
+		//auto opt = momentum_sgd(.5f, .9f);
+		auto opt = adam();
+
+		train_and_test(8, epoch_count, 10, &trainer, &opt, mnist_training, mnist_test);
+
+		std::cout << "Press any button to continue...";
+		std::cin.get();
+
+		return 0;
+	}
+	catch (std::exception& ex)
+	{
+		return 1;
+	}
 }
