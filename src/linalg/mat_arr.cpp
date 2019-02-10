@@ -1,8 +1,5 @@
 #include "mat_arr.h"
-#include <utility>
 #include <cmath>
-#include <memory>
-#include <vector>
 
 using namespace linalg;
 
@@ -68,9 +65,9 @@ unsigned mat_arr::index(unsigned index, unsigned row, unsigned col) const
 std::array<unsigned, 3> mat_arr::dim() const
 {
 	return std::array<unsigned, 3>
-	{
-		count, rows, cols
-	};
+		{
+			count, rows, cols
+		};
 }
 
 unsigned mat_arr::size() const
@@ -131,7 +128,7 @@ bool mat_arr::only_real() const
 
 void mat_arr::assert_only_real() const
 {
-	if(!only_real())
+	if (!only_real())
 	{
 		throw std::runtime_error("nan");
 	}

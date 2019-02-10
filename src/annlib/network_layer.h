@@ -1,5 +1,6 @@
 #ifndef NETWORK_LAYER_H
 #define NETWORK_LAYER_H
+
 #include "mat_arr.h"
 #include "training_buffer.h"
 #include "activation_function.h"
@@ -16,6 +17,7 @@ namespace annlib
 	{
 	protected:
 		network_layer(unsigned input_size, unsigned output_size);
+
 		~network_layer() = default;
 
 	public:
@@ -84,7 +86,7 @@ namespace annlib
 	{
 	public:
 		template <typename... Tys>
-		activation_layer_t(unsigned size, Tys&&... args)
+		activation_layer_t(unsigned size, Tys&& ... args)
 			: activation_layer(size, std::make_shared<Ty>(std::forward<Tys>(args)...))
 		{
 		}

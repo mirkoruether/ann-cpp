@@ -527,7 +527,9 @@ namespace linalg
 	{
 		if (C == nullptr)
 		{
-			mat_arr tempC = mat_arr(A.count, A.cols, A.rows);
+			const unsigned n_rows = A.cols;
+			const unsigned n_cols = A.rows;
+			mat_arr tempC = mat_arr(A.count, n_rows, n_cols);
 			__mat_transpose(A, C);
 			return tempC;
 		}

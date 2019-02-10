@@ -1,8 +1,5 @@
 #include "mnist.h"
 #include <fstream>
-#include <vector>
-#include "mat_arr.h"
-#include "training_data.h"
 
 using namespace linalg;
 using namespace annlib;
@@ -13,9 +10,9 @@ int read_next_int(std::ifstream* ifs)
 	ifs->read(buffer, 4);
 
 	return (buffer[0] & 0xff) << 24
-		| (buffer[1] & 0xff) << 16
-		| (buffer[2] & 0xff) << 8
-		| (buffer[3] & 0xff) << 0;
+			| (buffer[1] & 0xff) << 16
+			| (buffer[2] & 0xff) << 8
+			| (buffer[3] & 0xff) << 0;
 }
 
 int read_next_byte(std::ifstream* ifs)

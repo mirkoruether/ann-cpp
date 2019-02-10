@@ -2,10 +2,8 @@
 #include "sgd_trainer.h"
 #include "output_layer.h"
 #include <chrono>
-#include <iostream>
 #include <fstream>
 #include <thread>
-#include <string>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -68,8 +66,7 @@ void print_settings()
 	std::cout << "ann-cpp demo app" << std::endl << std::endl;
 
 	const unsigned n_threads = std::thread::hardware_concurrency();
-	std::cout << n_threads << " concurrent threads are supported.\n"
-		<< std::endl;
+	std::cout << n_threads << " concurrent threads are supported.\n" << std::endl;
 
 #ifdef _OPENMP
 	std::cout << "OpenMP enabled, launching four test threads" << std::endl;
@@ -177,11 +174,11 @@ void log_cycle_result(unsigned i, cycle_result res, std::ofstream* fs)
 	std::cout << std::endl;
 
 	*fs << i << ','
-		<< res.training_costs << ','
-		<< res.training_accuracy << ','
-		<< res.test_costs << ','
-		<< res.test_accuracy << ','
-		<< std::endl;
+	    << res.training_costs << ','
+	    << res.training_accuracy << ','
+	    << res.test_costs << ','
+	    << res.test_accuracy << ','
+	    << std::endl;
 }
 
 void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
@@ -194,11 +191,11 @@ void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
 	std::ofstream fs(path);
 
 	fs << "cycle_number" << ','
-		<< "training_costs" << ','
-		<< "training_accuracy" << ','
-		<< "test_costs" << ','
-		<< "test_accuracy" << ','
-		<< std::endl;
+	   << "training_costs" << ','
+	   << "training_accuracy" << ','
+	   << "test_costs" << ','
+	   << "test_accuracy" << ','
+	   << std::endl;
 
 	for (unsigned c = 0; c < cycles; c++)
 	{
@@ -211,21 +208,25 @@ void train_and_test(unsigned mini_batch_size, double epochs_per_cycle,
 void train_and_test_once(double epoch_count, sgd_trainer* trainer, gradient_based_optimizer* opt,
                          const training_data& train, const training_data& test)
 {
-	const std::function<void(training_status)> logf([&](training_status stat)
-	{
-		const unsigned batch_no = stat.batch_no;
-		const unsigned batch_count = stat.batch_count;
+	const std::function<void(training_status)> logf
+		([&](training_status stat)
+		 {
+			 const unsigned batch_no = stat.batch_no;
+			 const unsigned batch_count = stat.batch_count;
 
-		if (batch_no < batch_count)
-		{
-			std::cout << "\r" << batch_no << "/" << batch_count
-				<< " [" << unsigned(100.0 * (batch_no + 1) / batch_count) << "%]";
-		}
-		else
-		{
-			std::cout << "\r" << batch_count << "/" << batch_count << " [100%]" << std::endl;
-		}
-	});
+			 if (batch_no < batch_count)
+			 {
+				 std::cout << "\r" << batch_no << "/" << batch_count
+				           << " ["
+				           << unsigned(100.0 * (batch_no + 1) / batch_count)
+				           << "%]";
+			 }
+			 else
+			 {
+				 std::cout << "\r" << batch_count << "/" << batch_count
+				           << " [100%]" << std::endl;
+			 }
+		 });
 
 	time_execution("Train " + std::to_string(epoch_count) + " epochs", [&]()
 	{
@@ -268,8 +269,7 @@ int main(int argc, char** argv)
 		});
 
 		sgd_trainer trainer;
-		auto wnp = std::make_shared<L2_regularization>(
-			static_cast<fpt>(3.0 / mnist_training.entry_count()));
+		auto wnp = std::make_shared<L2_regularization>(static_cast<fpt>(3.0 / mnist_training.entry_count()));
 
 		//trainer.add_new_layer<fully_connected_layer>(784, 500);
 		//trainer.add_new_layer<relu_activation_layer>(500);

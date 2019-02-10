@@ -1,7 +1,6 @@
 #include "gradient_based_optimizer.h"
 #include "mat_arr_math.h"
 #include "mat_arr_math_t.h"
-#include <cmath>
 #include "_calc_macros.h"
 
 #ifdef ANNLIB_USE_CUDA

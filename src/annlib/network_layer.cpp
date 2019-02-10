@@ -1,8 +1,6 @@
 #include "network_layer.h"
-#include <utility>
 
 #include "mat_arr_math.h"
-#include "gradient_based_optimizer.h"
 
 annlib::network_layer::network_layer(unsigned input_size, unsigned output_size)
 	: input_size(input_size), output_size(output_size)

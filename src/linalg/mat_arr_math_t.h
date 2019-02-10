@@ -180,12 +180,12 @@ namespace linalg
 			fpt* c = c_start + offset;
 
 			__mat_e_by_e_loop<t_a == transposed || t_b == transposed>
-			(rows, cols, [&](const unsigned& i_normal, const unsigned& i_transposed)
-			{
-				__mat_e_by_e_set_c(t_a == scalar ? *a : t_a == normal ? a[i_normal] : a[i_transposed],
-				                   t_b == scalar ? *b : t_b == normal ? b[i_normal] : b[i_transposed],
-				                   c + i_normal, f);
-			});
+				(rows, cols, [&](const unsigned& i_normal, const unsigned& i_transposed)
+				{
+					__mat_e_by_e_set_c(t_a == scalar ? *a : t_a == normal ? a[i_normal] : a[i_transposed],
+					                   t_b == scalar ? *b : t_b == normal ? b[i_normal] : b[i_transposed],
+					                   c + i_normal, f);
+				});
 		}
 	}
 

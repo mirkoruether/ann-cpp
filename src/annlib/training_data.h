@@ -1,5 +1,6 @@
 #ifndef TRAINING_DATA_H
 #define TRAINING_DATA_H
+
 #include "mat_arr.h"
 
 using namespace linalg;

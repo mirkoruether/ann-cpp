@@ -3,6 +3,7 @@
 
 #include "mat_arr.h"
 #include "training_buffer.h"
+
 using namespace linalg;
 
 namespace annlib
@@ -35,6 +36,7 @@ namespace annlib
 		            mat_arr* target_noarr,
 		            std::string prefix,
 		            layer_buffer* buf) override;
+
 	protected:
 		explicit abstract_gradient_based_optimizer(unsigned buffer_count);
 

@@ -28,7 +28,7 @@ namespace linalg
 		explicit synced_vectors(size_t size)
 			: host_vec(size)
 #ifdef LINALG_CUDA_SUPPORT
-			  , dev_vec(size)
+		, dev_vec(size)
 #endif
 		{
 		}

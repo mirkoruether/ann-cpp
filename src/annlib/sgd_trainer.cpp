@@ -1,8 +1,6 @@
 #include "sgd_trainer.h"
-#include "mat_arr.h"
 #include "mat_arr_math.h"
 #include <future>
-#include <random>
 
 #include "_calc_macros.h"
 #include "output_layer.h"

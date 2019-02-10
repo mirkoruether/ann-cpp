@@ -34,7 +34,7 @@ namespace annlib
 		void add_layer(std::shared_ptr<network_layer> layer);
 
 		template <typename Ty, typename... Tys>
-		void add_new_layer(Tys&&... args)
+		void add_new_layer(Tys&& ... args)
 		{
 			add_layer(std::make_shared<Ty>(std::forward<Tys>(args)...));
 		}
@@ -54,6 +54,7 @@ namespace annlib
 		std::vector<std::shared_ptr<network_layer>> layers;
 
 		void do_feed_forward_and_backprop(training_buffer* buffer) const;
+
 		void do_adjustments(gradient_based_optimizer* opt, training_buffer* buffer);
 	};
 
@@ -61,9 +62,11 @@ namespace annlib
 	{
 	public:
 		const training_data& data;
+
 		explicit mini_batch_builder(training_data data);
 
 		void build_mini_batch(mat_arr* input_rv, mat_arr* solution_rv);
+
 	private:
 		std::uniform_int_distribution<unsigned> distribution;
 		std::mt19937 rng;

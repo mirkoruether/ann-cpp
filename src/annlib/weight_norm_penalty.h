@@ -11,6 +11,7 @@ namespace annlib
 	{
 	public:
 		virtual ~weight_norm_penalty() = default;
+
 		virtual void add_penalty_to_gradient(const mat_arr& weights_noarr,
 		                                     mat_arr* gradient_noarr) const = 0;
 	};
