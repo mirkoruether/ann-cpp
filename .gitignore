@@ -34,6 +34,9 @@
 *.pdb
 
 /.idea/*
+!/.idea/codeStyles
+!/.idea/inspectionProfiles
+
 /.vs/*
 /cmake-build-*
 /build/
