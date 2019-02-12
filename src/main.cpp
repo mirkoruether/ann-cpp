@@ -107,11 +107,12 @@ cycle_result train_and_test(unambiguous_classification* cl,
 void log_cycle_result(unsigned i, cycle_result res, std::ofstream* fs)
 {
 	std::cout << std::endl;
-	std::cout << "Cycle Number:      " << i << std::endl;
-	std::cout << "Training costs:    " << res.training_result.average_costs << std::endl;
-	std::cout << "Training accuracy: " << res.training_result.accuracy << std::endl;
-	std::cout << "Test costs:        " << res.test_result.average_costs << std::endl;
-	std::cout << "Test accuracy:     " << res.test_result.accuracy << std::endl;
+	std::cout << "Cycle Number:           " << i << std::endl;
+	std::cout << "Training costs:         " << res.training_result.average_costs << std::endl;
+	std::cout << "Training accuracy:      " << res.training_result.accuracy << std::endl;
+	std::cout << "Test costs:             " << res.test_result.average_costs << std::endl;
+	std::cout << "Test accuracy:          " << res.test_result.accuracy << std::endl;
+	std::cout << "Test Confusion Matrix:  " << std::endl << res.test_result.total_confusion_matrix;
 	std::cout << std::endl;
 
 	*fs << i << ','

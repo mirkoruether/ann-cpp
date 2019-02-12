@@ -18,8 +18,7 @@ namespace annlib
 	protected:
 		network_layer(unsigned input_size, unsigned output_size);
 
-		~network_layer() = default;
-
+		virtual ~network_layer() = default;
 	public:
 		const unsigned input_size;
 		const unsigned output_size;

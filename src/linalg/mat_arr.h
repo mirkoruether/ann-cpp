@@ -74,6 +74,8 @@ namespace linalg
 		bool only_real() const;
 
 		void assert_only_real() const;
+
+		friend std::ostream& operator<<(std::ostream& stream, const mat_arr& matrix);
 	};
 }
 

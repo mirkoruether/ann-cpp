@@ -138,3 +138,26 @@ void mat_arr::assert_only_real() const
 		throw std::runtime_error("nan");
 	}
 }
+
+std::ostream& linalg::operator<<(std::ostream& stream, const mat_arr& m)
+{
+	const fpt* start = m.start();
+	stream << "--- Begin matrix array: count " << m.count << ", rows " << m.rows << ", columns " << m.cols << " ---" << std::endl;
+	for (unsigned mat_no = 0; mat_no < m.count; mat_no++)
+	{
+		if (mat_no != 0) stream << std::endl;
+
+		for (unsigned row = 0; row < m.rows; row++)
+		{
+			if (row != 0) stream << ";" << std::endl;
+
+			for (unsigned col = 0; col < m.cols; col++)
+			{
+				if (col != 0) stream << ", ";
+				stream << std::scientific << start[m.index(mat_no, row, col)];
+			}
+		}
+	}
+	stream << std::endl << "--- End matrix array:   count " << m.count << ", rows " << m.rows << ", columns " << m.cols << " ---" << std::endl;
+	return stream;
+}
