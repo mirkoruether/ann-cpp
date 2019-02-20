@@ -5,26 +5,44 @@
 
 using namespace annlib;
 
-class convolution_layer : public network_layer
+namespace annlib
 {
-public:
-	void init(std::mt19937* rnd) override;
+	class conv_layer_hyperparameters
+	{
+		unsigned mask_width;
+		unsigned mask_height;
 
-	void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const override;
+		unsigned x_start;
+		unsigned y_start;
 
-	void feed_forward(const mat_arr& in, mat_arr* out) const override;
 
-	void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const override;
+	};
 
-	void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
+	class convolution_layer : public network_layer
+	{
+	private:
+		mat_arr mask_weights;
+		mat_arr mask_biases;
 
-	void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf) override;
 
-protected:
-	convolution_layer(unsigned input_size, unsigned output_size);
+	public:
+		void init(std::mt19937* rnd) override;
 
-	~convolution_layer() override = default;
-};
+		void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const override;
 
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
+		void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const override;
+
+		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
+
+		void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf) override;
+
+	protected:
+		convolution_layer(unsigned input_size, unsigned output_size);
+
+		~convolution_layer() override = default;
+	};
+}
 
 #endif //ANN_CPP_CONVOLUTION_LAYER_H

@@ -2,6 +2,8 @@
   <dictionary name="Mirko">
     <words>
       <w>annlib</w>
+      <w>conv</w>
+      <w>hyperparameters</w>
       <w>mnist</w>
       <w>relu</w>
     </words>
