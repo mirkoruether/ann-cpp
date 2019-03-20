@@ -7,23 +7,58 @@ using namespace annlib;
 
 namespace annlib
 {
-	class conv_layer_hyperparameters
+	struct conv_layer_hyperparameters
 	{
+		unsigned map_count;
+
+		unsigned image_width;
+		unsigned image_height;
+
 		unsigned mask_width;
 		unsigned mask_height;
 
-		unsigned x_start;
-		unsigned y_start;
+		unsigned stride_length_x;
+		unsigned stride_length_y;
 
+		unsigned input_size() const
+		{
+			return image_width * image_height;
+		};
 
+		unsigned mask_size() const
+		{
+			return mask_width * mask_height;
+		};
+
+		unsigned feature_map_width() const
+		{
+			return (image_width - (mask_width - 1)) / stride_length_x;
+		};
+
+		unsigned feature_map_height() const
+		{
+			return (image_height - (mask_height - 1)) / stride_length_y;
+		};
+
+		unsigned feature_map_size() const
+		{
+			return feature_map_width() * feature_map_height();
+		};
+
+		unsigned output_size() const
+		{
+			return feature_map_size() * map_count;
+		};
 	};
 
 	class convolution_layer : public network_layer
 	{
+	public:
+		const conv_layer_hyperparameters p;
+
 	private:
 		mat_arr mask_weights;
 		mat_arr mask_biases;
-
 
 	public:
 		void init(std::mt19937* rnd) override;
@@ -38,8 +73,7 @@ namespace annlib
 
 		void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf) override;
 
-	protected:
-		convolution_layer(unsigned input_size, unsigned output_size);
+		convolution_layer(conv_layer_hyperparameters p);
 
 		~convolution_layer() override = default;
 	};
