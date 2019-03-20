@@ -78,7 +78,8 @@ void sgd_trainer::train_epochs(gradient_based_optimizer* opt, const mini_batch_b
 	training_buffer buf(mini_batch_size, get_sizes());
 	for (unsigned i = 0; i < layers.size(); i++)
 	{
-		layers[i]->prepare_buffer(buf.lbuf(i), opt);
+		layers[i]->prepare_buffer(buf.lbuf(i));
+		buf.lbuf(i)->init_opt_target_buffers(opt->buffer_count);
 	}
 
 #ifdef _OPENMP
@@ -165,6 +166,11 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 	for (int i = 0; i < static_cast<int>(get_layer_count()); i++)
 	{
 		const auto ui = static_cast<unsigned >(i);
-		layers[i]->optimize(*buffer->error(ui), opt, buffer->lbuf(ui));
+		layers[i]->calculate_gradients(*buffer->error(ui), buffer->lbuf(ui));
+#pragma omp parallel for
+		for (int j = 0; j < static_cast<int>(buffer->lbuf(ui)->opt_targets.size()); j++)
+		{
+			opt->adjust(buffer->lbuf(ui)->opt_targets[j]);
+		}
 	}
 }

@@ -3,6 +3,7 @@
 #include <chrono>
 #include <fstream>
 #include <thread>
+#include <iomanip>
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -112,7 +113,9 @@ void log_cycle_result(unsigned i, cycle_result res, std::ofstream* fs)
 	std::cout << "Training accuracy:      " << res.training_result.accuracy << std::endl;
 	std::cout << "Test costs:             " << res.test_result.average_costs << std::endl;
 	std::cout << "Test accuracy:          " << res.test_result.accuracy << std::endl;
+	std::cout << std::fixed << std::setprecision(0);
 	std::cout << "Test Confusion Matrix:  " << std::endl << res.test_result.total_confusion_matrix;
+	std::cout << std::defaultfloat << std::setprecision(4);
 	std::cout << std::endl;
 
 	*fs << i << ','

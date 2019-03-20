@@ -154,7 +154,8 @@ std::ostream& linalg::operator<<(std::ostream& stream, const mat_arr& m)
 			for (unsigned col = 0; col < m.cols; col++)
 			{
 				if (col != 0) stream << ", ";
-				stream << std::scientific << start[m.index(mat_no, row, col)];
+				stream.width(6);
+				stream << start[m.index(mat_no, row, col)];
 			}
 		}
 	}

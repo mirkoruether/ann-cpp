@@ -63,7 +63,7 @@ namespace annlib
 	public:
 		void init(std::mt19937* rnd) override;
 
-		void prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const override;
+		void prepare_buffer(layer_buffer* buf) override;
 
 		void feed_forward(const mat_arr& in, mat_arr* out) const override;
 
@@ -71,7 +71,7 @@ namespace annlib
 
 		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
 
-		void optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf) override;
+		void calculate_gradients(const mat_arr& error, layer_buffer* buf) override;
 
 		convolution_layer(conv_layer_hyperparameters p);
 

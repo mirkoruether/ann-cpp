@@ -51,6 +51,18 @@ namespace annlib
 		buf(bool split, mat_arr mat);
 	};
 
+	class opt_target
+	{
+	public:
+		mat_arr* target;
+		mat_arr grad;
+		std::vector<mat_arr> opt_buf;
+
+		opt_target(mat_arr* target);
+
+		void init_opt_buffer(unsigned buffer_count);
+	};
+
 	class layer_buffer
 	{
 	private:
@@ -62,6 +74,8 @@ namespace annlib
 		void add(const std::string& key, mat_arr mat, bool split);
 
 	public:
+		std::vector<opt_target> opt_targets;
+
 		const unsigned mini_batch_size;
 		const mat_arr in;
 		const mat_arr out;
@@ -82,6 +96,12 @@ namespace annlib
 		mat_arr get_val(const std::string& key);
 
 		mat_arr* get_ptr(const std::string& key);
+
+		void add_opt_target(mat_arr* target);
+
+		void init_opt_target_buffers(unsigned opt_buffer_count);
+
+		mat_arr* get_grad_ptr(unsigned index);
 
 		layer_buffer get_part(unsigned start, unsigned count);
 	};

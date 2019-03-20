@@ -126,6 +126,19 @@ buf::buf(bool split, mat_arr mat)
 {
 }
 
+opt_target::opt_target(mat_arr* target)
+	: target(target), grad(target->count, target->rows, target->cols)
+{
+}
+
+void opt_target::init_opt_buffer(unsigned buffer_count)
+{
+	for (unsigned i = 0; i < buffer_count; i++)
+	{
+		opt_buf.emplace_back(target->count, target->rows, target->cols);
+	}
+}
+
 void layer_buffer::add(const std::string& key, unsigned count, unsigned rows, unsigned cols, bool split)
 {
 	m[key] = std::make_shared<buf>(split, count, rows, cols);
@@ -149,6 +162,24 @@ mat_arr layer_buffer::get_val(const std::string& key)
 mat_arr* layer_buffer::get_ptr(const std::string& key)
 {
 	return &m[key]->mat;
+}
+
+void layer_buffer::add_opt_target(mat_arr* target)
+{
+	opt_targets.emplace_back(target);
+}
+
+void layer_buffer::init_opt_target_buffers(unsigned opt_buffer_count)
+{
+	for (auto& e : opt_targets)
+	{
+		e.init_opt_buffer(opt_buffer_count);
+	}
+}
+
+mat_arr* layer_buffer::get_grad_ptr(unsigned index)
+{
+	return &opt_targets[index].grad;
 }
 
 layer_buffer layer_buffer::get_part(unsigned start, unsigned count)

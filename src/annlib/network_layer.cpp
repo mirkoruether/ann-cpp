@@ -11,7 +11,7 @@ void annlib::network_layer::init(std::mt19937* rnd)
 {
 }
 
-void annlib::network_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+void annlib::network_layer::prepare_buffer(layer_buffer* buf)
 {
 }
 
@@ -20,7 +20,7 @@ void annlib::network_layer::feed_forward_detailed(const mat_arr& in, mat_arr* ou
 	feed_forward(in, out);
 }
 
-void annlib::network_layer::optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf)
+void annlib::network_layer::calculate_gradients(const mat_arr& error, layer_buffer* buf)
 {
 }
 
@@ -46,13 +46,10 @@ void annlib::fully_connected_layer::init(std::mt19937* rnd)
 	mat_random_gaussian(0.0f, factor, rnd, &weights_noarr);
 }
 
-void annlib::fully_connected_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+void annlib::fully_connected_layer::prepare_buffer(layer_buffer* buf)
 {
-	buf->add_single("grad_b", 1, output_size);
-	buf->add_single("grad_w", input_size, output_size);
-
-	opt->add_to_buffer("opt_b", buf, 1, 1, output_size);
-	opt->add_to_buffer("opt_w", buf, 1, input_size, output_size);
+	buf->add_opt_target(&biases_noarr);
+	buf->add_opt_target(&weights_noarr);
 }
 
 void annlib::fully_connected_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const
@@ -96,22 +93,18 @@ void calculate_gradient_bias_cpu(const mat_arr& error_rv,
 	                     gradient_bias_noarr_rv);
 }
 
-void annlib::fully_connected_layer::optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf)
+void annlib::fully_connected_layer::calculate_gradients(const mat_arr& error, layer_buffer* buf)
 {
-	//TODO Parallel 
-	mat_arr* grad_w = buf->get_ptr("grad_w");
+	mat_arr* grad_b = buf->get_grad_ptr(0);
+	calculate_gradient_bias_cpu(error, grad_b);
+
+	mat_arr* grad_w = buf->get_grad_ptr(1);
 	calculate_gradient_weight_cpu(buf->in, error, grad_w);
 
 	if (wnp != nullptr)
 	{
 		wnp->add_penalty_to_gradient(weights_noarr, grad_w);
 	}
-
-	opt->adjust(*grad_w, &weights_noarr, "opt_w", buf);
-
-	mat_arr* grad_b = buf->get_ptr("grad_b");
-	calculate_gradient_bias_cpu(error, grad_b);
-	opt->adjust(*grad_b, &biases_noarr, "opt_b", buf);
 }
 
 annlib::activation_layer::activation_layer(unsigned size, std::shared_ptr<activation_function> act)
@@ -120,7 +113,7 @@ annlib::activation_layer::activation_layer(unsigned size, std::shared_ptr<activa
 {
 }
 
-void annlib::activation_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+void annlib::activation_layer::prepare_buffer(layer_buffer* buf)
 {
 	buf->add_mini_batch_size("df", 1, output_size);
 }

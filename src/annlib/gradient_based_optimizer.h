@@ -12,35 +12,23 @@ namespace annlib
 	class gradient_based_optimizer
 	{
 	public:
-		virtual ~gradient_based_optimizer() = default;
+		const unsigned buffer_count;
 
-		virtual void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned count, unsigned rows, unsigned cols) = 0;
+		virtual ~gradient_based_optimizer() = default;
 
 		virtual void start();
 
 		virtual void next_mini_batch();
 
-		virtual void adjust(const mat_arr& gradient, mat_arr* target,
-		                    std::string prefix, layer_buffer* buf) = 0;
-	};
-
-	class abstract_gradient_based_optimizer : public gradient_based_optimizer
-	{
-	public:
-		const unsigned buffer_count;
-
-		void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned count, unsigned rows, unsigned cols) override;
-
-		void adjust(const mat_arr& gradient, mat_arr* target,
-		            std::string prefix, layer_buffer* buf) override;
+		virtual void adjust(opt_target target);
 
 	protected:
-		explicit abstract_gradient_based_optimizer(unsigned buffer_count);
+		explicit gradient_based_optimizer(unsigned buffer_count);
 
 		virtual void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) = 0;
 	};
 
-	class ordinary_sgd : public abstract_gradient_based_optimizer
+	class ordinary_sgd : public gradient_based_optimizer
 	{
 	public:
 		explicit ordinary_sgd(fpt learning_rate);
@@ -50,7 +38,7 @@ namespace annlib
 		void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) override;
 	};
 
-	class momentum_sgd : public abstract_gradient_based_optimizer
+	class momentum_sgd : public gradient_based_optimizer
 	{
 	public:
 		explicit momentum_sgd(fpt learning_rate, fpt alpha);
@@ -61,7 +49,7 @@ namespace annlib
 		void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) override;
 	};
 
-	class adam : public abstract_gradient_based_optimizer
+	class adam : public gradient_based_optimizer
 	{
 	public:
 		adam();

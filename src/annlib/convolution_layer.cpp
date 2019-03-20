@@ -8,19 +8,16 @@ void convolution_layer::init(std::mt19937* rnd)
 	mat_random_gaussian(0.0f, factor, rnd, &mask_weights);
 }
 
-void convolution_layer::prepare_buffer(layer_buffer* buf, gradient_based_optimizer* opt) const
+void convolution_layer::prepare_buffer(layer_buffer* buf)
 {
-	buf->add_single("grad_mb", 1, output_size);
-	buf->add_single("grad_mw", input_size, output_size);
-
-	opt->add_to_buffer("opt_mb", buf, 1, output_size);
-	opt->add_to_buffer("opt_mw", buf, input_size, output_size);
+	buf->add_opt_target(&mask_biases);
+	buf->add_opt_target(&mask_weights);
 }
 
-void feed_forward_mask_element(const fpt* in_start, fpt* out, const fpt weight, unsigned fm_width, unsigned fm_heigth, unsigned im_width,
+void feed_forward_mask_element(const fpt* in_start, fpt* out, const fpt weight, unsigned fm_width, unsigned fm_height, unsigned im_width,
                                unsigned stride_x, unsigned stride_y)
 {
-	for (unsigned fm_row = 0; fm_row < fm_heigth; fm_row++)
+	for (unsigned fm_row = 0; fm_row < fm_height; fm_row++)
 	{
 		const unsigned im_row = fm_row * stride_y;
 		const fpt* im_row_p = in_start + im_row * im_width;
@@ -77,16 +74,15 @@ void convolution_layer::backprop(const mat_arr& error, mat_arr* error_prev, laye
 	throw std::runtime_error("Backpropagation through convolutional layer not supported yet");
 }
 
-void convolution_layer::optimize(const mat_arr& error, gradient_based_optimizer* opt, layer_buffer* buf)
+void convolution_layer::calculate_gradients(const mat_arr& error, layer_buffer* buf)
 {
 
 }
 
 convolution_layer::convolution_layer(conv_layer_hyperparameters p)
-	: network_layer(p.input_size(), p.output_size()),
-	  p(p),
-	  mask_biases(p.map_count, 1, 1),
-	  mask_weights(p.map_count, p.mask_height, p.mask_width)
+	: network_layer(p.input_size(), p.output_size()), p(p),
+	  mask_weights(p.map_count, p.mask_height, p.mask_width),
+	  mask_biases(p.map_count, 1, 1)
 {
 }
 

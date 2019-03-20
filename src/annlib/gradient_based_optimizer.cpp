@@ -17,32 +17,18 @@ void gradient_based_optimizer::next_mini_batch()
 {
 }
 
-void abstract_gradient_based_optimizer::add_to_buffer(std::string prefix, layer_buffer* buf,
-                                                      unsigned count, unsigned rows, unsigned cols)
-{
-	buf->add_custom_count(prefix, buffer_count * count, rows, cols);
-}
-
-void abstract_gradient_based_optimizer::adjust(const mat_arr& gradient, mat_arr* target,
-                                               std::string prefix, layer_buffer* buf)
-{
-	std::vector<mat_arr> buffer;
-	mat_arr complete_buffer = buf->get_val(prefix);
-	unsigned count_per_buffer = gradient.count;
-	for (unsigned i = 0; i < buffer_count; i++)
-	{
-		buffer.emplace_back(complete_buffer.get_mats(i * count_per_buffer, count_per_buffer));
-	}
-	adjust(gradient, std::move(buffer), target);
-}
-
-abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(unsigned buffer_count)
+gradient_based_optimizer::gradient_based_optimizer(unsigned buffer_count)
 	: buffer_count(buffer_count)
 {
 }
 
+void gradient_based_optimizer::adjust(opt_target target)
+{
+	adjust(target.grad, target.opt_buf, target.target);
+}
+
 ordinary_sgd::ordinary_sgd(fpt learning_rate)
-	: abstract_gradient_based_optimizer(0),
+	: gradient_based_optimizer(0),
 	  learning_rate(learning_rate)
 {
 }
@@ -61,7 +47,7 @@ void ordinary_sgd::adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, 
 }
 
 momentum_sgd::momentum_sgd(fpt learning_rate, fpt alpha)
-	: abstract_gradient_based_optimizer(1),
+	: gradient_based_optimizer(1),
 	  learning_rate(learning_rate), alpha(alpha)
 {
 }
@@ -87,7 +73,7 @@ adam::adam()
 }
 
 adam::adam(fpt alpha, fpt beta1, fpt beta2)
-	: abstract_gradient_based_optimizer(3),
+	: gradient_based_optimizer(3),
 	  alpha(alpha), beta1(beta1), beta2(beta2),
 	  beta1_pow_t(1.0f), beta2_pow_t(1.0f), alpha_t(0.0f)
 {
