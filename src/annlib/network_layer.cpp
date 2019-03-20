@@ -51,8 +51,8 @@ void annlib::fully_connected_layer::prepare_buffer(layer_buffer* buf, gradient_b
 	buf->add_single("grad_b", 1, output_size);
 	buf->add_single("grad_w", input_size, output_size);
 
-	opt->add_to_buffer("opt_b", buf, 1, output_size);
-	opt->add_to_buffer("opt_w", buf, input_size, output_size);
+	opt->add_to_buffer("opt_b", buf, 1, 1, output_size);
+	opt->add_to_buffer("opt_w", buf, 1, input_size, output_size);
 }
 
 void annlib::fully_connected_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const

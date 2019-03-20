@@ -2,7 +2,10 @@
   <dictionary name="Mirko">
     <words>
       <w>annlib</w>
+      <w>backprop</w>
+      <w>backpropagation</w>
       <w>conv</w>
+      <w>convolutional</w>
       <w>hyperparameters</w>
       <w>mnist</w>
       <w>relu</w>

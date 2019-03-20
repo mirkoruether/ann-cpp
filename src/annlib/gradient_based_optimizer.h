@@ -1,6 +1,7 @@
 #ifndef GRADIENT_BASED_OPTIMIZER_H
 #define GRADIENT_BASED_OPTIMIZER_H
 
+#include <vector>
 #include "mat_arr.h"
 #include "training_buffer.h"
 
@@ -13,16 +14,14 @@ namespace annlib
 	public:
 		virtual ~gradient_based_optimizer() = default;
 
-		virtual void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned rows, unsigned cols) = 0;
+		virtual void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned count, unsigned rows, unsigned cols) = 0;
 
 		virtual void start();
 
 		virtual void next_mini_batch();
 
-		virtual void adjust(const mat_arr& gradient_noarr,
-		                    mat_arr* target_noarr,
-		                    std::string prefix,
-		                    layer_buffer* buf) = 0;
+		virtual void adjust(const mat_arr& gradient, mat_arr* target,
+		                    std::string prefix, layer_buffer* buf) = 0;
 	};
 
 	class abstract_gradient_based_optimizer : public gradient_based_optimizer
@@ -30,19 +29,15 @@ namespace annlib
 	public:
 		const unsigned buffer_count;
 
-		void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned rows, unsigned cols) override;
+		void add_to_buffer(std::string prefix, layer_buffer* buf, unsigned count, unsigned rows, unsigned cols) override;
 
-		void adjust(const mat_arr& gradient_noarr,
-		            mat_arr* target_noarr,
-		            std::string prefix,
-		            layer_buffer* buf) override;
+		void adjust(const mat_arr& gradient, mat_arr* target,
+		            std::string prefix, layer_buffer* buf) override;
 
 	protected:
 		explicit abstract_gradient_based_optimizer(unsigned buffer_count);
 
-		virtual void adjust(const mat_arr& gradient_noarr,
-		                    mat_arr* buffer,
-		                    mat_arr* target_noarr) = 0;
+		virtual void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) = 0;
 	};
 
 	class ordinary_sgd : public abstract_gradient_based_optimizer
@@ -52,9 +47,7 @@ namespace annlib
 
 		fpt learning_rate;
 
-		void adjust(const mat_arr& gradient_noarr,
-		            mat_arr* buffer,
-		            mat_arr* target_noarr) override;
+		void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) override;
 	};
 
 	class momentum_sgd : public abstract_gradient_based_optimizer
@@ -65,9 +58,7 @@ namespace annlib
 		fpt learning_rate;
 		fpt alpha;
 
-		void adjust(const mat_arr& gradient_noarr,
-		            mat_arr* buffer,
-		            mat_arr* target_noarr) override;
+		void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) override;
 	};
 
 	class adam : public abstract_gradient_based_optimizer
@@ -89,9 +80,7 @@ namespace annlib
 
 		void next_mini_batch() override;
 
-		void adjust(const mat_arr& gradient_noarr,
-		            mat_arr* buffer,
-		            mat_arr* target_noarr) override;
+		void adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target) override;
 	};
 }
 

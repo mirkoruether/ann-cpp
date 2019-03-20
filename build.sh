@@ -7,6 +7,8 @@ linkerflags="-lstdc++fs"
 
 files="src/**/*.cpp src/*.cpp"
 
+rm -r ${out_dir_rel}
+rm -r ${out_dir_deb}
 mkdir -p ${out_dir_rel} ${out_dir_deb}
 
 #Debug x64

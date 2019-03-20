@@ -17,19 +17,23 @@ void gradient_based_optimizer::next_mini_batch()
 {
 }
 
-void abstract_gradient_based_optimizer::add_to_buffer(std::string prefix,
-                                                      layer_buffer* buf,
-                                                      unsigned rows, unsigned cols)
+void abstract_gradient_based_optimizer::add_to_buffer(std::string prefix, layer_buffer* buf,
+                                                      unsigned count, unsigned rows, unsigned cols)
 {
-	buf->add_custom_count(prefix, buffer_count, rows, cols);
+	buf->add_custom_count(prefix, buffer_count * count, rows, cols);
 }
 
-void abstract_gradient_based_optimizer::adjust(const mat_arr& gradient_noarr,
-                                               mat_arr* target_noarr,
-                                               std::string prefix,
-                                               layer_buffer* buf)
+void abstract_gradient_based_optimizer::adjust(const mat_arr& gradient, mat_arr* target,
+                                               std::string prefix, layer_buffer* buf)
 {
-	adjust(gradient_noarr, buf->get_ptr(prefix), target_noarr);
+	std::vector<mat_arr> buffer;
+	mat_arr complete_buffer = buf->get_val(prefix);
+	unsigned count_per_buffer = gradient.count;
+	for (unsigned i = 0; i < buffer_count; i++)
+	{
+		buffer.emplace_back(complete_buffer.get_mats(i * count_per_buffer, count_per_buffer));
+	}
+	adjust(gradient, std::move(buffer), target);
 }
 
 abstract_gradient_based_optimizer::abstract_gradient_based_optimizer(unsigned buffer_count)
@@ -43,14 +47,12 @@ ordinary_sgd::ordinary_sgd(fpt learning_rate)
 {
 }
 
-void ordinary_sgd::adjust(const mat_arr& gradient_noarr,
-                          mat_arr* buffer,
-                          mat_arr* target_noarr)
+void ordinary_sgd::adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target)
 {
 #ifdef ANNLIB_USE_CUDA
 	cuda::cuda_ordinary_sgd_update(learning_rate, gradient_noarr, target_noarr);
 #else
-	mat_element_by_element_operation(*target_noarr, gradient_noarr, target_noarr,
+	mat_element_by_element_operation(*target, gradient, target,
 	                                 [&](fpt target, fpt grad)
 	                                 {
 		                                 return target - learning_rate * grad;
@@ -64,21 +66,19 @@ momentum_sgd::momentum_sgd(fpt learning_rate, fpt alpha)
 {
 }
 
-void momentum_sgd::adjust(const mat_arr& gradient_noarr,
-                          mat_arr* buffer,
-                          mat_arr* target_noarr)
+void momentum_sgd::adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target)
 {
 #ifdef ANNLIB_USE_CUDA
 	cuda::cuda_momentum_sgd_update_velocities(alpha, learning_rate, gradient_noarr, buffer);
 #else
-	mat_element_by_element_operation(*buffer, gradient_noarr, buffer,
+	mat_element_by_element_operation(buffer[0], gradient, &buffer[0],
 	                                 [&](fpt v, fpt grad)
 	                                 {
 		                                 return alpha * v - learning_rate * grad;
 	                                 });
 #endif
 
-	M_ADD(*target_noarr, *buffer, target_noarr);
+	M_ADD(*target, buffer[0], target);
 }
 
 adam::adam()
@@ -107,22 +107,20 @@ void adam::next_mini_batch()
 	alpha_t = alpha * std::sqrt(1 - beta2_pow_t) / (1 - beta1_pow_t);
 }
 
-void adam::adjust(const mat_arr& gradient_noarr,
-                  mat_arr* buffer,
-                  mat_arr* target_noarr)
+void adam::adjust(const mat_arr& gradient, std::vector<mat_arr> buffer, mat_arr* target)
 {
-	mat_arr m_buf = buffer->get_mat(0);
-	mat_arr v_buf = buffer->get_mat(1);
+	mat_arr m_buf = buffer[0];
+	mat_arr v_buf = buffer[1];
 
-	mat_arr delta = buffer->get_mat(2);
+	mat_arr delta = buffer[2];
 
-	mat_element_by_element_operation(m_buf, gradient_noarr, &m_buf,
+	mat_element_by_element_operation(m_buf, gradient, &m_buf,
 	                                 [&](fpt m, fpt grad)
 	                                 {
 		                                 return beta1 * m + (1.0f - beta1) * grad;
 	                                 });
 
-	mat_element_by_element_operation(v_buf, gradient_noarr, &v_buf,
+	mat_element_by_element_operation(v_buf, gradient, &v_buf,
 	                                 [&](fpt v, fpt grad)
 	                                 {
 		                                 return beta2 * v + (1.0f - beta2) * grad * grad;
@@ -134,5 +132,5 @@ void adam::adjust(const mat_arr& gradient_noarr,
 		                                 return alpha_t * m / (std::sqrt(v) + 1e-8f);
 	                                 });
 
-	mat_element_wise_sub(*target_noarr, delta, target_noarr);
+	mat_element_wise_sub(*target, delta, target);
 }
