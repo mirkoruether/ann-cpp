@@ -77,6 +77,16 @@ namespace annlib
 
 		~convolution_layer() override = default;
 	};
+
+	struct pooling_layer_hyperparameters
+	{
+
+	};
+
+	class max_pooling_layer : public network_layer
+	{
+
+	};
 }
 
 #endif //ANN_CPP_CONVOLUTION_LAYER_H
