@@ -73,19 +73,73 @@ namespace annlib
 
 		void calculate_gradients(const mat_arr& error, layer_buffer* buf) override;
 
-		convolution_layer(conv_layer_hyperparameters p);
+		explicit convolution_layer(conv_layer_hyperparameters p);
 
 		~convolution_layer() override = default;
 	};
 
 	struct pooling_layer_hyperparameters
 	{
+		unsigned count;
 
+		unsigned in_width;
+		unsigned in_height;
+
+		unsigned mask_width;
+		unsigned mask_height;
+
+		unsigned in_size() const
+		{
+			return in_width * in_height;
+		};
+
+		unsigned in_size_total() const
+		{
+			return in_size() * count;
+		};
+
+		unsigned mask_size() const
+		{
+			return mask_width * mask_height;
+		};
+
+		unsigned out_width() const
+		{
+			return in_width / mask_width;
+		};
+
+		unsigned out_height() const
+		{
+			return in_height / mask_height;
+		};
+
+		unsigned out_size() const
+		{
+			return out_width() * out_height();
+		};
+
+		unsigned out_size_total() const
+		{
+			return out_size() * count;
+		}
 	};
 
 	class max_pooling_layer : public network_layer
 	{
+	public:
+		const pooling_layer_hyperparameters p;
 
+		void prepare_buffer(layer_buffer* buf) override;
+
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
+		void feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const override;
+
+		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
+
+		explicit max_pooling_layer(pooling_layer_hyperparameters p);
+
+		~max_pooling_layer() override = default;
 	};
 }
 
