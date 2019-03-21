@@ -199,26 +199,6 @@ int main(int argc, char** argv)
 
 		trainer.init();
 
-		const std::function<void(training_status)> logf
-			([&](training_status stat)
-			 {
-				 const unsigned batch_no = stat.batch_no;
-				 const unsigned batch_count = stat.batch_count;
-
-				 if (batch_no < batch_count)
-				 {
-					 std::cout << "\r" << batch_no << "/" << batch_count
-					           << " ["
-					           << unsigned(100.0 * (batch_no + 1) / batch_count)
-					           << "%]";
-				 }
-				 else
-				 {
-					 std::cout << "\r" << batch_count << "/" << batch_count
-					           << " [100%]" << std::endl;
-				 }
-			 });
-
 		unambiguous_classification cl;
 		cl.set_optimizer<adam>();
 		cl.set_trainer<sgd_trainer>(trainer);
