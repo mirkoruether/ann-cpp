@@ -26,8 +26,10 @@ namespace annlib
 		const unsigned out_size = out_width * out_height;
 		const unsigned out_size_total = out_size * out_count;
 
+#pragma omp parallel for
 		for (unsigned mb_el = 0; mb_el < mini_batch_size; mb_el++)
 		{
+#pragma omp parallel for
 			for (unsigned no = 0; no < count; no++)
 			{
 				const unsigned i_in_single = mb_el * in_size_total + (in_count == 1 ? 0 : no * in_size);
@@ -36,12 +38,13 @@ namespace annlib
 
 				for (unsigned mask_row = 0; mask_row < mask_height; mask_row++)
 				{
-					for (unsigned mask_col = 0; mask_col < mask_width; mask_col++)
+					for (unsigned out_row = 0; out_row < out_height; out_row++)
 					{
-						const unsigned i_mask = i_mask_single + mask_row * mask_width + mask_col;
-						const unsigned i_in_start = i_in_single + mask_col + mask_row * in_width;
-						for (unsigned out_row = 0; out_row < out_height; out_row++)
+						for (unsigned mask_col = 0; mask_col < mask_width; mask_col++)
 						{
+							const unsigned i_mask = i_mask_single + mask_row * mask_width + mask_col;
+							const unsigned i_in_start = i_in_single + mask_col + mask_row * in_width;
+
 							for (unsigned out_col = 0; out_col < out_width; out_col++)
 							{
 								const unsigned i_in = i_in_start + out_row * stride_y * in_width + out_col * stride_x;
@@ -61,14 +64,16 @@ namespace annlib
 		const unsigned size = width * height;
 		const unsigned size_total = size * count;
 
+#pragma omp parallel for
 		for (unsigned mb_el = 0; mb_el < mini_batch_size; mb_el++)
 		{
+#pragma omp parallel for
 			for (unsigned no = 0; no < count; no++)
 			{
 				unsigned i_single = mb_el * size_total + no * size;
-				for (unsigned row = 0; row < width; row++)
+				for (unsigned row = 0; row < height; row++)
 				{
-					for (unsigned col = 0; col < height; col++)
+					for (unsigned col = 0; col < width; col++)
 					{
 						unsigned i = i_single + row * width + col;
 						f(no, i);
@@ -211,6 +216,20 @@ namespace annlib
 		explicit max_pooling_layer(pooling_layer_hyperparameters p);
 
 		~max_pooling_layer() override = default;
+	};
+
+	class average_pooling_layer : public network_layer
+	{
+	public:
+		const pooling_layer_hyperparameters p;
+
+		void feed_forward(const mat_arr& in, mat_arr* out) const override;
+
+		void backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const override;
+
+		explicit average_pooling_layer(pooling_layer_hyperparameters p);
+
+		~average_pooling_layer() override = default;
 	};
 }
 

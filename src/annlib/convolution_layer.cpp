@@ -114,14 +114,19 @@ convolution_layer::convolution_layer(conv_layer_hyperparameters p)
 {
 }
 
+bool greater_equal(fpt val, fpt max)
+{
+	return max - val < 0.05f * std::abs(max);
+}
+
 void max_pooling_layer::prepare_buffer(layer_buffer* buf)
 {
-	buf->add_mini_batch_size("df", 1, p.in_size_total());
+	buf->add_mini_batch_size("num", 1, p.out_size_total());
 }
 
 void max_pooling_layer::feed_forward(const mat_arr& in, mat_arr* out) const
 {
-	mat_set_all(0.0f, out);
+	mat_set_all(-1.0f * std::numeric_limits<fpt>::infinity(), out);
 
 	if (in.cols != p.in_size_total())
 	{
@@ -149,32 +154,85 @@ void max_pooling_layer::feed_forward(const mat_arr& in, mat_arr* out) const
 void max_pooling_layer::feed_forward_detailed(const mat_arr& in, mat_arr* out, layer_buffer* buf) const
 {
 	feed_forward(in, out);
+	mat_arr* num = buf->get_ptr("num");
+	mat_set_all(0.0f, num);
 
 	const fpt* in_ptr = in.start();
 	const fpt* out_ptr = out->start();
-	fpt* df_ptr = buf->get_ptr("df")->start();
+	fpt* num_ptr = num->start();
 
 	convolve(in.count, p, std::function<void(unsigned, unsigned, unsigned)>
 		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
 		 {
-			 df_ptr[i_in] = out_ptr[i_out] == in_ptr[i_in] ? 1.0f : 0.0f;
+			 if (greater_equal(in_ptr[i_in], out_ptr[i_out]))
+			 {
+				 num_ptr[i_out] += 1.0f;
+			 }
 		 }));
 }
 
 void max_pooling_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const
 {
+	const fpt* in_ptr = buf->in.start();
+	const fpt* out_ptr = buf->out.start();
+
 	const fpt* err_ptr = error.start();
-	const fpt* df_ptr = buf->get_ptr("df")->start();
+	const fpt* num_ptr = buf->get_ptr("num")->start();
 	fpt* res_ptr = error_prev->start();
 
 	convolve(error.count, p, std::function<void(unsigned, unsigned, unsigned)>
 		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
 		 {
-			 res_ptr[i_in] = df_ptr[i_in] * err_ptr[i_out];
+			 res_ptr[i_in] = greater_equal(in_ptr[i_in], out_ptr[i_out]) ? err_ptr[i_out] / num_ptr[i_out] : 0.0f;
 		 }));
 }
 
 max_pooling_layer::max_pooling_layer(pooling_layer_hyperparameters p)
+	: network_layer(p.in_size_total(), p.out_size_total()), p(p)
+{
+}
+
+void average_pooling_layer::feed_forward(const mat_arr& in, mat_arr* out) const
+{
+	mat_set_all(0.0f, out);
+
+	if (in.cols != p.in_size_total())
+	{
+		throw std::runtime_error("Wrong input size");
+	}
+
+	if (out->cols != p.out_size_total())
+	{
+		throw std::runtime_error("Wrong output size");
+	}
+
+	const fpt* in_ptr = in.start();
+	fpt* out_ptr = out->start();
+
+	fpt factor = 1.0f / p.mask_size();
+
+	convolve(in.count, p, std::function<void(unsigned, unsigned, unsigned)>
+		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
+		 {
+			 out_ptr[i_out] += factor * in_ptr[i_in];
+		 }));
+}
+
+void average_pooling_layer::backprop(const mat_arr& error, mat_arr* error_prev, layer_buffer* buf) const
+{
+	const fpt* err_ptr = error.start();
+	fpt* res_ptr = error_prev->start();
+
+	fpt factor = 1.0f / p.mask_size();
+
+	convolve(error.count, p, std::function<void(unsigned, unsigned, unsigned)>
+		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
+		 {
+			 res_ptr[i_in] = factor * err_ptr[i_out];
+		 }));
+}
+
+average_pooling_layer::average_pooling_layer(pooling_layer_hyperparameters p)
 	: network_layer(p.in_size_total(), p.out_size_total()), p(p)
 {
 }

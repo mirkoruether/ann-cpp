@@ -144,133 +144,11 @@ void train_and_test(double epochs_per_cycle, unsigned cycles,
 
 	for (unsigned c = 0; c < cycles; c++)
 	{
-		const cycle_result cres = train_and_test(cl, epochs_per_cycle, train_data, test_data);
-		log_cycle_result(c, cres, &fs);
-	}
-}
-
-void random_matrix_arr(mat_arr* m)
-{
-	const unsigned size = m->size();
-
-	fpt* mat = m->start();
-	for (unsigned i = 0; i < size; i++)
-	{
-		*(mat + i) = static_cast<fpt>(rand()) / static_cast<fpt>(RAND_MAX);
-	}
-}
-
-void test_convolve()
-{
-	annlib::convolve(1, 1, 1, 4, 4, 2, 2, 2, 2, std::function<void(unsigned, unsigned, unsigned)>
-		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
-		 {
-			 std::cout << i_in << " | " << i_mask << " | " << i_out << std::endl;
-		 }));
-}
-
-void test_max_pool_single()
-{
-	mat_arr in(3, 1, 8);
-	mat_arr out(3, 1, 8);
-
-	pooling_layer_hyperparameters pool_test_p
+		time_execution("train cycle " + std::to_string(c), [&]()
 		{
-			2,    // map count
-			2, 2, // map dimension
-			1, 1  // mask dimension
-		};
-
-	layer_buffer lbuf(3, in, out, mat_arr(3, 1, 8));
-
-	max_pooling_layer la(pool_test_p);
-	la.prepare_buffer(&lbuf);
-
-	std::cout << std::endl;
-	std::cout << "feed forward" << std::endl;
-	std::cout << std::endl;
-	for (unsigned i = 0; i < 4; i++)
-	{
-		random_matrix_arr(&in);
-		la.feed_forward_detailed(in, &out, &lbuf);
-		std::cout << in << out << std::endl;
-	}
-
-	std::cout << "backprop" << std::endl;
-	std::cout << std::endl;
-
-	for (unsigned i = 0; i < 4; i++)
-	{
-		random_matrix_arr(&in);
-		la.backprop(in, &out, &lbuf);
-		std::cout << in << out << std::endl;
-	}
-}
-
-void test_max_pool()
-{
-	pooling_layer_hyperparameters pool_test_p
-		{
-			2,    // map count
-			4, 4, // map dimension
-			2, 2  // mask dimension
-		};
-
-	mat_arr in(3, 1, pool_test_p.in_size_total());
-	mat_arr out(3, 1, pool_test_p.out_size_total());
-
-	mat_arr err_in(3, 1, pool_test_p.out_size_total());
-	mat_arr err_out(3, 1, pool_test_p.in_size_total());
-
-	layer_buffer lbuf(3, in, out, mat_arr(3, 1, pool_test_p.out_size_total()));
-
-	max_pooling_layer la(pool_test_p);
-	la.prepare_buffer(&lbuf);
-
-	for (unsigned i = 0; i < 4; i++)
-	{
-		random_matrix_arr(&in);
-		la.feed_forward_detailed(in, &out, &lbuf);
-		std::cout << in << out << lbuf.get_val("df") << std::endl;
-
-		random_matrix_arr(&err_in);
-		la.backprop(err_in, &err_out, &lbuf);
-		std::cout << err_in << err_out << lbuf.get_val("df") << std::endl << std::endl;
-	}
-}
-
-void test_conv_layer1()
-{
-	conv_layer_hyperparameters p
-		{
-			2,     // map count
-			2, 2, // image dimension
-			1, 1,   // mask dimension
-			1, 1    // stride
-		};
-
-	mat_arr in(1, 1, p.input_size());
-	mat_arr out(1, 1, p.output_size());
-
-	fpt* in_ptr = in.start();
-	in_ptr[0] = 1;
-	in_ptr[1] = 2;
-	in_ptr[2] = 3;
-	in_ptr[3] = 4;
-
-	convolution_layer la(p);
-	fpt* mb_ptr = la.mask_biases.start();
-	mb_ptr[0] = 1;
-	mb_ptr[1] = 2;
-
-	fpt* mw_ptr = la.mask_weights.start();
-	mw_ptr[0] = 2;
-	mw_ptr[1] = 10;
-
-	for (unsigned i = 0; i < 4; i++)
-	{
-		la.feed_forward(in, &out);
-		std::cout << out << std::endl;
+			const cycle_result cres = train_and_test(cl, epochs_per_cycle, train_data, test_data);
+			log_cycle_result(c, cres, &fs);
+		});
 	}
 }
 
@@ -278,12 +156,10 @@ int main(int argc, char** argv)
 {
 	try
 	{
-		//test_convolve();
-		//test_max_pool_single();
-		//test_max_pool();
-		test_conv_layer1();
 		const unsigned cycle_count = 100;
-		const double epochs_per_cycle = (argc <= 1 ? 1.0 : std::stod(std::string(argv[1]))) / cycle_count;
+		const double epochs_per_cycle = (argc <= 1 ? 100.0 : std::stod(std::string(argv[1]))) / cycle_count;
+		std::cout << "Cycle count: " << cycle_count << std::endl;
+		std::cout << "Epochs per cycle: " << epochs_per_cycle << std::endl;
 
 #ifdef __linux__
 		const std::string folder = "/mnt/c/";
@@ -324,51 +200,31 @@ int main(int argc, char** argv)
 				3, 3    // mask dimension
 			};
 
-		//trainer.add_new_layer<max_pooling_layer>(pool_test_p);
-		//trainer.add_new_layer<max_pooling_layer>(pool_test_p);
-
 		trainer.add_new_layer<convolution_layer>(conv_p);
 		trainer.add_new_layer<max_pooling_layer>(pool_p);
-
-		//trainer.add_new_layer<fully_connected_layer>(784, 500);
-		//trainer.add_new_layer<relu_activation_layer>(500);
-
-		//trainer.add_new_layer<fully_connected_layer>(500, 300);
-		//trainer.add_new_layer<relu_activation_layer>(300);
-
-		//trainer.add_new_layer<fully_connected_layer>(300, 200);
-		//trainer.add_new_layer<relu_activation_layer>(200);
-
-		//trainer.add_new_layer<fully_connected_layer>(200, 50);
-		//trainer.add_new_layer<relu_activation_layer>(50);
 
 		const unsigned size_after_pooling = pool_p.out_size_total();
 		std::cout << "Size after pooling: " << size_after_pooling << std::endl;
 
-		trainer.add_new_layer<logistic_activation_layer>(size_after_pooling);
+		trainer.add_new_layer<relu_activation_layer>(size_after_pooling);
 
-		trainer.add_new_layer<fully_connected_layer>(size_after_pooling, 100, wnp);
-		trainer.add_new_layer<logistic_activation_layer>(100);
+		trainer.add_new_layer<fully_connected_layer>(size_after_pooling, 600, wnp);
+		trainer.add_new_layer<relu_activation_layer>(600);
 
-		trainer.add_new_layer<fully_connected_layer>(100, 10, wnp);
+		trainer.add_new_layer<fully_connected_layer>(600, 200, wnp);
+		trainer.add_new_layer<relu_activation_layer>(200);
+
+		trainer.add_new_layer<fully_connected_layer>(200, 10, wnp);
 		trainer.add_new_layer<softmax_act_cross_entropy_costs>(10);
 
 		trainer.init();
 
 		unambiguous_classification cl;
-		cl.set_optimizer<adam>();
+		cl.set_optimizer<adam>(1e-4f, 0.9f, 0.99f);
 		cl.set_trainer<sgd_trainer>(trainer);
 		cl.set_data(mnist_training, 8);
 
-		for (unsigned i = 0; i < cycle_count; i++)
-		{
-			time_execution("train cycle " + std::to_string(i), [&]()
-			{
-				train_and_test(epochs_per_cycle, 1, &cl, mnist_training, mnist_test);
-				std::cout << static_cast<convolution_layer*>(trainer.get_layer(0))->mask_weights << std::endl;
-				std::cout << static_cast<convolution_layer*>(trainer.get_layer(0))->mask_biases << std::endl;
-			});
-		}
+		train_and_test(epochs_per_cycle, cycle_count, &cl, mnist_training, mnist_test);
 
 		std::cout << "Press any button to continue...";
 		std::cin.get();

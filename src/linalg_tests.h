@@ -26,6 +26,131 @@ void random_matrix_arr(mat_arr* m)
 	}
 }
 
+void random_matrix_arr(mat_arr* m)
+{
+	const unsigned size = m->size();
+
+	fpt* mat = m->start();
+	for (unsigned i = 0; i < size; i++)
+	{
+		*(mat + i) = static_cast<fpt>(rand()) / static_cast<fpt>(RAND_MAX);
+	}
+}
+
+void test_convolve()
+{
+	annlib::convolve(1, 1, 1, 4, 4, 2, 2, 2, 2, std::function<void(unsigned, unsigned, unsigned)>
+		([&](unsigned i_in, unsigned i_out, unsigned i_mask)
+		 {
+			 std::cout << i_in << " | " << i_mask << " | " << i_out << std::endl;
+		 }));
+}
+
+void test_max_pool_single()
+{
+	mat_arr in(3, 1, 8);
+	mat_arr out(3, 1, 8);
+
+	pooling_layer_hyperparameters pool_test_p
+		{
+			2,    // map count
+			2, 2, // map dimension
+			1, 1  // mask dimension
+		};
+
+	layer_buffer lbuf(3, in, out, mat_arr(3, 1, 8));
+
+	max_pooling_layer la(pool_test_p);
+	la.prepare_buffer(&lbuf);
+
+	std::cout << std::endl;
+	std::cout << "feed forward" << std::endl;
+	std::cout << std::endl;
+	for (unsigned i = 0; i < 4; i++)
+	{
+		random_matrix_arr(&in);
+		la.feed_forward_detailed(in, &out, &lbuf);
+		std::cout << in << out << std::endl;
+	}
+
+	std::cout << "backprop" << std::endl;
+	std::cout << std::endl;
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		random_matrix_arr(&in);
+		la.backprop(in, &out, &lbuf);
+		std::cout << in << out << std::endl;
+	}
+}
+
+void test_max_pool()
+{
+	pooling_layer_hyperparameters pool_test_p
+		{
+			2,    // map count
+			4, 4, // map dimension
+			2, 2  // mask dimension
+		};
+
+	mat_arr in(3, 1, pool_test_p.in_size_total());
+	mat_arr out(3, 1, pool_test_p.out_size_total());
+
+	mat_arr err_in(3, 1, pool_test_p.out_size_total());
+	mat_arr err_out(3, 1, pool_test_p.in_size_total());
+
+	layer_buffer lbuf(3, in, out, mat_arr(3, 1, pool_test_p.out_size_total()));
+
+	max_pooling_layer la(pool_test_p);
+	la.prepare_buffer(&lbuf);
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		random_matrix_arr(&in);
+		la.feed_forward_detailed(in, &out, &lbuf);
+		std::cout << in << out << lbuf.get_val("df") << std::endl;
+
+		random_matrix_arr(&err_in);
+		la.backprop(err_in, &err_out, &lbuf);
+		std::cout << err_in << err_out << lbuf.get_val("df") << std::endl << std::endl;
+	}
+}
+
+void test_conv_layer1()
+{
+	conv_layer_hyperparameters p
+		{
+			2,     // map count
+			2, 2, // image dimension
+			1, 1,   // mask dimension
+			1, 1    // stride
+		};
+
+	mat_arr in(1, 1, p.input_size());
+	mat_arr out(1, 1, p.output_size());
+
+	fpt* in_ptr = in.start();
+	in_ptr[0] = 1;
+	in_ptr[1] = 2;
+	in_ptr[2] = 3;
+	in_ptr[3] = 4;
+
+	convolution_layer la(p);
+	fpt* mb_ptr = la.mask_biases.start();
+	mb_ptr[0] = 1;
+	mb_ptr[1] = 2;
+
+	fpt* mw_ptr = la.mask_weights.start();
+	mw_ptr[0] = 2;
+	mw_ptr[1] = 10;
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		la.feed_forward(in, &out);
+		std::cout << out << std::endl;
+	}
+}
+
 inline void do_assert(bool b)
 {
 	if (!b)
