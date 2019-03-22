@@ -7,6 +7,77 @@ using namespace annlib;
 
 namespace annlib
 {
+	template <typename Fc>
+	void convolve(const unsigned mini_batch_size, const unsigned in_count, const unsigned out_count,
+	              const unsigned in_width, const unsigned in_height, const unsigned mask_width, const unsigned mask_height,
+	              const unsigned stride_x, const unsigned stride_y, Fc f)
+	{
+		if (in_count != 1 && out_count != 1 && in_count != out_count)
+		{
+			throw std::runtime_error("Invalid counts");
+		}
+
+		const unsigned count = std::max(in_count, out_count);
+		const unsigned in_size = in_width * in_height;
+		const unsigned in_size_total = in_size * in_count;
+		const unsigned mask_size = mask_width * mask_height;
+		const unsigned out_width = (in_width - mask_width) / stride_x + 1;
+		const unsigned out_height = (in_height - mask_height) / stride_y + 1;
+		const unsigned out_size = out_width * out_height;
+		const unsigned out_size_total = out_size * out_count;
+
+		for (unsigned mb_el = 0; mb_el < mini_batch_size; mb_el++)
+		{
+			for (unsigned no = 0; no < count; no++)
+			{
+				const unsigned i_in_single = mb_el * in_size_total + (in_count == 1 ? 0 : no * in_size);
+				const unsigned i_out_single = mb_el * out_size_total + (out_count == 1 ? 0 : no * out_size);
+				const unsigned i_mask_single = no * mask_size;
+
+				for (unsigned mask_row = 0; mask_row < mask_height; mask_row++)
+				{
+					for (unsigned mask_col = 0; mask_col < mask_width; mask_col++)
+					{
+						const unsigned i_mask = i_mask_single + mask_row * mask_width + mask_col;
+						const unsigned i_in_start = i_in_single + mask_col + mask_row * in_width;
+						for (unsigned out_row = 0; out_row < out_height; out_row++)
+						{
+							for (unsigned out_col = 0; out_col < out_width; out_col++)
+							{
+								const unsigned i_in = i_in_start + out_row * stride_y * in_width + out_col * stride_x;
+								const unsigned i_out = i_out_single + out_row * out_width + out_col;
+								f(i_in, i_out, i_mask);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	template <typename Fc>
+	void iterate_image_set(unsigned mini_batch_size, unsigned count, unsigned width, unsigned height, Fc f)
+	{
+		const unsigned size = width * height;
+		const unsigned size_total = size * count;
+
+		for (unsigned mb_el = 0; mb_el < mini_batch_size; mb_el++)
+		{
+			for (unsigned no = 0; no < count; no++)
+			{
+				unsigned i_single = mb_el * size_total + no * size;
+				for (unsigned row = 0; row < width; row++)
+				{
+					for (unsigned col = 0; col < height; col++)
+					{
+						unsigned i = i_single + row * width + col;
+						f(no, i);
+					}
+				}
+			}
+		}
+	}
+
 	struct conv_layer_hyperparameters
 	{
 		unsigned map_count;
@@ -32,12 +103,12 @@ namespace annlib
 
 		unsigned feature_map_width() const
 		{
-			return (image_width - (mask_width - 1)) / stride_length_x;
+			return (image_width - mask_width) / stride_length_x + 1;
 		};
 
 		unsigned feature_map_height() const
 		{
-			return (image_height - (mask_height - 1)) / stride_length_y;
+			return (image_height - mask_height) / stride_length_y + 1;
 		};
 
 		unsigned feature_map_size() const
@@ -56,11 +127,11 @@ namespace annlib
 	public:
 		const conv_layer_hyperparameters p;
 
-	private:
+		//private:
 		mat_arr mask_weights;
 		mat_arr mask_biases;
 
-	public:
+		//public:
 		void init(std::mt19937* rnd) override;
 
 		void prepare_buffer(layer_buffer* buf) override;

@@ -174,3 +174,8 @@ void sgd_trainer::do_adjustments(gradient_based_optimizer* opt, training_buffer*
 		}
 	}
 }
+
+network_layer* sgd_trainer::get_layer(unsigned index)
+{
+	return layers[index].get();
+}

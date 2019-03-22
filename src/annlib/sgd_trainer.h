@@ -49,6 +49,7 @@ namespace annlib
 
 		fpt calculate_costs(const mat_arr& net_output, const mat_arr& solution) const;
 
+		network_layer* get_layer(unsigned index);
 	private:
 		std::vector<std::shared_ptr<network_layer>> layers;
 

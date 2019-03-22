@@ -393,7 +393,8 @@ inline void mat_arr_math_mat_mul_speed_test()
 					{
 						for (unsigned k = 0; k < n; k++)
 						{
-							vec_c[mat_no * n2 + i * n + k] = vec_a[mat_no * n2 + i * n + j] * vec_b[mat_no * n2 + j * n + k];
+							vec_c[mat_no * n2 + i * n + k] = vec_a[mat_no * n2 + i * n + j] * vec_b[mat_no * n2 + j * n
+								+ k];
 						}
 					}
 				}
